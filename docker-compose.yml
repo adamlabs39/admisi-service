@@ -1,0 +1,13 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=sample_pass
+      - POSTGRES_USER=alliano-dev
+    volumes:
+      - pg_volume:/var/lib/postgresql/data
+volumes:
+  pg_volume: {}
