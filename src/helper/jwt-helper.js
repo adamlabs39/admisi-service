@@ -3,7 +3,7 @@ import "dotenv/config"
 import fs from "fs/promises";
 
 export default class JwtHelper {
-    static async veryfy(token) {
+    static async verify(token) {
         return jwt.verify(token, await this.#getPublicKey(), { algorithms: "RS256" });
     }
 

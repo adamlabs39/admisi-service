@@ -6,6 +6,7 @@ import helmet from "helmet";
 import { rateLimit } from 'express-rate-limit';
 import cors from 'cors';
 import MODELMERGE from "./models/modelMerge.js";
+import routes from "./routes/routes.js";
 
 const app = express();
 const port = process.env.APP_PORT || 8080;
@@ -16,14 +17,14 @@ const logger = morgan('dev');
 // Register Middleware
 // --------------------------------------------------------------------------
 app.use(express.json());
-// app.use(routes);
 app.use(errorMiddleware);
 app.use(logger);
 
+// Register V1 routes
+app.use("/api", routes);
 // --------------------------------------------------------------------------
 // Security Middleware
 // --------------------------------------------------------------------------
-
 app.use(helmet());
 
 const corsConfig = {
