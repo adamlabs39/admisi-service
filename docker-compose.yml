@@ -1,13 +1,33 @@
-version: "3.8"
+version: '3.3'
 services:
   postgres:
     image: postgres:latest
     ports:
       - 5432:5432
-    environment:
-      - POSTGRES_PASSWORD=sample_pass
-      - POSTGRES_USER=alliano-dev
+    restart: no
+    networks:
+      - adameds
     volumes:
-      - pg_volume:/var/lib/postgresql/data
-volumes:
-  pg_volume: {}
+      - pg-data-volume:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_DB=${DB_NAME}
+
+  app:
+    build: .
+    container_name: auth-service
+    ports:
+      - ${APPLICATION_PORT}:${APPLICATION_PORT}
+    restart: always
+    networks:
+      - adameds
+    environment:
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_DIALECT=postgres
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - APPLICATION_PORT=${APPLICATION_PORT}
+      - APPLICATION_HOST=${APPLICATION_HOST}
