@@ -9,10 +9,10 @@ const tableIdentifier = {
         unique: true,
     },
     uuid: {
-        type: DataTypes.STRING(255),
+        type: DataTypes.UUID,
         primaryKey: true,
         allowNull: false,
-        defaultValue: uuidv7(),
+        defaultValue: DataTypes.UUIDV4,
         unique: true,
     },
     faskesUuid: {

@@ -1,18 +1,20 @@
 import {
     DataTypes,
-    Model
+    Model,
+    Op
 } from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import AddressModel from "./address-model.js";
 export default class PatientModel extends Model {}
 PatientModel.init(
     {
         ...identifierModel,
         satuSehatUuid: {
             type: DataTypes.STRING(255),
-            allowNull: false,
-            unique: false,
+            allowNull: true,
+            unique: true,
         },
         noRm: {
             type: DataTypes.STRING(255),
@@ -24,6 +26,10 @@ PatientModel.init(
             allowNull: true,
         },
         name: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        identity: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
@@ -82,27 +88,31 @@ PatientModel.init(
         },
         polyclinic: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         doctor: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         categoryRoom: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         classRoom: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         room: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         bedRoom: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
+        },
+        MonitoringRuanganUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
         },
         note: {
             type: DataTypes.STRING(255),
@@ -112,13 +122,26 @@ PatientModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
+        InsuranceAccountUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        namaPenjamin: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
         unggahBerkas: {
             type: DataTypes.BLOB,
             allowNull: true,
         },
+        tanggalChecking: {
+            type: DataTypes.BIGINT,
+            allowNull: true,
+            unique: false,
+        },
         tanggalDaftar: {
-            type: DataTypes.DATE,
-            allowNull: false,
+            type: DataTypes.BIGINT,
+            allowNull: true,
         },
         ...fieldTime
     },
@@ -128,5 +151,19 @@ PatientModel.init(
         modelName: "PatientModel",
         underscored: true,
         timestamps: false,
+        defaultScope: {
+            where:{
+                deletedAt: {
+                    [Op.is]: null
+                }
+            }
+        }
     }
 )
+
+
+PatientModel.belongsTo(AddressModel, {
+    foreignKey: "address_uuid",
+    as: "address",
+    constraints: false,
+});
