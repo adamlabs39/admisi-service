@@ -52,7 +52,6 @@ export default class PatientService{
     }
 
     static async findByUuid(uuid){
-        // return PatientRepository.getPatientByUuid(uuid);
         const data = await PatientRepository.getPatientByUuid(uuid);
         if(!data) throw new NotfoundException("Pasien Tidak Ditemukan")
         return data;

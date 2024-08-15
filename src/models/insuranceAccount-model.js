@@ -43,5 +43,6 @@ InsuranceAccountModel.init(
         modelName: "InsuranceAccount",
         tableName: "InsuranceAccounts",
         underscored: true,
+        timestamps: false,
     }
 )

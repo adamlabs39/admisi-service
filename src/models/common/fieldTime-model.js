@@ -5,6 +5,7 @@ export const fieldTime = {
     status: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
+        defaultValue: true,
     },
     createdAt: {
         type: DataTypes.BIGINT,

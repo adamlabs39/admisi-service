@@ -36,5 +36,15 @@ export default class RawatJalanValidation{
         dpjp: z.string().max(255),
         complaint: z.string().max(255),
         note: z.string().max(255),
+        maternity: z.boolean().default(false),
+        platform: z.string().max(255).default("WEB").transform(value => value.toUpperCase()),
+        assurance_account_id: z.string(255).optional()
+    }).superRefine((data, ctx) => {
+        if (data.payment_method === "ASURANSI" && !data.assurance_account_id) {
+            ctx.addIssue({
+                path: ["assurance_account_id"],
+                message: "Assurance account ID is required when payment method is ASURANSI.",
+            });
+        }
     })
 }

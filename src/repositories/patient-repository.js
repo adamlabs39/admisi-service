@@ -8,28 +8,53 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import * as sequlizeInstance from "sequelize";
 
 export default class PatientRepository{
-    static async registPatient(data){
-        try{
-            const uuid = data.uuid || null;
+    static async registPatient(data) {
+        try {
+            const uuid = data.patientUuid || null;
             return await sequelizeInstace.transaction(async (t) => {
-                let patient = await PatientModel.findOne({
+                console.log(data);
+
+                let address = null;
+                if (data.address?.addressUuid) {
+                    address = await AddressModel.findOne({
+                        where: {
+                            uuid: data.address.addressUuid,
+                            deletedAt: { [Op.is]: null }
+                        }
+                    });
+                }
+
+                if (address) {
+                    await address.update(data.address, { transaction: t });
+                } else {
+                    address = await AddressModel.create(data.address, { transaction: t });
+                }
+
+                data.addressUuid = address.uuid;
+
+                const patient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
                             { uuid },
+                            {
+                                deletedAt: {
+                                    [Op.is]: null
+                                }
+                            }
                         ]
                     }
-                });
+                }) || await PatientModel.create(data, { transaction: t, returning: true });
 
-                if(patient){
-                    return await patient.update(data, {transaction: t});
+                if (patient) {
+                    return await patient.update(data, { transaction: t, returning: true });
                 }
-
-                return await PatientModel.create(data, {transaction: t});
             });
-        }catch (error){
+        } catch (error) {
+            console.log(error);
             throw error;
         }
     }
+
 
     static async cretePatient(data){
         try{

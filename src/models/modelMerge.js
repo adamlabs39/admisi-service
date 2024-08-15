@@ -12,6 +12,7 @@ import InstalasiGawatDaruratModel from "./instalasi-gawat-darurat-model.js";
 import PaymentMethodModel from "./payment-method-model.js";
 import RawatInapModel from "./rawat-inap-model.js";
 import RawatJalanModel from "./rawat-jalan-model.js";
+import InsuranceAdmissionModel from "./insurance-admission-model.js";
 
 const MODELMERGE = [
     BpjsModel,
@@ -27,6 +28,7 @@ const MODELMERGE = [
     PaymentMethodModel,
     RawatInapModel,
     RawatJalanModel,
+    InsuranceAdmissionModel,
     sequelizeInstance
 ]
 

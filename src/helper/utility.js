@@ -25,6 +25,17 @@ const generateNoRM = (code) => {
     return `${code}${result}`;
 }
 
+const generateNoReg = () => {
+    const CODE = 'REG';
+    const randomText = '1234567890';
+    const date = moment().format('YYMMDD');
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+        result += randomText.charAt(Math.floor(Math.random() * randomText.length));
+    }
+    return `${CODE}${date}${result}`;
+}
+
 const getInfoAge = (birthDate) => {
     const today = moment();
     const birth = moment(birthDate);
@@ -49,4 +60,12 @@ const convertSnakeToCamel = (obj) => {
     return newObj;
 }
 
-export { paginationHelper, generateNoRM, getInfoAge, convertSnakeToCamel };
+const convertCamelToSnake = (obj) => {
+    const newObj = {};
+    for (const key in obj) {
+        newObj[key.replace(/([A-Z])/g, function(m){return '_'+m.toLowerCase();})] = obj[key];
+    }
+    return newObj;
+}
+
+export { paginationHelper, generateNoRM, getInfoAge, convertSnakeToCamel, generateNoReg , convertCamelToSnake};
