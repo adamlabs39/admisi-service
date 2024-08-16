@@ -1,5 +1,5 @@
 import { DataTypes } from "sequelize";
-import { uuidv7 } from "uuidv7";
+import {uuidv7} from "uuidv7";
 
 const tableIdentifier = {
     id: {
@@ -11,8 +11,10 @@ const tableIdentifier = {
     uuid: {
         type: DataTypes.UUID,
         primaryKey: true,
+        defaultValue: function() {
+            return uuidv7();
+        },
         allowNull: false,
-        defaultValue: DataTypes.UUIDV4,
         unique: true,
     },
     faskesUuid: {

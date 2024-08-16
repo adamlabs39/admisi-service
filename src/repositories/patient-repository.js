@@ -4,16 +4,16 @@ import {Op} from "sequelize";
 import Pagination from "../helper/pagination.js";
 import moment from "moment";
 import AddressModel from "../models/address-model.js";
-import sequelizeInstance from "../configurations/sequelize-instance.js";
-import * as sequlizeInstance from "sequelize";
+import BirthDetailModel from "../models/birth-detail-model.js";
+import {generateNoRM, getInfoAge} from "../helper/utility.js";
+
 
 export default class PatientRepository{
     static async registPatient(data) {
         try {
             const uuid = data.patientUuid || null;
             return await sequelizeInstace.transaction(async (t) => {
-                console.log(data);
-
+                // Address Query
                 let address = null;
                 if (data.address?.addressUuid) {
                     address = await AddressModel.findOne({
@@ -25,6 +25,7 @@ export default class PatientRepository{
                 }
 
                 if (address) {
+                    console.log("update address", address);
                     await address.update(data.address, { transaction: t });
                 } else {
                     address = await AddressModel.create(data.address, { transaction: t });
@@ -32,7 +33,34 @@ export default class PatientRepository{
 
                 data.addressUuid = address.uuid;
 
-                const patient = await PatientModel.findOne({
+
+                // Birth Detail Query
+                let birthDetail = null;
+                const infoAge = getInfoAge(data.birthDetail.birthDate);
+                console.log(data.birthDetail);
+                if(data.birthDetail?.birthDetailUuid){
+                    birthDetail = await BirthDetailModel.findOne({
+                        where: {
+                            uuid: data.birthDetail.birthDetailUuid,
+                            deletedAt: { [Op.is]: null }
+                        }
+                    })
+                }
+
+                data.birthDetail.ageYear = infoAge.year;
+                data.birthDetail.ageMonth = infoAge.month;
+                data.birthDetail.ageDay = infoAge.day;
+
+                if(birthDetail){
+                    await birthDetail.update(data.birthDetail, {transaction: t});
+                }else{
+                    birthDetail = await BirthDetailModel.create(data.birthDetail, {transaction: t});
+                }
+
+                data.birthDetailUuid = birthDetail.uuid;
+
+
+                const [patient, created] = await PatientModel.findOrCreate({
                     where: {
                         [Op.and]: [
                             { uuid },
@@ -42,12 +70,20 @@ export default class PatientRepository{
                                 }
                             }
                         ]
-                    }
-                }) || await PatientModel.create(data, { transaction: t, returning: true });
+                    },
+                    defaults: {
+                        ...data,
+                        noRm: generateNoRM(data.faskesCode)
+                    },
+                    transaction: t
+                });
 
-                if (patient) {
-                    return await patient.update(data, { transaction: t, returning: true });
+                if (!created) {
+                    await patient.update(data, { transaction: t });
                 }
+
+                return patient;
+
             });
         } catch (error) {
             console.log(error);
@@ -90,6 +126,27 @@ export default class PatientRepository{
         }
     }
 
+
+    static async checkExistPatient(uuid){
+        try {
+            return await PatientModel.findOne({
+                where: {
+                    [Op.and]: [
+                        {uuid},
+                        {
+                            deletedAt: {
+                                [Op.is]: null
+                            }
+                        }
+                    ]
+                }
+            });
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
     static async getPatientByUuid(uuid){
         try{
             return await PatientModel.findOne({
@@ -103,12 +160,20 @@ export default class PatientRepository{
                         }
                     ]
                 },
-                include: [{
-                    model: AddressModel,
-                    required: true,
-                    as: "address",
-                    attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "postal_code", "country"]
-                }],
+                include: [
+                    {
+                        model: AddressModel,
+                        required: true,
+                        as: "address",
+                        attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "postal_code", "country"]
+                    },
+                    {
+                        model: BirthDetailModel,
+                        required: true,
+                        as: "birthDetail",
+                        attributes: ["uuid", "birth_place", "birth_date", "age_year", "age_month", "age_day"]
+                    }
+                ],
                 attributes: [
                     "uuid",
                     "no_rm",
@@ -116,8 +181,6 @@ export default class PatientRepository{
                     "name",
                     "identity",
                     "no_identity",
-                    "birth_place",
-                    "birth_date",
                     "gender",
                     "phone",
                     "religion",
@@ -187,7 +250,7 @@ export default class PatientRepository{
                     "status",
                 ],
             }
-            return await Pagination.do(
+            return await Pagination.init(
                 PatientModel,
                 args,
                 filter,

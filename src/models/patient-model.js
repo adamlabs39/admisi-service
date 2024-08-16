@@ -7,6 +7,8 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import AddressModel from "./address-model.js";
+import BirthDetailModel from "./birth-detail-model.js";
+import {hookModel} from "./common/hook-model.js";
 export default class PatientModel extends Model {}
 PatientModel.init(
     {
@@ -37,24 +39,8 @@ PatientModel.init(
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        birthPlace: {
-            type: DataTypes.STRING(150),
-            allowNull: false,
-        },
-        birthDate: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        },
-        ageYear: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        ageMonth: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        ageDay: {
-            type: DataTypes.INTEGER,
+        birthDetailUuid: {
+            type: DataTypes.STRING(255),
             allowNull: false,
         },
         gender: {
@@ -86,63 +72,6 @@ PatientModel.init(
             type: DataTypes.STRING(150),
             allowNull: false,
         },
-        polyclinic: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        doctor: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        categoryRoom: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        classRoom: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        room: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        bedRoom: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        MonitoringRuanganUuid: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        note: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        complaint: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        InsuranceAccountUuid: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        namaPenjamin: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        unggahBerkas: {
-            type: DataTypes.BLOB,
-            allowNull: true,
-        },
-        tanggalChecking: {
-            type: DataTypes.BIGINT,
-            allowNull: true,
-            unique: false,
-        },
-        tanggalDaftar: {
-            type: DataTypes.BIGINT,
-            allowNull: true,
-        },
         ...fieldTime
     },
     {
@@ -157,7 +86,8 @@ PatientModel.init(
                     [Op.is]: null
                 }
             }
-        }
+        },
+        hooks: hookModel,
     }
 )
 
@@ -167,3 +97,9 @@ PatientModel.belongsTo(AddressModel, {
     as: "address",
     constraints: false,
 });
+
+PatientModel.belongsTo(BirthDetailModel, {
+    foreignKey: "birth_detail_uuid",
+    as: "birthDetail",
+    constraints: false,
+})

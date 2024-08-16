@@ -2,6 +2,8 @@ import { DataTypes, Model } from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import identifierModel from "./common/identifier-model.js";
 import fieldTime from "./common/fieldTime-model.js";
+import {uuidv4, uuidv7} from "uuidv7";
+import moment from "moment";
 
 export default class AddressModel extends Model {}
 AddressModel.init(
@@ -51,5 +53,16 @@ AddressModel.init(
         tableName: "addresses",
         underscored: true,
         timestamps: false,
+        hooks: {
+            beforeCreate: (instance, options) => {
+                const unixTimestamp = moment().unix();
+                instance.dataValues.uuid = uuidv7();
+                instance.createdAt = unixTimestamp;
+                instance.updatedAt = unixTimestamp;
+            },
+            beforeUpdate: (instance, options) => {
+                instance.updatedAt = moment().unix();
+            }
+        },
     }
 );

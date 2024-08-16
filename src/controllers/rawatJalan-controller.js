@@ -18,7 +18,7 @@ export default class RawatJalanController {
 
 static async registRawatJalan(request, response, nextFunction) {
         try {
-            const data = await RawatJalanService.registRawatJalan(response.locals.jwtData, request.body);
+            const data = await RawatJalanService.registRawatJalan(request.body);
             return response.status(201).json({
                 message: "Data Rawat Jalan Berhasil Ditambahkan",
                 data

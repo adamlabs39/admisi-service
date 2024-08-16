@@ -8,6 +8,7 @@ import {ZodError} from "zod";
 import zodErrorParser from "../helper/zod-error-parser.js";
 
 const errorMiddleware = (error, request, response, nextFunction) => {
+  console.error("Error Middleware", error);
   if (error instanceof NotfoundException) {
     return response.status(error.code).json(errorResponse(error.message));
   }else if(error instanceof UnauthorizedException){

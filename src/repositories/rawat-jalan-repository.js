@@ -12,14 +12,24 @@ export default class RawatJalanRepository {
     static async getAll(args) {
         const ctx = Ctx.get(CTX_AUTHOR);
         const filter = {
-            faskesUuid: ctx.faskesUuid,
             name: {
                 [Op.like]: `%${args.name || ""}%`
             },
             // TODO : Add more filter By Payment method, poli, etc
         };
-        return await Pagination.do(
-            PatientModel,
+
+        const options = {
+
+        }
+
+        const data = await RawatJalanModel.findAll({
+            where: {
+                faskesUuid: ctx.faskesUuid
+            }
+        });
+        console.log(data);
+        return await Pagination.init(
+            RawatJalanModel,
             args,
             filter,
         );
@@ -82,6 +92,16 @@ export default class RawatJalanRepository {
         } catch (error) {
             console.error(error);
             throw error;
+        }
+    }
+
+
+    static async registNewBorn(data){
+        try{
+
+        }catch (e){
+            console.error(e);
+            throw e;
         }
     }
 }

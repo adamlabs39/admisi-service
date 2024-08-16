@@ -1,5 +1,6 @@
 import { z } from 'zod';
-export default class RawatJalanValidation{
+
+export default class RawatJalanValidation {
     static CREATE = z.object({
         is_newborn: z.boolean().default(false),
         patient_data: z.object({
@@ -8,10 +9,12 @@ export default class RawatJalanValidation{
             name: z.string().max(255),
             identity: z.string().max(255),
             no_identity: z.string().max(255),
-            birth_place: z.string().max(150),
-            birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
-                message: "Invalid date format"
-            }).transform(value => new Date(value)),
+            birth_detail: z.object({
+                birth_place: z.string().max(150),
+                birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
+                    message: "Invalid date format"
+                }).transform(value => new Date(value)),
+            }),
             gender: z.string().max(15),
             phone: z.string().max(15),
             religion: z.string().max(25),
@@ -37,13 +40,25 @@ export default class RawatJalanValidation{
         complaint: z.string().max(255),
         note: z.string().max(255),
         maternity: z.boolean().default(false),
-        platform: z.string().max(255).default("WEB").transform(value => value.toUpperCase()),
-        assurance_account_id: z.string(255).optional()
+        platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("ADMISI").optional(),
+        assurance_account_id: z.string().max(255).optional()
     }).superRefine((data, ctx) => {
         if (data.payment_method === "ASURANSI" && !data.assurance_account_id) {
             ctx.addIssue({
                 path: ["assurance_account_id"],
                 message: "Assurance account ID is required when payment method is ASURANSI.",
+            });
+        }
+
+        // Validasi tambahan untuk kasus is_newborn
+        if (data.is_newborn && Array.isArray(data.patient_data)) {
+            data.patient_data.forEach((patient, index) => {
+                if (!patient.name) {
+                    ctx.addIssue({
+                        path: ["patient_data", index, "name"],
+                        message: "Name is required for each newborn.",
+                    });
+                }
             });
         }
     })

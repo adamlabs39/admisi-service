@@ -1,4 +1,4 @@
-import InsuranceAccountModel from "../models/insuranceAccount-model.js";
+import InsuranceAccountModel from "../models/insurance-account-model.js";
 
 export default class InsuranceAccountSeeder{
     static async seed(transaction) {

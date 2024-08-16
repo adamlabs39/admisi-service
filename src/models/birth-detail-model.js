@@ -5,44 +5,39 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 
-
-export default class InsuranceAccountModel extends Model {}
-InsuranceAccountModel.init(
+export default class BirthDetailModel extends Model {}
+BirthDetailModel.init(
     {
         ...identifierModel,
-        patientUuid: {
+        birthPlace: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        code: {
-            type: DataTypes.STRING(150),
+        birthDate: {
+            type: DataTypes.DATE,
             allowNull: false,
         },
-        name: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        accountNumber: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        classEntitle: {
+        ageYear: {
             type: DataTypes.INTEGER,
-            allowNull: true,
-        },
-        membershipStatus: {
-            type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: true,
+        },
+        ageMonth: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        ageDay: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
         },
         ...fieldTime
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "InsuranceAccount",
-        tableName: "InsuranceAccounts",
+        tableName: "birth_details",
         underscored: true,
         timestamps: false,
+        hooks: hookModel,
     }
 )

@@ -5,6 +5,7 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 
 
 export default class PatientFamilyModel extends Model {}
@@ -32,7 +33,8 @@ PatientFamilyModel.init(
     {
         sequelize: sequelizeInstance,
         modelName: "PatientFamily",
-        tableName: "PatientFamilies",
+        tableName: "patient_families",
         underscored: true,
+        hooks: hookModel,
     }
 )

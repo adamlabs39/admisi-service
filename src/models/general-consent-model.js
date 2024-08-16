@@ -5,9 +5,10 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 
-export default class RoomMonitoringModel extends Model {}
-RoomMonitoringModel.init(
+export default class GeneralConsentModel extends Model {}
+GeneralConsentModel.init(
     {
         ...identifierModel,
         faskesUuid: {
@@ -18,37 +19,21 @@ RoomMonitoringModel.init(
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        roomUuid: {
+        generalConsent: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        roomCategory: {
+        patientFamiliesUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
-        },
-        roomClass: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        room: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        bed: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        availableStatus: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: true,
         },
         ...fieldTime
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "RoomMonitoring",
-        tableName: "RoomMonitorings",
+        modelName: "GeneralConsent",
+        tableName: "general_consents",
         underscored: true,
+        hooks: hookModel,
     }
 )

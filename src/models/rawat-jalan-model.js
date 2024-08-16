@@ -5,6 +5,7 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 export default class RawatJalanModel extends Model{}
 
 RawatJalanModel.init(
@@ -36,20 +37,8 @@ RawatJalanModel.init(
             type: DataTypes.STRING(150),
             allowNull: false,
         },
-        birthDate: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        },
-        ageYear: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        ageMonth: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        ageDay: {
-            type: DataTypes.INTEGER,
+        birthDetailUuid: {
+            type: DataTypes.STRING(255),
             allowNull: false,
         },
         gender: {
@@ -57,11 +46,11 @@ RawatJalanModel.init(
             allowNull: false,
         },
         tanggalDaftar: {
-            type: DataTypes.DATE,
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         tanggalPeriksa: {
-            type: DataTypes.DATE,
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         doctor: {
@@ -276,6 +265,34 @@ RawatJalanModel.init(
             type: DataTypes.STRING(50),
             allowNull: true,
         },
+        polyclinic: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        categoryRoom: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        classRoom: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        room: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        bedRoom: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        MonitoringRuanganUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        InsuranceAccountUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
         ...fieldTime
     },
     {
@@ -284,5 +301,6 @@ RawatJalanModel.init(
         tableName: "rawat_jalans",
         underscored: true,
         timestamps: false,
+        hooks: hookModel,
     }
 )
