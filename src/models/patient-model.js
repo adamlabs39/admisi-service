@@ -100,6 +100,6 @@ PatientModel.belongsTo(AddressModel, {
 
 PatientModel.belongsTo(BirthDetailModel, {
     foreignKey: "birth_detail_uuid",
-    as: "birthDetail",
+    as: "birth_detail",
     constraints: false,
-})
+});

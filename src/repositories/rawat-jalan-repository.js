@@ -19,7 +19,7 @@ export default class RawatJalanRepository {
         };
 
         const options = {
-
+            // TODO: Set Attribute to show and map to snake case
         }
 
         const data = await RawatJalanModel.findAll({
@@ -32,6 +32,7 @@ export default class RawatJalanRepository {
             RawatJalanModel,
             args,
             filter,
+            // TODO: Add options
         );
     }
 
@@ -98,7 +99,11 @@ export default class RawatJalanRepository {
 
     static async registNewBorn(data){
         try{
+            return await sequelizeInstace.transaction(async (t) => {
+                const ctx = Ctx.get(CTX_AUTHOR);
+                const faskesUuid = ctx.faskesUuid;
 
+            });
         }catch (e){
             console.error(e);
             throw e;

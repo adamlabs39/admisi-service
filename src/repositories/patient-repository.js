@@ -9,88 +9,95 @@ import {generateNoRM, getInfoAge} from "../helper/utility.js";
 
 
 export default class PatientRepository{
-    static async registPatient(data) {
+    static async registPatient(data, externalTransaction = null) {
+        const transaction = externalTransaction || await sequelizeInstace.transaction();
+
         try {
             const uuid = data.patientUuid || null;
-            return await sequelizeInstace.transaction(async (t) => {
-                // Address Query
-                let address = null;
-                if (data.address?.addressUuid) {
-                    address = await AddressModel.findOne({
-                        where: {
-                            uuid: data.address.addressUuid,
-                            deletedAt: { [Op.is]: null }
-                        }
-                    });
-                }
 
-                if (address) {
-                    console.log("update address", address);
-                    await address.update(data.address, { transaction: t });
-                } else {
-                    address = await AddressModel.create(data.address, { transaction: t });
-                }
-
-                data.addressUuid = address.uuid;
-
-
-                // Birth Detail Query
-                let birthDetail = null;
-                const infoAge = getInfoAge(data.birthDetail.birthDate);
-                console.log(data.birthDetail);
-                if(data.birthDetail?.birthDetailUuid){
-                    birthDetail = await BirthDetailModel.findOne({
-                        where: {
-                            uuid: data.birthDetail.birthDetailUuid,
-                            deletedAt: { [Op.is]: null }
-                        }
-                    })
-                }
-
-                data.birthDetail.ageYear = infoAge.year;
-                data.birthDetail.ageMonth = infoAge.month;
-                data.birthDetail.ageDay = infoAge.day;
-
-                if(birthDetail){
-                    await birthDetail.update(data.birthDetail, {transaction: t});
-                }else{
-                    birthDetail = await BirthDetailModel.create(data.birthDetail, {transaction: t});
-                }
-
-                data.birthDetailUuid = birthDetail.uuid;
-
-
-                const [patient, created] = await PatientModel.findOrCreate({
+            let address = null;
+            if (data.address?.addressUuid) {
+                address = await AddressModel.findOne({
                     where: {
-                        [Op.and]: [
-                            { uuid },
-                            {
-                                deletedAt: {
-                                    [Op.is]: null
-                                }
-                            }
-                        ]
-                    },
-                    defaults: {
-                        ...data,
-                        noRm: generateNoRM(data.faskesCode)
-                    },
-                    transaction: t
+                        uuid: data.address.addressUuid,
+                        deletedAt: { [Op.is]: null }
+                    }
                 });
+            }
 
-                if (!created) {
-                    await patient.update(data, { transaction: t });
-                }
+            if (address) {
+                console.log("update address", address);
+                await address.update(data.address, { transaction });
+            } else {
+                address = await AddressModel.create(data.address, { transaction });
+            }
 
-                return patient;
+            data.addressUuid = address.uuid;
 
+            let birthDetail = null;
+            const infoAge = getInfoAge(data.birthDetail.birthDate);
+            console.log(data.birthDetail);
+            if (data.birthDetail?.birthDetailUuid) {
+                birthDetail = await BirthDetailModel.findOne({
+                    where: {
+                        uuid: data.birthDetail.birthDetailUuid,
+                        deletedAt: { [Op.is]: null }
+                    }
+                });
+            }
+
+            data.birthDetail.ageYear = infoAge.year;
+            data.birthDetail.ageMonth = infoAge.month;
+            data.birthDetail.ageDay = infoAge.day;
+
+            if (birthDetail) {
+                await birthDetail.update(data.birthDetail, { transaction });
+            } else {
+                birthDetail = await BirthDetailModel.create(data.birthDetail, { transaction });
+            }
+
+            data.birthDetailUuid = birthDetail.uuid;
+
+            const [patient, created] = await PatientModel.findOrCreate({
+                where: {
+                    [Op.and]: [
+                        { uuid },
+                        {
+                            deletedAt: {
+                                [Op.is]: null
+                            }
+                        }
+                    ]
+                },
+                defaults: {
+                    ...data,
+                    noRm: generateNoRM(data.faskesCode)
+                },
+                transaction
             });
+
+            if (!created) {
+                await patient.update(data, { transaction });
+            }
+
+            if (!externalTransaction) {
+                await transaction.commit();
+            }
+
+            return {
+                ...patient.get({ plain: true }), // Convert to plain object
+                address: address.get({ plain: true }), // Include address data
+                birthDetail: birthDetail.get({ plain: true }) // Include birth detail data
+            };
+
         } catch (error) {
+            if (!externalTransaction) {
+                await transaction.rollback();
+            }
             console.log(error);
             throw error;
         }
     }
-
 
     static async cretePatient(data){
         try{
@@ -170,7 +177,7 @@ export default class PatientRepository{
                     {
                         model: BirthDetailModel,
                         required: true,
-                        as: "birthDetail",
+                        as: "birth_detail",
                         attributes: ["uuid", "birth_place", "birth_date", "age_year", "age_month", "age_day"]
                     }
                 ],
@@ -237,14 +244,16 @@ export default class PatientRepository{
                     model: AddressModel,
                     required: true,
                     as: "address",
-                    attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "postal_code", "country"]
+                    attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "country"]
+                },{
+                    model: BirthDetailModel,
+                    required: true,
+                    as: "birth_detail",
+                    attributes: ["age_year", "age_month", "age_day"]
                 }],
                 attributes: [
                     "uuid",
                     "no_rm",
-                    "age_year",
-                    "age_month",
-                    "age_day",
                     "name",
                     "gender",
                     "status",

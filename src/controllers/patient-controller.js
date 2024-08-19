@@ -34,7 +34,7 @@ export default class PatientController {
     static async findByUuid(req, res, next) {
         try {
             const patient = await PatientService.findByUuid(req.params.uuid);
-            return res.status(200).json(patient);
+            return res.status(200).json(successResponse("Berhasil Menampilkan Pasien", patient));
         } catch (error) {
             next(error);
         }
@@ -43,7 +43,7 @@ export default class PatientController {
     static async findAll(req, res, next) {
         try {
             const patient = await PatientService.findAll(req.query);
-            return res.status(200).json(patient);
+            return res.status(200).json(successResponse("Berhasil Menampilkan Pasien", patient));
         } catch (error) {
             next(error);
         }

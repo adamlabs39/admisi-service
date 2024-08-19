@@ -64,5 +64,6 @@ NewBornModel.init(
         tableName: "new_borns",
         timestamps: false,
         hooks: hookModel,
+        underscored: true,
     }
 )

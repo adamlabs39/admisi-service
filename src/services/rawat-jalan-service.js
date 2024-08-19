@@ -14,6 +14,8 @@ import {Context as Ctx} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import PatientValidation from "../validations/patient-validation.js";
 import BadRequestException from "../exception/bad-request-exception.js";
+import moment from "moment";
+import newBornRepository from "../repositories/newborn-repository.js";
 
 export class RawatJalanService {
     static async getALl(args) {
@@ -21,74 +23,6 @@ export class RawatJalanService {
         console.log(data);
         return data;
     }
-
-    // static async registRawatJalan(data) {
-    //     const validData = ZodValidator.validate(RawatJalanValidation.CREATE, data);
-    //     const user = Ctx.get(CTX_AUTHOR);
-    //     const infoAge = getInfoAge(validData.patient_data.birth_date);
-    //
-    //     // Registrasi Pasien
-    //     const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
-    //     if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
-    //
-    //     Object.assign(validData.patient_data.address, {
-    //         faskesUuid: faskes.uuid,
-    //         status: true,
-    //         fullAddress: validData.patient_data.address.full_address,
-    //     });
-    //
-    //     Object.assign(validData.patient_data, {
-    //         faskes_uuid: faskes.uuid,
-    //         no_rm: generateNoRM(faskes.code),
-    //         age_year: infoAge.year,
-    //         age_month: infoAge.month,
-    //         age_day: infoAge.day,
-    //         status: true
-    //     });
-    //
-    //     const patient = await PatientRepository.registPatient(convertSnakeToCamel(validData.patient_data));
-    //     if (!patient) throw new Error("Failed to create patient");
-    //
-    //     // DEFAULT DATA
-    //     const dataRJ = {
-    //         faskesUuid: faskes.uuid,
-    //         noReg: generateNoReg(),
-    //         patientUuid: patient.uuid,
-    //         name: validData.patient_data.name,
-    //         noRm: validData.patient_data.no_rm,
-    //         birthDate: validData.patient_data.birth_date,
-    //         ageYear: validData.patient_data.age_year,
-    //         ageMonth: validData.patient_data.age_month,
-    //         ageDay: validData.patient_data.age_day,
-    //         gender: validData.patient_data.gender,
-    //         doctor: validData.dpjp,
-    //         maternity: validData.maternity,
-    //         newBorn: validData.is_newborn,
-    //         note: validData.note,
-    //         polyclinic: validData.polyclinic,
-    //         complaint: validData.complaint,
-    //         platform: validData.platform
-    //     };
-    //
-    //     if (validData.payment_method === 'TUNAI') {
-    //         const dataTunai = await RawatJalanRepository.registTunai(dataRJ);
-    //         if (!dataTunai) throw new Error("Failed to create rawat jalan");
-    //         return dataTunai;
-    //     }
-    //
-    //     if (validData.payment_method === 'ASURANSI') {
-    //         dataRJ.insurance = validData.assurance_account_id;
-    //         const dataAsuransi = await RawatJalanRepository.registAsuransi(dataRJ);
-    //         if (!dataAsuransi) throw new Error("Failed to create rawat jalan");
-    //         return dataAsuransi;
-    //     }
-    //
-    //     if(validData.is_newborn){
-    //
-    //     }
-    //     return patient;
-    // }
-
 
     static async registRawatJalan(data) {
         const user = Ctx.get(CTX_AUTHOR);
@@ -99,7 +33,6 @@ export class RawatJalanService {
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
-        // Helper function untuk membuat data rawat jalan
         const createRawatJalanData = (patient) => ({
             faskesUuid: faskes.uuid,
             noReg: generateNoReg(),
@@ -118,6 +51,7 @@ export class RawatJalanService {
         });
 
         if (validData.is_newborn && Array.isArray(validData.patient_data)) {
+            let dataNewBorn = [];
             for (const patient of validData.patient_data) {
                 patient.faskesUuid = faskes.uuid;
                 patient.address.faskesUuid = faskes.uuid;
@@ -130,19 +64,39 @@ export class RawatJalanService {
 
                 const dataRJ = createRawatJalanData(newPatient);
 
+                let rawatJalanResult;
                 if (validData.payment_method === 'TUNAI') {
-                    const dataTunai = await RawatJalanRepository.registTunai(dataRJ);
-                    if (!dataTunai) throw new Error("Failed to create rawat jalan for newborn");
-                    return dataTunai;
-                }
-
-                if (validData.payment_method === 'ASURANSI') {
+                    rawatJalanResult = await RawatJalanRepository.registTunai(dataRJ);
+                    if (!rawatJalanResult) throw new Error("Failed to create rawat jalan for newborn");
+                } else if (validData.payment_method === 'ASURANSI') {
                     dataRJ.insurance = validData.assurance_account_id;
-                    const dataAsuransi = await RawatJalanRepository.registAsuransi(dataRJ);
-                    if (!dataAsuransi) throw new Error("Failed to create rawat jalan for newborn");
-                    return dataAsuransi;
+                    rawatJalanResult = await RawatJalanRepository.registAsuransi(dataRJ);
+                    if (!rawatJalanResult) throw new Error("Failed to create rawat jalan for newborn");
                 }
+                const newBorn = {
+                    faskesUuid: faskes.uuid,
+                    identifierMom: newPatient.identity,
+                    nameMom: newPatient.motherName,
+                    nameBaby: newPatient.name,
+                    noRmBaby: newPatient.noRm,
+                    birthPlaceBaby: newPatient.birthDetail.birthPlace,
+                    birthDateBaby: newPatient.birthDetail.birthDate,
+                    birthTimeBaby: moment(newPatient.birthDetail.birthDate).format('HH:mm'),
+                    genderBaby: newPatient.gender,
+                    multipleBirth: validData.patient_data.length,
+                    addressUuid: newPatient.address.uuid,
+                    tanggalDaftar: moment().format('YYYY-MM-DD HH:mm:ss'),
+                    status: true,
+                };
+
+                dataNewBorn.push(newBorn);
             }
+
+            const queryDataNewBorn = await newBornRepository.registNewBorn(dataNewBorn);
+            if (!queryDataNewBorn) throw new Error("Failed to create newborn data");
+
+            return queryDataNewBorn;
+
         } else {
             const patientData = validData.patient_data;
             patientData.faskesUuid = faskes.uuid;
@@ -172,7 +126,6 @@ export class RawatJalanService {
             return patient;
         }
     }
-
 
 
 }
