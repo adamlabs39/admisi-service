@@ -27,103 +27,41 @@ export class RawatJalanService {
     static async registRawatJalan(data) {
         const user = Ctx.get(CTX_AUTHOR);
 
-        const validData = ZodValidator.validate(RawatJalanValidation.CREATE, data);
+        let validData = ZodValidator.validate(RawatJalanValidation.CREATE, data);
         if (!validData) throw new BadRequestException("Bad Request");
 
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
-        const createRawatJalanData = (patient) => ({
-            faskesUuid: faskes.uuid,
-            noReg: generateNoReg(),
-            patientUuid: patient.uuid,
-            name: patient.name,
-            noRm: patient.noRm,
-            birthDetailUuid: patient.birthDetailUuid,
-            gender: patient.gender,
-            doctor: validData.dpjp,
-            maternity: validData.maternity,
-            newBorn: validData.is_newborn,
-            note: validData.note,
-            polyclinic: validData.polyclinic,
-            complaint: validData.complaint,
-            platform: validData.platform
-        });
-
         if (validData.is_newborn && Array.isArray(validData.patient_data)) {
-            let dataNewBorn = [];
-            for (const patient of validData.patient_data) {
+            // Convert data to camelCase and pass to repository
+            const newbornData = validData.patient_data.map(patient => {
                 patient.faskesUuid = faskes.uuid;
                 patient.address.faskesUuid = faskes.uuid;
                 patient.birth_detail.faskesUuid = faskes.uuid;
                 patient.birth_detail = convertSnakeToCamel(patient.birth_detail);
                 patient.faskes_code = faskes.code;
+                return convertSnakeToCamel(patient);
+            });
+            validData = convertSnakeToCamel(validData);
+            const result = await RawatJalanRepository.registNewBorn(newbornData, validData);
+            if (!result) throw new Error("Failed to create rawat jalan for newborn");
 
-                const newPatient = await PatientRepository.registPatient(convertSnakeToCamel(patient));
-                if (!newPatient) throw new Error("Failed to create patient for newborn");
-
-                const dataRJ = createRawatJalanData(newPatient);
-
-                let rawatJalanResult;
-                if (validData.payment_method === 'TUNAI') {
-                    rawatJalanResult = await RawatJalanRepository.registTunai(dataRJ);
-                    if (!rawatJalanResult) throw new Error("Failed to create rawat jalan for newborn");
-                } else if (validData.payment_method === 'ASURANSI') {
-                    dataRJ.insurance = validData.assurance_account_id;
-                    rawatJalanResult = await RawatJalanRepository.registAsuransi(dataRJ);
-                    if (!rawatJalanResult) throw new Error("Failed to create rawat jalan for newborn");
-                }
-                const newBorn = {
-                    faskesUuid: faskes.uuid,
-                    identifierMom: newPatient.identity,
-                    nameMom: newPatient.motherName,
-                    nameBaby: newPatient.name,
-                    noRmBaby: newPatient.noRm,
-                    birthPlaceBaby: newPatient.birthDetail.birthPlace,
-                    birthDateBaby: newPatient.birthDetail.birthDate,
-                    birthTimeBaby: moment(newPatient.birthDetail.birthDate).format('HH:mm'),
-                    genderBaby: newPatient.gender,
-                    multipleBirth: validData.patient_data.length,
-                    addressUuid: newPatient.address.uuid,
-                    tanggalDaftar: moment().format('YYYY-MM-DD HH:mm:ss'),
-                    status: true,
-                };
-
-                dataNewBorn.push(newBorn);
-            }
-
-            const queryDataNewBorn = await newBornRepository.registNewBorn(dataNewBorn);
-            if (!queryDataNewBorn) throw new Error("Failed to create newborn data");
-
-            return queryDataNewBorn;
+            return result;
 
         } else {
-            const patientData = validData.patient_data;
+            // Handle non-newborn patients
+            const patientData = convertSnakeToCamel(validData.patient_data);
             patientData.faskesUuid = faskes.uuid;
             patientData.address.faskesUuid = faskes.uuid;
-            patientData.birth_detail.faskesUuid = faskes.uuid;
-            patientData.birth_detail = convertSnakeToCamel(patientData.birth_detail);
+            patientData.birthDetail.faskesUuid = faskes.uuid;
             patientData.faskes_code = faskes.code;
+            patientData.birthDetail = convertSnakeToCamel(patientData.birthDetail);
+            validData = convertSnakeToCamel(validData);
+            const result = await RawatJalanRepository.registSinglePatient(patientData, validData);
+            if (!result) throw new Error("Failed to create rawat jalan");
 
-            const patient = await PatientRepository.registPatient(convertSnakeToCamel(patientData));
-            if (!patient) throw new Error("Failed to create patient");
-
-            const dataRJ = createRawatJalanData(patient);
-
-            if (validData.payment_method === 'TUNAI') {
-                const dataTunai = await RawatJalanRepository.registTunai(dataRJ);
-                if (!dataTunai) throw new Error("Failed to create rawat jalan");
-                return dataTunai;
-            }
-
-            if (validData.payment_method === 'ASURANSI') {
-                dataRJ.insurance = validData.assurance_account_id;
-                const dataAsuransi = await RawatJalanRepository.registAsuransi(dataRJ);
-                if (!dataAsuransi) throw new Error("Failed to create rawat jalan");
-                return dataAsuransi;
-            }
-
-            return patient;
+            return result;
         }
     }
 

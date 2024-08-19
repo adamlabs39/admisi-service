@@ -10,6 +10,7 @@ export default class Pagination{
             limit: limit,
             offset: offset,
             where: filter,
+            distinct:true,
             ...options
         });
 

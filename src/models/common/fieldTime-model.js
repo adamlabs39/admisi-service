@@ -11,7 +11,7 @@ export const fieldTime = {
         type: DataTypes.BIGINT,
         allowNull: false,
         unique: false,
-        defaultValue: moment().unix(),
+        defaultValue: () => moment().unix(),
     },
     updatedAt: {
         type: DataTypes.BIGINT,

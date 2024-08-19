@@ -36,7 +36,6 @@ export default class PatientRepository{
 
             let birthDetail = null;
             const infoAge = getInfoAge(data.birthDetail.birthDate);
-            console.log(data.birthDetail);
             if (data.birthDetail?.birthDetailUuid) {
                 birthDetail = await BirthDetailModel.findOne({
                     where: {

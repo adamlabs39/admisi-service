@@ -6,54 +6,62 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
-import PatientModel from "./patient-model.js";
+import RoomMonitoringModel from "./room-monitoring-model.js";
+import KategoriRuanganModel from "./kategori-ruangan-model.js";
 
-export default class RoomMonitoringModel extends Model {}
-RoomMonitoringModel.init(
+export default class RuanganModel extends Model{}
+RuanganModel.init(
     {
         ...identifierModel,
-        patientUuid: {
+        code: {
             type: DataTypes.STRING(255),
+            allowNull: false,
+            unique: true,
+        },
+        name: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        noRoom:{
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        kategoriRuanganUuid:{
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        kelasRuangan:{
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        status:{
+            type: DataTypes.BOOLEAN,
             allowNull: true,
+            defaultValue: true,
         },
-        roomUuid: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        roomCategory: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        roomClass: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        room: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        bedName: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        noBed: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        ...fieldTime
+        ...fieldTime,
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "RoomMonitoring",
-        tableName: "room_monitorings",
+        modelName: "Ruangan",
+        tableName: "ruangan",
         underscored: true,
-        hooks: hookModel,
         timestamps: false,
+        hooks: hookModel,
     }
 )
 
-RoomMonitoringModel.belongsTo(PatientModel, {
-    foreignKey: "patient_uuid",
-    as: "patient",
+
+RuanganModel.hasMany(RoomMonitoringModel,{
+    foreignKey: "room_uuid",
+    as: "room_monitorings",
+    sourceKey: "uuid",
     constraints: false,
-});
+})
+
+RuanganModel.belongsTo(KategoriRuanganModel,{
+    foreignKey: "kategori_ruangan_uuid",
+    as: "kategori_ruangan",
+    targetKey: "uuid",
+    constraints: false,
+})
