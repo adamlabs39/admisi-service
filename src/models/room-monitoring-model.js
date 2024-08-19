@@ -5,18 +5,16 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
+import PatientModel from "./patient-model.js";
 
 export default class RoomMonitoringModel extends Model {}
 RoomMonitoringModel.init(
     {
         ...identifierModel,
-        faskesUuid: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
         patientUuid: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         roomUuid: {
             type: DataTypes.STRING(255),
@@ -34,21 +32,28 @@ RoomMonitoringModel.init(
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        bed: {
+        bedName: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        availableStatus: {
-            type: DataTypes.BOOLEAN,
+        noBed: {
+            type: DataTypes.STRING(255),
             allowNull: false,
-            defaultValue: true,
         },
         ...fieldTime
     },
     {
         sequelize: sequelizeInstance,
         modelName: "RoomMonitoring",
-        tableName: "RoomMonitorings",
+        tableName: "room_monitorings",
         underscored: true,
+        hooks: hookModel,
+        timestamps: false,
     }
 )
+
+RoomMonitoringModel.belongsTo(PatientModel, {
+    foreignKey: "patient_uuid",
+    as: "patient",
+    constraints: false,
+});

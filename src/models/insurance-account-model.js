@@ -7,40 +7,44 @@ import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
 
-export default class PaymentMethodModel extends Model {}
-PaymentMethodModel.init(
+
+export default class InsuranceAccountModel extends Model {}
+InsuranceAccountModel.init(
     {
         ...identifierModel,
-        noReg: {
+        patientUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
-            unique: true,
         },
         code: {
-            type: DataTypes.STRING(25),
+            type: DataTypes.STRING(150),
             allowNull: false,
         },
         name: {
             type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        insurance: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         accountNumber: {
             type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        classEntitle: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        membershipStatus: {
+            type: DataTypes.BOOLEAN,
             allowNull: false,
+            defaultValue: true,
         },
         ...fieldTime
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "PaymentMethod",
-        tableName: "payment_methods",
+        modelName: "InsuranceAccount",
+        tableName: "InsuranceAccounts",
         underscored: true,
         timestamps: false,
         hooks: hookModel,
-
     }
-);
+)

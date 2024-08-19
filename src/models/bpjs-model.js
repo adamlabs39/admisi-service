@@ -5,6 +5,7 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 
 export default class BpjsModel extends Model {}
 BpjsModel.init(
@@ -123,5 +124,6 @@ BpjsModel.init(
         modelName: "Bpjs",
         tableName: "bpjs",
         underscored: true,
+        hooks: hookModel,
     }
 )

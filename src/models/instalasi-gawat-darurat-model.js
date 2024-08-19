@@ -5,6 +5,7 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 
 export default class InstalasiGawatDaruratModel extends Model {}
 InstalasiGawatDaruratModel.init(
@@ -288,8 +289,9 @@ InstalasiGawatDaruratModel.init(
     {
         sequelize: sequelizeInstance,
         modelName: "InstalasiGawatDarurat",
-        tableName: "instalasiGawatDarurats",
+        tableName: "instalasi_gawat_darurats",
         underscored: true,
         timestamps: false,
+        hooks: hookModel,
     }
 )

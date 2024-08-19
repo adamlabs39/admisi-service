@@ -1,46 +1,32 @@
 import {
     DataTypes,
-    Model
+    Model,
 } from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
 
-export default class PaymentMethodModel extends Model {}
-PaymentMethodModel.init(
+export default class InsuranceAdmissionModel extends Model {}
+InsuranceAdmissionModel.init(
     {
         ...identifierModel,
         noReg: {
             type: DataTypes.STRING(255),
             allowNull: false,
-            unique: true,
         },
-        code: {
-            type: DataTypes.STRING(25),
-            allowNull: false,
-        },
-        name: {
+        insuranceAccountUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        insurance: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        accountNumber: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        ...fieldTime
+        ...fieldTime,
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "PaymentMethod",
-        tableName: "payment_methods",
+        modelName: "InsuranceAdmission",
+        tableName: "insurance_admissions",
         underscored: true,
         timestamps: false,
         hooks: hookModel,
-
     }
-);
+)

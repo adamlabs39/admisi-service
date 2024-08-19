@@ -7,28 +7,24 @@ import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
 
-export default class PaymentMethodModel extends Model {}
-PaymentMethodModel.init(
+
+export default class PatientFamilyModel extends Model {}
+PatientFamilyModel.init(
     {
         ...identifierModel,
-        noReg: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-            unique: true,
-        },
-        code: {
-            type: DataTypes.STRING(25),
-            allowNull: false,
-        },
         name: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        insurance: {
-            type: DataTypes.STRING(255),
+        gender: {
+            type: DataTypes.STRING(25),
             allowNull: false,
         },
-        accountNumber: {
+        relationship: {
+            type: DataTypes.STRING(150),
+            allowNull: false,
+        },
+        patientUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
@@ -36,11 +32,9 @@ PaymentMethodModel.init(
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "PaymentMethod",
-        tableName: "payment_methods",
+        modelName: "PatientFamily",
+        tableName: "patient_families",
         underscored: true,
-        timestamps: false,
         hooks: hookModel,
-
     }
-);
+)

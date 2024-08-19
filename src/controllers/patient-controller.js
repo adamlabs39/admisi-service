@@ -5,7 +5,7 @@ import successResponse from "../responses/success-response.js";
 export default class PatientController {
     static async create(req, res, next) {
         try {
-            const patient = await PatientService.create(res.locals.jwtData, req.body);
+            const patient = await PatientService.create(req.body);
             return res.status(201).json(successResponse(patient.message));
         } catch (error) {
             console.log(error);
@@ -15,8 +15,8 @@ export default class PatientController {
 
     static async update(req, res, next) {
         try {
-            const patient = await PatientService.update(req.params.uuid, res.locals.jwtData, req.body);
-            return res.status(200).json(patient);
+            const patient = await PatientService.update(req.params.uuid, req.body);
+            return res.status(200).json(successResponse(patient.message));
         } catch (error) {
             next(error);
         }
@@ -34,7 +34,7 @@ export default class PatientController {
     static async findByUuid(req, res, next) {
         try {
             const patient = await PatientService.findByUuid(req.params.uuid);
-            return res.status(200).json(patient);
+            return res.status(200).json(successResponse("Berhasil Menampilkan Pasien", patient));
         } catch (error) {
             next(error);
         }
@@ -43,7 +43,7 @@ export default class PatientController {
     static async findAll(req, res, next) {
         try {
             const patient = await PatientService.findAll(req.query);
-            return res.status(200).json(patient);
+            return res.status(200).json(successResponse("Berhasil Menampilkan Pasien", patient));
         } catch (error) {
             next(error);
         }

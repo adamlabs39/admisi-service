@@ -6,10 +6,12 @@ export default class PatientValidation{
         name: z.string().max(255),
         identity: z.string().max(255),
         no_identity: z.string().max(255),
-        birth_place: z.string().max(150),
-        birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
-            message: "Invalid date format"
-        }).transform(value => new Date(value)),
+        birth_detail: z.object({
+            birth_place: z.string().max(150),
+            birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
+                message: "Invalid date format"
+            }).transform(value => new Date(value)),
+        }),
         gender: z.string().max(15),
         phone: z.string().max(15),
         religion: z.string().max(25),
@@ -35,10 +37,13 @@ export default class PatientValidation{
         name: z.string().max(255),
         identity: z.string().max(255),
         no_identity: z.string().max(255),
-        birth_place: z.string().max(150),
-        birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
-            message: "Invalid date format"
-        }).transform(value => new Date(value)),
+        birth_detail: z.object({
+            birth_detail_uuid: z.nullable(z.string().max(255).optional()),
+            birth_place: z.string().max(150),
+            birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
+                message: "Invalid date format"
+            }).transform(value => new Date(value)),
+        }),
         gender: z.string().max(15),
         phone: z.string().max(15),
         religion: z.string().max(25),

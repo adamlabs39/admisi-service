@@ -1,7 +1,7 @@
 import { paginationHelper } from "./utility.js";
 
 export default class Pagination{
-    static async do(model, args, filter = {}, options= {}){
+    static async init(model, args, filter = {}, options= {}){
         const page = args.page || 1;
         const limit = args.limit || 10;
         const offset = (page - 1) * limit;
@@ -10,6 +10,7 @@ export default class Pagination{
             limit: limit,
             offset: offset,
             where: filter,
+            distinct:true,
             ...options
         });
 

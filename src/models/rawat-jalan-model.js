@@ -5,6 +5,7 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 export default class RawatJalanModel extends Model{}
 
 RawatJalanModel.init(
@@ -15,36 +16,29 @@ RawatJalanModel.init(
             allowNull: false,
             unique: true,
         },
+        paymentMethod: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            defaultValue: 1,
+        },
         patientUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
         noAntrian: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         name: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        noMR: {
+        noRm: {
             type: DataTypes.STRING(150),
             allowNull: false,
         },
-        birthDate: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        },
-        ageYear: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        ageMonth: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        ageDay: {
-            type: DataTypes.INTEGER,
+        birthDetailUuid: {
+            type: DataTypes.STRING(255),
             allowNull: false,
         },
         gender: {
@@ -52,11 +46,11 @@ RawatJalanModel.init(
             allowNull: false,
         },
         tanggalDaftar: {
-            type: DataTypes.DATE,
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         tanggalPeriksa: {
-            type: DataTypes.DATE,
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         doctor: {
@@ -85,7 +79,7 @@ RawatJalanModel.init(
         },
         rekamMedisUuid: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         pemeriksaanGigiUuid: {
             type: DataTypes.STRING(255),
@@ -101,7 +95,7 @@ RawatJalanModel.init(
         },
         edukasiCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         edukasiDisplay: {
             type: DataTypes.STRING(255),
@@ -109,11 +103,11 @@ RawatJalanModel.init(
         },
         edukasiText: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         prognosisCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         prognosisDisplay: {
             type: DataTypes.STRING(255),
@@ -121,7 +115,7 @@ RawatJalanModel.init(
         },
         rencanaTindaklanutCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         rencanaTindaklanutDisplay: {
             type: DataTypes.STRING(255),
@@ -129,11 +123,11 @@ RawatJalanModel.init(
         },
         rencanaTindaklanutText: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         instruksiTindaklanutCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         instruksiTindaklanutDisplay: {
             type: DataTypes.STRING(255),
@@ -141,7 +135,7 @@ RawatJalanModel.init(
         },
         instruksiLokasiCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         instruksiLokasiDisplay: {
             type: DataTypes.STRING(255),
@@ -153,15 +147,15 @@ RawatJalanModel.init(
         },
         instruksiDate: {
             type: DataTypes.DATE,
-            allowNull: false,
+            allowNull: true,
         },
         instruksiNoDarurat: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         rujukInternalCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         rujukInternalDisplay: {
             type: DataTypes.STRING(255),
@@ -169,11 +163,11 @@ RawatJalanModel.init(
         },
         rujukInternalText: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         rujukEksternalCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         rujukEksternalDisplay: {
             type: DataTypes.STRING(255),
@@ -181,11 +175,11 @@ RawatJalanModel.init(
         },
         rujukEksternalText: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         transportRujukCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         transportRujukDisplay: {
             type: DataTypes.STRING(225),
@@ -197,7 +191,7 @@ RawatJalanModel.init(
         },
         kondisiKeluarCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         kondisiKeluarDisplay: {
             type: DataTypes.STRING(255),
@@ -209,7 +203,7 @@ RawatJalanModel.init(
         },
         caraKeluarCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         caraKeluarDisplay: {
             type: DataTypes.STRING(255),
@@ -221,23 +215,23 @@ RawatJalanModel.init(
         },
         dischargeDate: {
             type: DataTypes.DATE,
-            allowNull: false,
+            allowNull: true,
         },
         dischargeTime: {
             type: DataTypes.DATE,
-            allowNull: false,
+            allowNull: true,
         },
         doctorName: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         doctorCode: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         doctorSign: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         penanggungjawabName: {
             type: DataTypes.STRING(255),
@@ -249,15 +243,15 @@ RawatJalanModel.init(
         },
         informConsent: {
             type: DataTypes.STRING(50),
-            allowNull: false,
+            allowNull: true,
         },
         unggahBerkas: {
             type: DataTypes.STRING(50),
-            allowNull: false,
+            allowNull: true,
         },
         riwayatKunjungan: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         bookingCode: {
             type: DataTypes.STRING(50),
@@ -269,7 +263,35 @@ RawatJalanModel.init(
         },
         petugas: {
             type: DataTypes.STRING(50),
-            allowNull: false,
+            allowNull: true,
+        },
+        polyclinic: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        categoryRoom: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        classRoom: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        room: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        bedRoom: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        MonitoringRuanganUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        InsuranceAccountUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
         },
         ...fieldTime
     },
@@ -279,5 +301,6 @@ RawatJalanModel.init(
         tableName: "rawat_jalans",
         underscored: true,
         timestamps: false,
+        hooks: hookModel,
     }
 )

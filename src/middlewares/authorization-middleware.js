@@ -1,4 +1,6 @@
 import JwtHelper from "../helper/jwt-helper.js";
+import { Context as Ctx } from "./context.js";
+import { CTX_AUTHOR } from "../constant/context-constant.js";
 const authorizationMiddleware = async (request, response, nextFunction) => {
     try {
         const BEARER_TOKEN = request.get("Authorization");
@@ -7,6 +9,7 @@ const authorizationMiddleware = async (request, response, nextFunction) => {
         const isValid = await JwtHelper.verify(token);
         if (!isValid) return response.status(401).json({message: `token tidak valid!`});
         response.locals.jwtData = isValid;
+        Ctx.set(CTX_AUTHOR, isValid);
         nextFunction();
     }catch (error) {
         return response.status(401).json({message: `token tidak valid!`});

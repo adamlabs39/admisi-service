@@ -5,6 +5,7 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 
 export default class NewBornModel extends Model {}
 NewBornModel.init(
@@ -60,7 +61,9 @@ NewBornModel.init(
     {
         sequelize: sequelizeInstance,
         modelName: "newBorn",
-        tableName: "newBorn",
+        tableName: "new_borns",
         timestamps: false,
+        hooks: hookModel,
+        underscored: true,
     }
 )

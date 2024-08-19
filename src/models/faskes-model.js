@@ -5,6 +5,7 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import {uuidv7} from "uuidv7";
+import {hookModel} from "./common/hook-model.js";
 
 export default class FaskesModel extends Model {}
 FaskesModel.init(
@@ -42,5 +43,6 @@ FaskesModel.init(
         tableName: "faskes",
         underscored: true,
         timestamps: false,
+        hooks: hookModel,
     }
 )

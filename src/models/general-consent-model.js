@@ -5,43 +5,35 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 
-
-export default class InsuranceAccountModel extends Model {}
-InsuranceAccountModel.init(
+export default class GeneralConsentModel extends Model {}
+GeneralConsentModel.init(
     {
         ...identifierModel,
+        faskesUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
         patientUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        code: {
-            type: DataTypes.STRING(150),
+        generalConsent: {
+            type: DataTypes.STRING(255),
             allowNull: false,
         },
-        name: {
+        patientFamiliesUuid: {
             type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        accountNumber: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        classEntitle: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
-        membershipStatus: {
-            type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: true,
         },
         ...fieldTime
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "InsuranceAccount",
-        tableName: "InsuranceAccounts",
+        modelName: "GeneralConsent",
+        tableName: "general_consents",
         underscored: true,
+        hooks: hookModel,
     }
 )

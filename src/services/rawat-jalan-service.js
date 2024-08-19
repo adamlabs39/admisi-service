@@ -1,50 +1,69 @@
 import RawatJalanRepository from "../repositories/rawat-jalan-repository.js";
 import RawatJalanValidation from "../validations/rawat-jalan-validation.js";
-import {convertSnakeToCamel, generateNoRM, getInfoAge} from "../helper/utility.js";
+import {
+    convertSnakeToCamel,
+    generateNoReg,
+    generateNoRM,
+    getInfoAge
+} from "../helper/utility.js";
 import FaskesRepository from "../repositories/faskes-repository.js";
 import ZodValidator from "../validations/zod-validator.js";
 import NotfoundException from "../exception/notfound-exception.js";
-import AddressRepository from "../repositories/address-repository.js";
 import PatientRepository from "../repositories/patient-repository.js";
+import {Context as Ctx} from "../middlewares/context.js";
+import {CTX_AUTHOR} from "../constant/context-constant.js";
+import PatientValidation from "../validations/patient-validation.js";
+import BadRequestException from "../exception/bad-request-exception.js";
+import moment from "moment";
+import newBornRepository from "../repositories/newborn-repository.js";
 
-export class RawatJalanService{
+export class RawatJalanService {
     static async getALl(args) {
-        return await RawatJalanRepository.getAll(args);
+        const data = await RawatJalanRepository.getAll(args);
+        console.log(data);
+        return data;
     }
 
-    static async registRawatJalan(user, data) {
-        const validData = ZodValidator.validate(RawatJalanValidation.CREATE, data);
-        const infoAge = getInfoAge(validData.patient_data.birth_date);
+    static async registRawatJalan(data) {
+        const user = Ctx.get(CTX_AUTHOR);
+
+        let validData = ZodValidator.validate(RawatJalanValidation.CREATE, data);
+        if (!validData) throw new BadRequestException("Bad Request");
 
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
-        let checkAddressExist = await AddressRepository.getOne(validData.patient_data.address.address_uuid);
-        validData.patient_data.address.faskesUuid = faskes.uuid;
-        validData.patient_data.address.status = true;
-        validData.patient_data.address.fullAddress = validData.patient_data.address.full_address;
-        delete validData.patient_data.address.full_address;
+        if (validData.is_newborn && Array.isArray(validData.patient_data)) {
+            // Convert data to camelCase and pass to repository
+            const newbornData = validData.patient_data.map(patient => {
+                patient.faskesUuid = faskes.uuid;
+                patient.address.faskesUuid = faskes.uuid;
+                patient.birth_detail.faskesUuid = faskes.uuid;
+                patient.birth_detail = convertSnakeToCamel(patient.birth_detail);
+                patient.faskes_code = faskes.code;
+                return convertSnakeToCamel(patient);
+            });
+            validData = convertSnakeToCamel(validData);
+            const result = await RawatJalanRepository.registNewBorn(newbornData, validData);
+            if (!result) throw new Error("Failed to create rawat jalan for newborn");
 
-        const address = checkAddressExist
-            ? await AddressRepository.update(validData.patient_data.address.address_uuid, validData.patient_data.address)
-            : await AddressRepository.create(validData.patient_data.address);
+            return result;
 
-        if (!address) throw new NotfoundException('Failed to process address.');
+        } else {
+            // Handle non-newborn patients
+            const patientData = convertSnakeToCamel(validData.patient_data);
+            patientData.faskesUuid = faskes.uuid;
+            patientData.address.faskesUuid = faskes.uuid;
+            patientData.birthDetail.faskesUuid = faskes.uuid;
+            patientData.faskes_code = faskes.code;
+            patientData.birthDetail = convertSnakeToCamel(patientData.birthDetail);
+            validData = convertSnakeToCamel(validData);
+            const result = await RawatJalanRepository.registSinglePatient(patientData, validData);
+            if (!result) throw new Error("Failed to create rawat jalan");
 
-        delete validData.patient_data.address;
-
-        validData.patient_data.faskes_uuid = faskes.uuid;
-        validData.patient_data.no_rm = generateNoRM(faskes.code);
-        validData.patient_data.age_year = infoAge.year;
-        validData.patient_data.age_month = infoAge.month;
-        validData.patient_data.age_day = infoAge.day;
-        validData.patient_data.status = true;
-        validData.patient_data.address_uuid = address.dataValues.uuid;
-        validData.patient_data.doctor = validData.dpjp;
-        console.log(validData.patient_data);
-        const patient = await PatientRepository.registPatient(convertSnakeToCamel(validData.patient_data));
-
-        return convertSnakeToCamel(validData.patient_data);
+            return result;
+        }
     }
+
 
 }

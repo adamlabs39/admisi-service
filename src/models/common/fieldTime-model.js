@@ -5,12 +5,13 @@ export const fieldTime = {
     status: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
+        defaultValue: true,
     },
     createdAt: {
         type: DataTypes.BIGINT,
         allowNull: false,
         unique: false,
-        defaultValue: moment().unix(),
+        defaultValue: () => moment().unix(),
     },
     updatedAt: {
         type: DataTypes.BIGINT,

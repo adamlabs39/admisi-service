@@ -5,33 +5,39 @@ import {
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
+import {hookModel} from "./common/hook-model.js";
 
-export default class GeneralConsentModel extends Model {}
-GeneralConsentModel.init(
+export default class BirthDetailModel extends Model {}
+BirthDetailModel.init(
     {
         ...identifierModel,
-        faskesUuid: {
+        birthPlace: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        patientUuid: {
-            type: DataTypes.STRING(255),
+        birthDate: {
+            type: DataTypes.DATE,
             allowNull: false,
         },
-        generalConsent: {
-            type: DataTypes.STRING(255),
+        ageYear: {
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
-        patientFamiliesUuid: {
-            type: DataTypes.STRING(255),
+        ageMonth: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        ageDay: {
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         ...fieldTime
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "GeneralConsent",
-        tableName: "GeneralConsents",
+        tableName: "birth_details",
         underscored: true,
+        timestamps: false,
+        hooks: hookModel,
     }
 )
