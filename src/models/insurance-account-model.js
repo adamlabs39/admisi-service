@@ -42,7 +42,7 @@ InsuranceAccountModel.init(
     {
         sequelize: sequelizeInstance,
         modelName: "InsuranceAccount",
-        tableName: "InsuranceAccounts",
+        tableName: "insurance_accounts",
         underscored: true,
         timestamps: false,
         hooks: hookModel,

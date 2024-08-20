@@ -1,0 +1,75 @@
+import sequelizeInstace from "../configurations/sequelize-instance.js";
+import {Context} from "../middlewares/context.js";
+import {CTX_AUTHOR} from "../constant/context-constant.js";
+import PatientFamilyRepository from "./patient-family-repository.js";
+import GeneralConsentModel from "../models/general-consent-model.js";
+import PatientFamilyModel from "../models/patient-family-model.js";
+
+export default class GeneralConsentRepository {
+    static async create(uuid, data) {
+        try {
+            return sequelizeInstace.transaction(async (t) => {
+                const {faskesUuid} = Context.get(CTX_AUTHOR);
+
+                if (data.familyData) {
+                    const familyData = await PatientFamilyRepository.create({
+                        ...data.familyData,
+                        patientUuid: uuid
+                    }, t);
+
+                    data.patientFamiliesUuid = familyData.dataValues.uuid;
+                }
+
+                return GeneralConsentModel.create({
+                    ...data,
+                    patientUuid: uuid,
+                    status: true,
+                    faskesUuid
+                }, {transaction: t});
+            });
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
+    static getAllByPatient(uuid) {
+        return GeneralConsentModel.findAll({
+            include: [
+                {
+                    model: PatientFamilyModel,
+                    as: "patient_family",
+                    attributes: ["uuid", "name", "gender", "relationship"],
+                },
+            ],
+            attributes: [
+                "uuid","name", "created_at", "updated_at"
+            ],
+            where: {
+                patientUuid: uuid,
+                status: true,
+                deletedAt: null
+            },
+        });
+    }
+
+    static getDetail(uuid) {
+        return GeneralConsentModel.findOne({
+            include: [
+                {
+                    model: PatientFamilyModel,
+                    as: "patient_family",
+                    attributes: ["uuid", "name", "gender", "relationship"],
+                }
+            ],
+            attributes: [
+                "uuid","name", "general_consent","created_at", "updated_at"
+            ],
+            where: {
+                uuid,
+                status: true,
+                deletedAt: null
+            },
+        });
+    }
+}
