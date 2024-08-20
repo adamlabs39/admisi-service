@@ -6,6 +6,7 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
+import PatientFamilyModel from "./patient-family-model.js";
 
 export default class GeneralConsentModel extends Model {}
 GeneralConsentModel.init(
@@ -19,13 +20,17 @@ GeneralConsentModel.init(
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        generalConsent: {
+        name: {
             type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        generalConsent: {
+            type: DataTypes.TEXT,
             allowNull: false,
         },
         patientFamiliesUuid: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         ...fieldTime
     },
@@ -37,3 +42,9 @@ GeneralConsentModel.init(
         hooks: hookModel,
     }
 )
+
+GeneralConsentModel.belongsTo(PatientFamilyModel,{
+    foreignKey: "patient_families_uuid",
+    as: "patient_family",
+    constraints: false,
+})
