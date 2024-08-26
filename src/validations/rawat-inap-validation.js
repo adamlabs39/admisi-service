@@ -1,7 +1,8 @@
-import { z } from "zod";
+import {z} from 'zod';
 
-export default class RawatJalanValidation {
+export default class RawatInapValidation {
     static CREATE = z.object({
+        is_newborn: z.boolean().default(false),
         patient_data: z.object({
             patient_uuid: z.nullable(z.string().max(255)),
             title: z.string().max(255),
@@ -39,7 +40,29 @@ export default class RawatJalanValidation {
         complaint: z.string().max(255),
         note: z.string().max(255),
         maternity: z.boolean().default(false),
-        platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("ADMISI").optional(),
+        entrusted_patient: z.boolean().default(false),
+        upgrade_class: z.boolean().default(false),
+        join_bill: z.boolean().default(false),
+        previous_bill: z.boolean().default(false),
+        family_bill: z.boolean().default(false),
+        spare_bed: z.boolean().default(false),
+        box_baby: z.boolean().default(false),
+        monitoring_room_uuid: z.string().max(255),
         assurance_account_id: z.string().max(255).optional()
+    }).superRefine((data, ctx) => {
+        if (!data.join_bill) {
+            if (data.previous_bill) {
+                ctx.addIssue({
+                    path: ['previous_bill'],
+                    message: "previous_bill must be false when join_bill is false"
+                });
+            }
+            if (data.family_bill) {
+                ctx.addIssue({
+                    path: ['family_bill'],
+                    message: "family_bill must be false when join_bill is false"
+                });
+            }
+        }
     });
 }

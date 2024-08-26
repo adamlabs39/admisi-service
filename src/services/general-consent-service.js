@@ -2,6 +2,7 @@ import ZodValidator from "../validations/zod-validator.js";
 import GeneralConsentValidation from "../validations/general-consent-validation.js";
 import GeneralConsentRepository from "../repositories/general-consent-repository.js";
 import {convertSnakeToCamel} from "../helper/utility.js";
+import NotfoundException from "../exception/notfound-exception.js";
 
 export default class GeneralConsentService{
     static async create(uuid,data){
@@ -20,7 +21,7 @@ export default class GeneralConsentService{
 
     static async getDetail(uuid){
         const result = await GeneralConsentRepository.getDetail(uuid);
-        if(!result) throw new Error("Failed to get general consent detail");
+        if(!result) throw new NotfoundException("General Consent not found");
         return result;
     }
 }

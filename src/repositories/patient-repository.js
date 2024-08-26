@@ -5,13 +5,14 @@ import Pagination from "../helper/pagination.js";
 import moment from "moment";
 import AddressModel from "../models/address-model.js";
 import BirthDetailModel from "../models/birth-detail-model.js";
-import {generateNoRM, getInfoAge} from "../helper/utility.js";
+import {convertSnakeToCamel, generateNoRM, getInfoAge} from "../helper/utility.js";
 
 
 export default class PatientRepository{
     static async registPatient(data, externalTransaction = null) {
         const transaction = externalTransaction || await sequelizeInstace.transaction();
 
+        data.address = convertSnakeToCamel(data.address);
         try {
             const uuid = data.patientUuid || null;
 
@@ -26,7 +27,6 @@ export default class PatientRepository{
             }
 
             if (address) {
-                console.log("update address", address);
                 await address.update(data.address, { transaction });
             } else {
                 address = await AddressModel.create(data.address, { transaction });
@@ -70,7 +70,7 @@ export default class PatientRepository{
                 },
                 defaults: {
                     ...data,
-                    noRm: generateNoRM(data.faskesCode)
+                    noRm: generateNoRM(data.faskes_code)
                 },
                 transaction
             });
@@ -84,9 +84,9 @@ export default class PatientRepository{
             }
 
             return {
-                ...patient.get({ plain: true }), // Convert to plain object
-                address: address.get({ plain: true }), // Include address data
-                birthDetail: birthDetail.get({ plain: true }) // Include birth detail data
+                ...patient.get({ plain: true }),
+                address: address.get({ plain: true }),
+                birthDetail: birthDetail.get({ plain: true })
             };
 
         } catch (error) {

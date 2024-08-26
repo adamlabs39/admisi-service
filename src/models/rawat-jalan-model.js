@@ -6,6 +6,8 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
+import PatientModel from "./patient-model.js";
+import BirthDetailModel from "./birth-detail-model.js";
 export default class RawatJalanModel extends Model{}
 
 RawatJalanModel.init(
@@ -24,10 +26,6 @@ RawatJalanModel.init(
         patientUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
-        },
-        noAntrian: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
         },
         name: {
             type: DataTypes.STRING(255),
@@ -64,6 +62,7 @@ RawatJalanModel.init(
         newborn: {
             type: DataTypes.BOOLEAN,
             allowNull: true,
+            defaultValue: false,
         },
         multipleBirth: {
             type: DataTypes.BOOLEAN,
@@ -214,11 +213,7 @@ RawatJalanModel.init(
             allowNull: true,
         },
         dischargeDate: {
-            type: DataTypes.DATE,
-            allowNull: true,
-        },
-        dischargeTime: {
-            type: DataTypes.DATE,
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         doctorName: {
@@ -245,22 +240,18 @@ RawatJalanModel.init(
             type: DataTypes.STRING(50),
             allowNull: true,
         },
-        unggahBerkas: {
-            type: DataTypes.STRING(50),
-            allowNull: true,
-        },
+        // unggahBerkas: {
+        //     type: DataTypes.STRING(50),
+        //     allowNull: true,
+        // },
         riwayatKunjungan: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        bookingCode: {
-            type: DataTypes.STRING(50),
-            allowNull: true,
-        },
-        queueNumber: {
-            type: DataTypes.STRING(50),
-            allowNull: true,
-        },
+        // queueNumber: {
+        //     type: DataTypes.STRING(50),
+        //     allowNull: true,
+        // },
         petugas: {
             type: DataTypes.STRING(50),
             allowNull: true,
@@ -269,27 +260,31 @@ RawatJalanModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        categoryRoom: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        classRoom: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        room: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        bedRoom: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        MonitoringRuanganUuid: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
         InsuranceAccountUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        LokasiUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        tanggalCheckin:{
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        platform: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        noAntrian: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        kodeBooking: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        alasanBatal: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
@@ -304,3 +299,16 @@ RawatJalanModel.init(
         hooks: hookModel,
     }
 )
+
+
+RawatJalanModel.belongsTo(PatientModel, {
+    foreignKey: "patient_uuid",
+    as: "patient",
+    constraints: false
+})
+
+RawatJalanModel.belongsTo(BirthDetailModel, {
+    foreignKey: "birth_detail_uuid",
+    as: "birth_detail",
+    constraints: false,
+});
