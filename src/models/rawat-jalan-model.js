@@ -288,6 +288,11 @@ RawatJalanModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
+        status:{
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 1,
+        },
         ...fieldTime
     },
     {

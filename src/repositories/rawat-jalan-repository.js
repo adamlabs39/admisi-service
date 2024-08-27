@@ -134,12 +134,13 @@ export default class RawatJalanRepository {
                 polyclinic: data.polyclinic,
                 complaint: data.complaint,
                 platform: data.platform,
+                status: 2, // Antrian Poli
                 paymentMethod: data.paymentMethod === 'TUNAI' ? 1 : 2,
                 tanggalDaftar: moment().unix(),
             };
 
             if (action === 'create') {
-                dataRJ.noReg = generateNoReg(); // Generate noReg only for creation
+                dataRJ.noReg = generateNoReg(); // Generate noReg only for registration
                 const regist = await RawatJalanModel.create(dataRJ, { transaction: t });
 
                 const patientAttributes = selectAttributes(patient, [
