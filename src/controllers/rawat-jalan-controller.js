@@ -34,6 +34,15 @@ export default class RawatJalanController {
         }
     }
 
+    static async cancelVisitRawatJalan(request, response, nextFunction) {
+        try {
+            const data = await RawatJalanService.cancelVisit(request.body);
+            return response.status(200).json(successResponse("Data Rawat Jalan Berhasil Dibatalkan", data));
+        } catch (error) {
+            nextFunction(error);
+        }
+    }
+
 
     static async getDetail(req, res, next) {
         try{

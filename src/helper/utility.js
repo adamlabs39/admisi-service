@@ -1,5 +1,12 @@
 import dotenv from 'dotenv';
 import moment from "moment";
+import {Context} from "../middlewares/context.js";
+import {CTX_AUTHOR} from "../constant/context-constant.js";
+import PatientModel from "../models/patient-model.js";
+import PractionerModel from "../models/practioner-model.js";
+import RawatJalanModel from "../models/rawat-jalan-model.js";
+import LokasiModel from "../models/lokasi-model.js";
+import AntrianPoliModel from "../models/antrian-poli-model.js";
 
 dotenv.config();
 
@@ -17,16 +24,52 @@ const paginationHelper = (page, limit, total) => {
     };
 }
 
-const generateNoRM = (code) => {
-    const randomText = '1234567890';
-    if (!code) throw new Error('Code is required');
-    const length = process.env.RM_NO_LENGTH;
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += randomText.charAt(Math.floor(Math.random() * randomText.length));
-    }
-    return `${code}${result}`;
-}
+const generateNoRM = async () => {
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
+    const countPatient = await PatientModel.count({ where: { faskesUuid } });
+    return `${faskesUuid}-${countPatient.toString().padStart(6, '0')}`;
+};
+
+const generateAntrianAdmisi = async () => {
+    const today = moment().startOf('day').unix();
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
+    const countPatient = await PatientModel.count({
+        where: {
+            faskesUuid,
+            tanggalDaftar: { [Op.between]: [today, today + 86400] }
+        }
+    });
+    return countPatient.toString().padStart(3, '0');
+};
+
+const generateAntrianPoli = async (poliUuid, dokterUuid) => {
+    const today = moment().startOf('day').unix();
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
+
+    const [code, countRJ] = await Promise.all([
+        AntrianPoliModel.findOne({
+            where: {
+                faskesUuid,
+                practitionerUuid: dokterUuid,
+                lokasiUuid: poliUuid
+            },
+            attributes: ['code_antrian_poli', 'code_antrian_dokter']
+        }),
+        RawatJalanModel.count({
+            where: {
+                faskesUuid,
+                tanggalPeriksa: { [Op.between]: [today, today + 86400] },
+                practionerUuid: dokterUuid,
+                lokasiUuid: poliUuid
+            }
+        })
+    ]);
+
+    if (!code) throw new Error('Kode antrian poli tidak ditemukan');
+
+    return `${poli.code}-${dokter.code}-${countRJ.toString().padStart(3, '0')}`;
+};
+
 
 const generateNoReg = () => {
     const CODE = 'REG';
@@ -38,6 +81,20 @@ const generateNoReg = () => {
     }
     return `${CODE}${date}${result}`;
 }
+
+const generateBookingCode = (length = 6) => {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const numbers = '1234567890';
+    const randomText = letters + numbers;
+    if (length < 2) throw new Error("Length must be at least 2 to ensure a mix of letters and numbers.");
+    let result = '';
+    result += letters.charAt(Math.floor(Math.random() * letters.length));
+    result += numbers.charAt(Math.floor(Math.random() * numbers.length));
+    for (let i = 2; i < length; i++) result += randomText.charAt(Math.floor(Math.random() * randomText.length));
+    result = result.split('').sort(() => 0.5 - Math.random()).join('');
+    return result;
+};
+
 
 const getInfoAge = (birthDate) => {
     const today = moment();
@@ -104,6 +161,27 @@ const selectAttributes = (record, attributesWithAliases, withConvertToSnake = fa
     }, {});
 };
 
+const bannerChannel = (channel, data) => {
+    console.log('Event Received');
+    console.log(`Channel : ${channel}`);
+    console.log('Data : ', data);
+    console.log('========================================');
+}
+
+const checkExistData = async (model, value, column = 'uuid') => {
+    const user = Context.get(CTX_AUTHOR);
+    const result = await model.findOne({
+        where: {
+            [column]: value,
+            faskesUuid: user.faskesUuid
+        },
+        attributes: [column]
+    });
+
+    return !!result;
+};
+
+
 
 
 
@@ -114,5 +192,8 @@ export {
     convertSnakeToCamel,
     generateNoReg,
     convertCamelToSnake,
-    selectAttributes
+    selectAttributes,
+    generateBookingCode,
+    bannerChannel,
+    checkExistData
 };

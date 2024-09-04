@@ -10,4 +10,12 @@ export default class RawatInapController{
             next(error);
         }
     }
+
+    static async update(req, res, next){
+        try{
+
+        }catch (e){
+            
+        }
+    }
 }

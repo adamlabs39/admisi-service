@@ -42,4 +42,9 @@ export default class RawatJalanValidation {
         platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("ADMISI").optional(),
         assurance_account_id: z.string().max(255).optional()
     });
+
+    static cancelVisit = z.object({
+        list_uuid: z.array(z.string().max(255)),
+        cancel_reason: z.string().max(255)
+    })
 }

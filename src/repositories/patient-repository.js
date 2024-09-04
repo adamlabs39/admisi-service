@@ -70,7 +70,7 @@ export default class PatientRepository{
                 },
                 defaults: {
                     ...data,
-                    noRm: generateNoRM(data.faskes_code)
+                    noRm: generateNoRM(data.faskes_code || data.faskesCode)
                 },
                 transaction
             });
@@ -97,41 +97,6 @@ export default class PatientRepository{
             throw error;
         }
     }
-
-    static async cretePatient(data){
-        try{
-            return await PatientModel.create(data);
-        }catch (error){
-            throw error;
-        }
-    }
-
-    static async updatePatient(uuid, data){
-        try{
-            return await sequelizeInstace.transaction(async (t) => {
-                const [affectedCount, updatedPatients] = await PatientModel.update(data, {
-                    where: {
-                        [Op.and]: [
-                            { uuid },
-                            {
-                                deletedAt: {
-                                    [Op.is]: null,
-                                }
-                            }
-                        ]
-                    },
-                    returning: true,
-                    plain: false,
-                    transaction: t,
-                });
-
-                return affectedCount > 0 ? updatedPatients[0] : null;
-            });
-        }catch (error){
-            throw error;
-        }
-    }
-
 
     static async checkExistPatient(uuid){
         try {

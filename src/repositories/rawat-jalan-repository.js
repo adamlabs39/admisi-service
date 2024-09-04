@@ -3,10 +3,10 @@ import {Op} from "sequelize";
 import Pagination from "../helper/pagination.js";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
 import RawatJalanModel from "../models/rawat-jalan-model.js";
-import {Context as Ctx} from "../middlewares/context.js";
+import {Context, Context as Ctx} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
-import {convertCamelToSnake, generateNoReg, selectAttributes} from "../helper/utility.js";
+import {generateBookingCode, generateNoReg, selectAttributes} from "../helper/utility.js";
 import PatientRepository from "./patient-repository.js";
 import BirthDetailModel from "../models/birth-detail-model.js";
 import AddressModel from "../models/address-model.js";
@@ -70,7 +70,7 @@ export default class RawatJalanRepository {
                     }
                 ],
                 attributes: [
-                    "no_reg", "payment_method", ["doctor", "dpjp"], "maternity", "newborn", "note", "polyclinic", "complaint"
+                    "no_reg", "payment_method", ["doctor", "dpjp"], "maternity", "note", "polyclinic", "complaint"
                 ]
             });
 
@@ -91,7 +91,7 @@ export default class RawatJalanRepository {
             const rawatJalanAttributes = convert(result, [
                 'uuid', 'noReg', 'polyclinic', 'doctor', 'complaint', 'note', 'maternity'
             ]);
-
+x
             if (result.paymentMethod === 2) {
                 const insurance = await InsuranceAdmissionModel.findOne({
                     where: { noReg: result.noReg },
@@ -134,12 +134,13 @@ export default class RawatJalanRepository {
                 polyclinic: data.polyclinic,
                 complaint: data.complaint,
                 platform: data.platform,
-                status: 2, // Antrian Poli
                 paymentMethod: data.paymentMethod === 'TUNAI' ? 1 : 2,
                 tanggalDaftar: moment().unix(),
             };
 
             if (action === 'create') {
+                dataRJ.statusRj = 2;
+                dataRJ.kodeBooking = generateBookingCode(); // Generate kodeBooking only for registration
                 dataRJ.noReg = generateNoReg(); // Generate noReg only for registration
                 const regist = await RawatJalanModel.create(dataRJ, { transaction: t });
 
@@ -218,4 +219,20 @@ export default class RawatJalanRepository {
             }
         });
     }
+
+    static async cancelVisit(data) {
+        try {
+            const user = Context.get(CTX_AUTHOR);
+            if (!data.listUuid || !data.cancelReason) throw new Error("Invalid input.");
+
+            return await RawatJalanModel.update(
+                { statusRj: 0, cancelReason: data.cancelReason },
+                { where: { uuid: data.listUuid, faskesUuid: user.faskesUuid } }
+            );
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
 }

@@ -8,6 +8,7 @@ import cors from 'cors';
 import MODELMERGE from "./models/modelMerge.js";
 import routes from "./routes/routes.js";
 import {dbSeeder} from "./seeders/db-seeder.js";
+import EventListener from "./listeners/event-listener.js";
 
 const app = express();
 const port = process.env.APP_PORT || 8080;
@@ -34,6 +35,11 @@ const limiter = rateLimit({
 app.use(limiter);
 app.use("/api", routes);
 app.use(errorMiddleware);
+
+
+// Event Handler
+EventListener.init();
+
 app.listen(port, host, async () => {
     if (process.env.SYNC_DB === "true") {
         try {

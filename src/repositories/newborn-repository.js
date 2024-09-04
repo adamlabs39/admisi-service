@@ -1,13 +1,16 @@
 import NewBornModel from "../models/new-born-model.js";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
+import {Context} from "../middlewares/context.js";
+import {CTX_AUTHOR} from "../constant/context-constant.js";
 
 export default class newBornRepository {
     static async upsertNewBorn(data, transaction) {
         const trx = transaction || await sequelizeInstace.transaction();
+        const user = Context.get(CTX_AUTHOR);
         try {
             const uuid = data.uuid || null;
             let newBorn = uuid ? await this.findByUuid(uuid, trx) : null;
-
+            data.faskesUuid = user.faskesUuid;
             if (newBorn) {
                 await newBorn.update(data, { transaction: trx });
             } else {

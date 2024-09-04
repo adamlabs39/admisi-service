@@ -12,6 +12,8 @@ routes.get("/rawat-jalan", RawatJalanController.getAll);
 routes.post("/rawat-jalan", RawatJalanController.registRawatJalan);
 routes.get("/rawat-jalan/:uuid", RawatJalanController.getDetail);
 routes.put("/rawat-jalan/:uuid", RawatJalanController.updateRawatJalan);
+routes.post("/rawat-jalan/cancel", RawatJalanController.cancelVisitRawatJalan);
+
 
 routes.post("/rawat-inap", RawatInapController.regist);
 

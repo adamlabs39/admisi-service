@@ -170,6 +170,7 @@ export default class MonitoringRoomRepository {
                 patientUuid
             }, {transaction: trx, returning: true});
 
+            if (!transaction) await trx.commit();
             return result;
         } catch (error) {
             if (!transaction) await trx.rollback();

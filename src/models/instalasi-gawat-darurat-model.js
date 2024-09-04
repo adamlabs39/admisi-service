@@ -11,6 +11,10 @@ export default class InstalasiGawatDaruratModel extends Model {}
 InstalasiGawatDaruratModel.init(
     {
         ...identifierModel,
+        paymentMethod: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
         noReg: {
             type: DataTypes.STRING(255),
             allowNull: false,
@@ -24,36 +28,28 @@ InstalasiGawatDaruratModel.init(
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        noMR: {
+        noRm: {
             type: DataTypes.STRING(150),
             allowNull: false,
         },
-        birthDate: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        },
-        ageYear: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        ageMonth: {
-            type: DataTypes.INTEGER,
-            allowNull: false,
-        },
-        ageDay: {
-            type: DataTypes.INTEGER,
+        birthDetailUuid: {
+            type: DataTypes.STRING(255),
             allowNull: false,
         },
         gender: {
             type: DataTypes.STRING(15),
             allowNull: false,
         },
+        practioner_uuid: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
         tanggalDaftar: {
-            type: DataTypes.DATE,
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
-        tanggalPeriksa: {
-            type: DataTypes.DATE,
+        tanggalDirawat: {
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
         maternity: {
@@ -92,11 +88,91 @@ InstalasiGawatDaruratModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        rekamMedisUuid: {
+        lokasiUuid:{
             type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        alasanBatal: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        statusIgd: {
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
-        pemeriksaanGigiUuid: {
+        edukasi: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        edukasiText: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+        },
+        kondisiPasienPulang: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        statusPulang: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        statusPulangLainnya: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        instruksiLokasi: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        instruksiLokasiLainnya: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        instruksiDate: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        instruksiNoDarurat: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        transporRujuk: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        transportRujukLainnya: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        isInternal: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+        },
+        rujukInternal: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        rujukInternalText: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+        },
+        rujukEksternal: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        rujukEksternalText: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        dischargeDate: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        petugas: {
+            type: DataTypes.STRING(50),
+            allowNull: true,
+        },
+        rekamMedisUuid: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
@@ -107,182 +183,6 @@ InstalasiGawatDaruratModel.init(
         farmasiUuid: {
             type: DataTypes.STRING(255),
             allowNull: true,
-        },
-        edukasiCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        edukasiDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        edukasiText: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        kriteriaRencanaPulangCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        kriteriaRencanaPulangDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        rencanaPulangCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        rencanaPulangDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        rencanaPulangText: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        rencanaTindaklanjutCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        rencanaTindaklanjutDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        rencanaTindaklanjutText: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        instruksiTindaklanjutCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        instruksiTindaklanjutDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        instruksiLokasiCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        instruksiLokasiDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        instruksiLokasiLainnya: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        instruksiDate: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        },
-        instruksiNoDarurat: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        rujukInternalCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        rujukInternalDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        rujukInternalText: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        rujukEksternalCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        rujukEksternalDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        rujukEksternalText: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        transportRujukCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        transportRujukDisplay: {
-            type: DataTypes.STRING(225),
-            allowNull: true,
-        },
-        transportRujukLainnya: {
-            type: DataTypes.STRING(225),
-            allowNull: false,
-        },
-        kondisiKeluarCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        kondisiKeluarDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        kondisiKeluarLainnya: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        caraKeluarCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        caraKeluarDisplay: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        caraKeluarLainnya: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        dischargeDate: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        },
-        dischargeTime: {
-            type: DataTypes.DATE,
-            allowNull: false,
-        },
-        doctorName: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        doctorCode: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        doctorSign: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        penanggungjawabName: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        penanggungjawabSign: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
-        informConsent: {
-            type: DataTypes.STRING(50),
-            allowNull: false,
-        },
-        unggahBerkas: {
-            type: DataTypes.STRING(50),
-            allowNull: false,
-        },
-        riwayatKunjungan: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        petugas: {
-            type: DataTypes.STRING(50),
-            allowNull: false,
         },
         ...fieldTime
     },
