@@ -8,10 +8,11 @@ import KategoriRuanganModel from "../models/kategori-ruangan-model.js";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import PatientModel from "../models/patient-model.js";
 import RuanganRepository from "./ruangan-repository.js";
+import NotfoundException from "../exception/notfound-exception.js";
+import BadRequestException from "../exception/bad-request-exception.js";
 
 export default class MonitoringRoomRepository {
     static async getAllRoom(args) {
-        const queryInterface = sequelizeInstance.getQueryInterface();
         try {
             const user = Context.get(CTX_AUTHOR);
             const filter = {
@@ -22,11 +23,11 @@ export default class MonitoringRoomRepository {
                         },
                     }
                 ],
-                [Op.and]:[
+                [Op.and]: [
                     {faskesUuid: user.faskesUuid},
-                    {deletedAt: { [Op.is]: null }},
-                    {kelasRuangan: args.filter_kelas || { [Op.ne]: null }},
-                    {kategoriRuanganUuid: args.filter_kategori || { [Op.ne]: null }},
+                    {deletedAt: {[Op.is]: null}},
+                    {kelasRuangan: args.filter_kelas || {[Op.ne]: null}},
+                    {kategoriRuanganUuid: args.filter_kategori || {[Op.ne]: null}},
                 ]
             };
 
@@ -93,7 +94,7 @@ export default class MonitoringRoomRepository {
         }
     }
 
-    static async getDetail(uuid){
+    static async getDetail(uuid) {
         const user = Context.get(CTX_AUTHOR);
         try {
             const data = await RoomMonitoringModel.findAll({
@@ -101,7 +102,7 @@ export default class MonitoringRoomRepository {
                     [Op.and]: [
                         {room_uuid: uuid},
                         {faskesUuid: user.faskesUuid},
-                        {deletedAt: { [Op.is]: null }}
+                        {deletedAt: {[Op.is]: null}}
                     ]
                 },
                 include: [
@@ -111,7 +112,7 @@ export default class MonitoringRoomRepository {
                         as: "patient",
                     }
                 ],
-                attributes:["uuid", "patient_uuid", "room_uuid", "room_category", "room_class", "room", "bed_name","no_bed"]
+                attributes: ["uuid", "patient_uuid", "room_category", "room_class", "room", "bed_name", "no_bed"]
             });
             return data.map(item => {
                 return {
@@ -119,8 +120,60 @@ export default class MonitoringRoomRepository {
                     is_available: item.patient === null
                 };
             });
-        }catch (error){
+        } catch (error) {
             console.log(error);
+            throw error;
+        }
+    }
+
+
+    static async getDetailBed(uuid) {
+        const user = Context.get(CTX_AUTHOR);
+        try{
+            return await RoomMonitoringModel.findOne({
+                where: {
+                    [Op.and]: [
+                        {uuid},
+                        {faskesUuid: user.faskesUuid},
+                        {deletedAt: {[Op.is]: null}}
+                    ]
+                },
+            });
+        }catch (error){
+            throw new NotfoundException("Bed not found");
+        }
+    }
+
+
+    static async registPatientToBed(uuid, patientUuid, transaction = null) {
+        const trx = transaction || await sequelizeInstance.transaction();
+        try {
+            const user = Context.get(CTX_AUTHOR);
+            const result = await RoomMonitoringModel.findOne({
+                where: {
+                    [Op.and]: [
+                        {uuid},
+                        {faskesUuid: user.faskesUuid},
+                        {deletedAt: {[Op.is]: null}}
+                    ]
+                },
+                transaction: trx
+            });
+
+            // if not found
+            if (!result) throw new NotfoundException("Bed not found");
+
+            if (result.patientUuid) throw new BadRequestException("Bed is already occupied");
+
+            // update bed
+            await result.update({
+                patientUuid
+            }, {transaction: trx, returning: true});
+
+            if (!transaction) await trx.commit();
+            return result;
+        } catch (error) {
+            if (!transaction) await trx.rollback();
             throw error;
         }
     }
@@ -138,7 +191,7 @@ export default class MonitoringRoomRepository {
                     where: {
                         room_uuid: uuid,
                         faskesUuid: user.faskesUuid,
-                        deletedAt: { [Op.is]: null }
+                        deletedAt: {[Op.is]: null}
                     },
                     transaction: t
                 });
@@ -149,7 +202,7 @@ export default class MonitoringRoomRepository {
                 // Delete beds that are not in the incoming data
                 for (const bed of existingBeds) {
                     if (!incomingUuids.includes(bed.uuid)) {
-                        await bed.destroy({ transaction: t });
+                        await bed.destroy({transaction: t});
                     }
                 }
 
@@ -171,7 +224,6 @@ export default class MonitoringRoomRepository {
                             }
                         );
                     } else {
-                        console.log("ADAWDAWDADA", dataRuangan.dataValues);
                         await RoomMonitoringModel.create(
                             {
                                 roomUuid: uuid,
@@ -182,17 +234,16 @@ export default class MonitoringRoomRepository {
                                 bedName: bedData.bed_name,
                                 noBed: bedData.no_bed
                             },
-                            { transaction: t }
+                            {transaction: t}
                         );
                     }
                 }
 
-                // Return updated or created beds along with room information
                 const updatedBeds = await RoomMonitoringModel.findAll({
                     where: {
                         room_uuid: uuid,
                         faskesUuid: user.faskesUuid,
-                        deletedAt: { [Op.is]: null }
+                        deletedAt: {[Op.is]: null}
                     },
                     transaction: t
                 });

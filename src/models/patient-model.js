@@ -71,6 +71,7 @@ PatientModel.init(
         maritialStatus: {
             type: DataTypes.STRING(150),
             allowNull: false,
+            defaultValue: false,
         },
         ...fieldTime
     },
@@ -80,6 +81,12 @@ PatientModel.init(
         modelName: "PatientModel",
         underscored: true,
         timestamps: false,
+        indexes: [
+            {
+                unique: true,
+                fields: ['no_rm', 'faskes_uuid']
+            }
+        ],
         defaultScope: {
             where:{
                 deletedAt: {

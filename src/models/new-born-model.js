@@ -45,7 +45,7 @@ NewBornModel.init(
             allowNull: false,
         },
         multipleBirth: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.BOOLEAN,
             allowNull: false,
         },
         addressUuid: {

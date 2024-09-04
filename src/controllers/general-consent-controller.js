@@ -5,7 +5,7 @@ export default class GeneralConsentController{
     static async create(req, res, next){
         try{
             const result = await GeneralConsentService.create(req.params.uuid, req.body);
-            return res.status(201).json(successResponse("General Consent Created", result));
+            return res.status(201).json(successResponse("General Consent Created"));
         }catch (error){
             next(error);
         }
