@@ -1,6 +1,6 @@
-import PractionerModel from "../models/practioner-model.js";
+import PractitionerModel from "../models/practitioner-model.js";
 
-export default class PractionerSeeder{
+export default class PractitionerSeeder {
     static async seed(transaction){
         const data = [
             {
@@ -32,6 +32,6 @@ export default class PractionerSeeder{
             },
         ];
 
-        await PractionerModel.bulkCreate(data, {transaction});
+        await PractitionerModel.bulkCreate(data, {transaction});
     }
 }

@@ -7,8 +7,8 @@ import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
 
-export default class PractionerModel extends Model {}
-PractionerModel.init(
+export default class PractitionerModel extends Model {}
+PractitionerModel.init(
     {
         ...identifierModel,
         sip: {

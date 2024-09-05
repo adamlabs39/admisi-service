@@ -16,20 +16,12 @@ export class RawatJalanService {
 
     static async registRawatJalan(data) {
         const user = Ctx.get(CTX_AUTHOR);
-        const validData = ZodValidator.validate(RawatJalanValidation.CREATE, data);
+        const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
         if (!validData) throw new BadRequestException("Bad Request");
+
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
-
-        const patientData = {
-            ...convertSnakeToCamel(validData.patient_data),
-            faskesUuid: faskes.uuid,
-            faskes_code: faskes.code,
-            address: { ...validData.patient_data.address, faskesUuid: faskes.uuid },
-            birthDetail: { ...convertSnakeToCamel(validData.patient_data.birth_detail), faskesUuid: faskes.uuid },
-        };
-
-        const result = await RawatJalanRepository.processRJ('create',null, patientData, convertSnakeToCamel(validData));
+        const result = await RawatJalanRepository.processRJ('create',null, validData);
         if (!result) throw new Error("Failed to create rawat jalan");
 
         return result;
@@ -39,20 +31,12 @@ export class RawatJalanService {
         const user = Ctx.get(CTX_AUTHOR);
         const checkExist = await checkExistData(RawatJalanModel, uuid);
         if(!checkExist) throw new NotfoundException('Data tidak ditemukan');
-        const validData = ZodValidator.validate(RawatJalanValidation.CREATE, data);
+        const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
         if (!validData) throw new BadRequestException("Bad Request");
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
-        const patientData = {
-            ...convertSnakeToCamel(validData.patient_data),
-            faskesUuid: faskes.uuid,
-            faskes_code: faskes.code,
-            address: { ...validData.patient_data.address, faskesUuid: faskes.uuid },
-            birthDetail: { ...convertSnakeToCamel(validData.patient_data.birth_detail), faskesUuid: faskes.uuid },
-        };
-
-        const result = await RawatJalanRepository.processRJ('update',uuid, patientData, convertSnakeToCamel(validData));
+        const result = await RawatJalanRepository.processRJ('update',uuid, validData);
         if (!result) throw new Error("Failed to create rawat jalan");
 
         return result;

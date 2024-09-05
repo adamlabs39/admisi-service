@@ -1,28 +1,22 @@
 import ZodValidator from "../validations/zod-validator.js";
 import PatientValidation from "../validations/patient-validation.js";
 import PatientRepository from "../repositories/patient-repository.js";
-import {convertSnakeToCamel, getInfoAge} from "../helper/utility.js";
+import {convertSnakeToCamel} from "../helper/utility.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 import FaskesRepository from "../repositories/faskes-repository.js";
-import AddressRepository from "../repositories/address-repository.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {Context as Ctx} from "../middlewares/context.js";
 
 export default class PatientService{
     static async create(data){
         const user = Ctx.get(CTX_AUTHOR);
-        const validData = ZodValidator.validate(PatientValidation.CREATE, data);
+        const validData = ZodValidator.validate(PatientValidation.PATIENT_VALIDATOR, data);
         if(!validData) throw new BadRequestException("Bad Request");
 
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
-        validData.faskesUuid = faskes.uuid;
-        validData.address.faskesUuid = faskes.uuid;
-        validData.birth_detail.faskesUuid = faskes.uuid;
-        validData.birth_detail = convertSnakeToCamel(validData.birth_detail);
-        validData.faskes_code = faskes.code;
-        const patient = await PatientRepository.registPatient(convertSnakeToCamel(validData));
+        const patient = await PatientRepository.registPatient(validData);
         if(!patient) throw new Error("failed create patient");
 
         return { message: "Berhasil Mendaftarkan Pasien" };
@@ -30,21 +24,14 @@ export default class PatientService{
 
     static async update(uuid,data){
 
-        const validData = ZodValidator.validate(PatientValidation.UPDATE, data);
+        const validData = ZodValidator.validate(PatientValidation.PATIENT_VALIDATOR, data);
         if(!validData) throw new BadRequestException("Bad Request");
 
         const checkPatientExist = await PatientRepository.getPatientByUuid(uuid);
         if(!checkPatientExist) throw new NotfoundException("Pasien Tidak Ditemukan");
-
-        validData.birth_detail = convertSnakeToCamel(validData.birth_detail);
-        validData.address = convertSnakeToCamel(validData.address);
-
         validData.patient_uuid = uuid;
-
         const patient = await PatientRepository.registPatient(convertSnakeToCamel(validData));
-
         if(!patient) throw new Error("failed update patient");
-
         return { message: "Berhasil Mengubah Pasien" };
 
     }

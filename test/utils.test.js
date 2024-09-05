@@ -1,19 +1,36 @@
-import {convertCamelToSnake, convertSnakeToCamel, generateNoReg, generateNoRM, getInfoAge} from '../src/helper/utility';
+import {
+    convertCamelToSnake,
+    convertSnakeToCamel,
+    generateAntrianPoli,
+    generateNoReg,
+    generateNoRM,
+    getInfoAge
+} from '../src/helper/utility';
+import {Context} from "../src/middlewares/context.js";
+import {CTX_AUTHOR} from "../src/constant/context-constant.js";
 
 describe('Check Utility', () => {
-    it('should generate random number with length 6', () => {
-        const code = 'ASW';
-        const result = generateNoRM(code);
-        expect(result).toMatch(/ASW\d{3}/);
+    it('should generate random number with length 6', async () => {
+        Context.set(CTX_AUTHOR, {
+            roleUuid: "0191a137-a782-7b59-b13d-c06d97064cda",
+            username: "alliano-dev",
+            faskesUuid: "9d403ufjh43ufh3uf8430ihf",
+            iat: 1724986703,
+            exp: 1727578703,
+            iss: "authentication-serivice"
+        })
+        const result = await generateNoRM();
+        console.log(result);
+        expect(result).toMatch(/^\d{2}-\d{2}-\d{2}$/);
     });
 
     it('should return age info', () => {
         const birthDate = '1999-01-01';
         const result = getInfoAge(birthDate);
         expect(result).toEqual({
-            year: 25,
-            month: 7,
-            day: 14
+            ageYear: 25,
+            ageMonth: 8,
+            ageDay: 3
         });
     });
 
@@ -93,4 +110,20 @@ describe('Check Utility', () => {
             mother_name: "Jane Doe"
         });
     });
+
+
+    it('should generate queue number poly-clinic', async () => {
+        Context.set(CTX_AUTHOR, {
+            roleUuid: "0191a137-a782-7b59-b13d-c06d97064cda",
+            username: "alliano-dev",
+            faskesUuid: "9d403ufjh43ufh3uf8430ihf",
+            iat: 1724986703,
+            exp: 1727578703,
+            iss: "authentication-serivice"
+        })
+        const result = await generateAntrianPoli('0191a18a-22e4-73d6-ab3b-dc6683607aa9', '0191a18a-22e4-7410-abaa-899eb0fd35e0');
+        console.log(result);
+        expect(result).toMatch(/PM-DPM-\d{3}/);
+    });
+
 });

@@ -3,10 +3,11 @@ import moment from "moment";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import PatientModel from "../models/patient-model.js";
-import PractionerModel from "../models/practioner-model.js";
 import RawatJalanModel from "../models/rawat-jalan-model.js";
-import LokasiModel from "../models/lokasi-model.js";
 import AntrianPoliModel from "../models/antrian-poli-model.js";
+import {Op} from "sequelize";
+import JadwalDokterModel from "../models/jadwal-dokter-model.js";
+import BadRequestException from "../exception/bad-request-exception.js";
 
 dotenv.config();
 
@@ -26,9 +27,12 @@ const paginationHelper = (page, limit, total) => {
 
 const generateNoRM = async () => {
     const { faskesUuid } = Context.get(CTX_AUTHOR);
-    const countPatient = await PatientModel.count({ where: { faskesUuid } });
-    return `${faskesUuid}-${countPatient.toString().padStart(6, '0')}`;
+    let countPatient = await PatientModel.count({ where: { faskesUuid } });
+    countPatient += 1;
+    const paddedNumber = countPatient.toString().padStart(6, '0');
+    return `${paddedNumber.slice(0, 2)}-${paddedNumber.slice(2, 4)}-${paddedNumber.slice(4, 6)}`;
 };
+
 
 const generateAntrianAdmisi = async () => {
     const today = moment().startOf('day').unix();
@@ -42,34 +46,44 @@ const generateAntrianAdmisi = async () => {
     return countPatient.toString().padStart(3, '0');
 };
 
-const generateAntrianPoli = async (poliUuid, dokterUuid) => {
+const generateAntrianPoli = async (poliUuid, dokterUuid,jadwalUuid) => {
     const today = moment().startOf('day').unix();
     const { faskesUuid } = Context.get(CTX_AUTHOR);
-
-    const [code, countRJ] = await Promise.all([
-        AntrianPoliModel.findOne({
+    let [code, countRJ,jadwalDokter] = await Promise.all([
+        (await AntrianPoliModel.findOne({
             where: {
                 faskesUuid,
                 practitionerUuid: dokterUuid,
-                lokasiUuid: poliUuid
+                lokasiUuid: poliUuid,
             },
-            attributes: ['code_antrian_poli', 'code_antrian_dokter']
-        }),
+            attributes: ['code_antrian_poli', 'code_antrian_dokter','time_pelayanan'],
+            plain: true
+        })).dataValues,
         RawatJalanModel.count({
             where: {
                 faskesUuid,
                 tanggalPeriksa: { [Op.between]: [today, today + 86400] },
-                practionerUuid: dokterUuid,
+                practitionerUuid: dokterUuid,
                 lokasiUuid: poliUuid
             }
+        }),
+        JadwalDokterModel.findOne({
+            where: {
+                faskesUuid,
+                uuid:jadwalUuid
+            },
+            attributes: ['start_time'],
+            plain: true
         })
     ]);
-
-    if (!code) throw new Error('Kode antrian poli tidak ditemukan');
-
-    return `${poli.code}-${dokter.code}-${countRJ.toString().padStart(3, '0')}`;
+    if (!code) throw new Error('Kode antrian poli tidak ditemukan / Belum diatur');
+    if(!jadwalDokter) throw new BadRequestException('Jadwal Dokter tidak ditemukan');
+    const estimateTime = moment(jadwalDokter.start_time, 'HH:mm:ss').unix() + (code.time_pelayanan * countRJ++);
+    return {
+        code_antrian_poli: `${code.code_antrian_poli}-${code.code_antrian_dokter}-${String(countRJ).padStart(3, '0')}`,
+        estimate_time: estimateTime
+    };
 };
-
 
 const generateNoReg = () => {
     const CODE = 'REG';
@@ -106,9 +120,9 @@ const getInfoAge = (birthDate) => {
     const ageDay = today.diff(birth, 'days');
 
     return {
-        year: ageYear,
-        month: ageMonth,
-        day: ageDay
+        ageYear,
+        ageMonth,
+        ageDay
     };
 }
 
@@ -195,5 +209,7 @@ export {
     selectAttributes,
     generateBookingCode,
     bannerChannel,
-    checkExistData
+    checkExistData,
+    generateAntrianPoli,
+    generateAntrianAdmisi,
 };

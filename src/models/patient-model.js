@@ -73,6 +73,15 @@ PatientModel.init(
             allowNull: false,
             defaultValue: false,
         },
+        isNewBorn: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        unggahBerkas: {
+            type: DataTypes.BLOB,
+            allowNull: true,
+        },
         ...fieldTime
     },
     {

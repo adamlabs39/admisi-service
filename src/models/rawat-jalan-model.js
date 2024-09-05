@@ -59,7 +59,7 @@ RawatJalanModel.init(
             type: DataTypes.INTEGER,
             allowNull: true,
         },
-        practioner_uuid: {
+        practitionerUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
@@ -112,14 +112,6 @@ RawatJalanModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        // rencanaTindaklanut: {
-        //     type: DataTypes.STRING(255),
-        //     allowNull: true,
-        // },
-        // rencanaTindaklanutText: {
-        //     type: DataTypes.TEXT,
-        //     allowNull: true,
-        // },
         kondisiPasienPulang: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -128,22 +120,22 @@ RawatJalanModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        statusPulangLainnya:{
+        statusPulangKeterangan:{
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        instruksiLokasi: {
+        tujuanRujuk: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        instruksiLokasiLainnya: {
+        tujuanRujukLainnya: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        instruksiDate:{
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
+        // instruksiDate:{
+        //     type: DataTypes.INTEGER,
+        //     allowNull: true,
+        // },
         instruksiNoDarurat: {
             type: DataTypes.STRING(255),
             allowNull: true,
@@ -172,7 +164,7 @@ RawatJalanModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        rujukEksternalText: {
+        instruksiTindakLanjut: {
             type: DataTypes.TEXT,
             allowNull: true,
         },
@@ -193,6 +185,14 @@ RawatJalanModel.init(
             allowNull: true,
         },
         farmasiUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        jadwalPeriksa:{
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        jadwalDokterUuid: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },

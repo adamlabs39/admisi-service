@@ -39,17 +39,16 @@ app.use(errorMiddleware);
 
 // Event Handler
 EventListener.init();
-
-app.listen(port, host, async () => {
-    if (process.env.SYNC_DB === "true") {
-        try {
-            for (const model of MODELMERGE) {
-                await model.sync({ alter: false, force: true });
-            }
-            await dbSeeder();
-        } catch (error) {
-            console.error("Failed to synchronize the database:", error);
+if (process.env.SYNC_DB === "true") {
+    try {
+        for (const model of MODELMERGE) {
+            await model.sync({ alter: false, force: true });
         }
+        await dbSeeder();
+    } catch (error) {
+        console.error("Failed to synchronize the database:", error);
     }
+}
+app.listen(port, host, async () => {
     console.log(`Server running on http://${host}:${port}`);
 });
