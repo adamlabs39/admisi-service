@@ -18,7 +18,7 @@ const errorMiddleware = (error, request, response, nextFunction) => {
     response.status(error.status).json({message: error.message});
   }
   else if(error instanceof DuplicateException){
-    response.status(error.code).json({messages: error.message});
+    response.status(error.code).json(errorResponse(error.message, error.errors));
   }
   else if(error instanceof UniqueConstraintError){
     response.status(400).json({message: error.errors[0].message})

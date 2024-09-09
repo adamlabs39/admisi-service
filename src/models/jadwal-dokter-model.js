@@ -14,6 +14,10 @@ JadwalDokterModel.init(
             type: DataTypes.STRING(255),
             allowNull: false,
         },
+        lokasiUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
         day: {
             type: DataTypes.STRING(255),
             allowNull: false,
@@ -24,6 +28,30 @@ JadwalDokterModel.init(
         },
         end_time: {
             type: DataTypes.TIME,
+            allowNull: false,
+        },
+        kuota:{
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        kuotaNonJkn:{
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        kuotaJkn:{
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        durasiPelayanan: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        codeAntrianPoli: {
+            type: DataTypes.STRING(15),
+            allowNull: false,
+        },
+        codeAntrianDokter: {
+            type: DataTypes.STRING(15),
             allowNull: false,
         },
         status: {

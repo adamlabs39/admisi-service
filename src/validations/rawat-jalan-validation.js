@@ -8,8 +8,8 @@ export default class RawatJalanValidation {
             ...PatientValidation.PATIENT_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        polyclinic_uuid: z.string().max(255).uuid(),
-        dpjp_uuid: z.string().max(255).uuid(),
+        // polyclinic_uuid: z.string().max(255).uuid(),
+        // dpjp_uuid: z.string().max(255).uuid(),
         jadwal_dokter_uuid: z.string().max(255).uuid(),
         complaint: z.string().max(255),
         note: z.string().max(255),

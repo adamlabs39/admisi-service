@@ -8,6 +8,9 @@ import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
 import PatientModel from "./patient-model.js";
 import BirthDetailModel from "./birth-detail-model.js";
+import JadwalDokterModel from "./jadwal-dokter-model.js";
+import PractitionerModel from "./practitioner-model.js";
+import LokasiModel from "./lokasi-model.js";
 export default class RawatJalanModel extends Model{}
 
 RawatJalanModel.init(
@@ -196,6 +199,10 @@ RawatJalanModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
+        noReferensi: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
         ...fieldTime
     },
     {
@@ -220,3 +227,21 @@ RawatJalanModel.belongsTo(BirthDetailModel, {
     as: "birth_detail",
     constraints: false,
 });
+
+RawatJalanModel.belongsTo(JadwalDokterModel,{
+    foreignKey: "jadwal_dokter_uuid",
+    as: "jadwal_dokter",
+    constraints: false,
+});
+
+RawatJalanModel.belongsTo(PractitionerModel,{
+    foreignKey: "practitioner_uuid",
+    as: "practitioner",
+    constraints: false,
+})
+
+RawatJalanModel.belongsTo(LokasiModel,{
+    foreignKey: "lokasi_uuid",
+    as: "lokasi",
+    constraints: false,
+})

@@ -46,41 +46,32 @@ const generateAntrianAdmisi = async () => {
     return countPatient.toString().padStart(3, '0');
 };
 
-const generateAntrianPoli = async (poliUuid, dokterUuid,jadwalUuid) => {
+const generateAntrianPoli = async (jadwalUuid) => {
     const today = moment().startOf('day').unix();
     const { faskesUuid } = Context.get(CTX_AUTHOR);
-    let [code, countRJ,jadwalDokter] = await Promise.all([
-        (await AntrianPoliModel.findOne({
+
+    let [jadwalDokter, countRJ] = await Promise.all([
+        (await JadwalDokterModel.findOne({
             where: {
                 faskesUuid,
-                practitionerUuid: dokterUuid,
-                lokasiUuid: poliUuid,
+                uuid: jadwalUuid
             },
-            attributes: ['code_antrian_poli', 'code_antrian_dokter','time_pelayanan'],
+            attributes: ['start_time', 'code_antrian_poli', 'code_antrian_dokter', 'durasi_pelayanan'],
             plain: true
         })).dataValues,
         RawatJalanModel.count({
             where: {
                 faskesUuid,
                 tanggalPeriksa: { [Op.between]: [today, today + 86400] },
-                practitionerUuid: dokterUuid,
-                lokasiUuid: poliUuid
+                jadwalDokterUuid: jadwalUuid
             }
-        }),
-        JadwalDokterModel.findOne({
-            where: {
-                faskesUuid,
-                uuid:jadwalUuid
-            },
-            attributes: ['start_time'],
-            plain: true
         })
     ]);
-    if (!code) throw new Error('Kode antrian poli tidak ditemukan / Belum diatur');
-    if(!jadwalDokter) throw new BadRequestException('Jadwal Dokter tidak ditemukan');
-    const estimateTime = moment(jadwalDokter.start_time, 'HH:mm:ss').unix() + (code.time_pelayanan * countRJ++);
+
+    if (!jadwalDokter) throw new BadRequestException('Jadwal Dokter tidak ditemukan');
+    const estimateTime = moment(jadwalDokter.start_time, 'HH:mm:ss').unix() + (jadwalDokter.durasi_pelayanan * countRJ++);
     return {
-        code_antrian_poli: `${code.code_antrian_poli}-${code.code_antrian_dokter}-${String(countRJ).padStart(3, '0')}`,
+        code_antrian_poli: `${jadwalDokter.code_antrian_poli}-${jadwalDokter.code_antrian_dokter}-${String(countRJ).padStart(3, '0')}`,
         estimate_time: estimateTime
     };
 };

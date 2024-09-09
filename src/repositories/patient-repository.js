@@ -9,6 +9,7 @@ import {convertSnakeToCamel, generateNoRM, getInfoAge} from "../helper/utility.j
 import BadRequestException from "../exception/bad-request-exception.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
+import DuplicateException from "../exception/duplicate-exception.js";
 
 
 export default class PatientRepository{
@@ -60,7 +61,7 @@ export default class PatientRepository{
                     where: { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
                     transaction
                 });
-                if (existingPatient) throw new BadRequestException("No identity already exists");
+                if (existingPatient) throw new DuplicateException("No identity already exists");
             }
 
             // Create or update patient
@@ -189,6 +190,9 @@ export default class PatientRepository{
                     [Op.like]: `%${args.search || ""}%`
                 },
                 noRm: {
+                    [Op.like]: `%${args.search || ""}%`
+                },
+                noIdentity:{
                     [Op.like]: `%${args.search || ""}%`
                 }
             };

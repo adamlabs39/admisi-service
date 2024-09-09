@@ -39,7 +39,6 @@ const MODELMERGE = [
     RuanganModel,
     LokasiModel,
     PractitionerModel,
-    AntrianPoliModel,
     JadwalDokterModel,
     sequelizeInstance
 ]

@@ -6,21 +6,13 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
-import PegawaiModel from "./pegawai-model.js";
 
-export default class PractitionerModel extends Model {}
-PractitionerModel.init(
+
+export default class PegawaiModel extends Model {}
+PegawaiModel.init(
     {
         ...identifierModel,
-        pegawaiUuid: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        sip: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        str: {
+        nama: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
@@ -28,32 +20,34 @@ PractitionerModel.init(
             type: DataTypes.BOOLEAN,
             allowNull: false,
         },
-        codeBpjs: {
+        nik: {
             type: DataTypes.STRING(255),
-            unique: true,
-            allowNull: true,
+            allowNull: false,
         },
-        satuSehatId: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
+        tipe: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            defaultValue: 1,
         },
-        fileSign: {
+        title: {
             type: DataTypes.STRING(255),
-            allowNull: true,
+            allowNull: false,
+        },
+        tanggalLahir: {
+            type: DataTypes.DATE,
+            allowNull: false,
+        },
+        gender: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
         },
         ...fieldTime
-    },
-    {
+    },{
         sequelize: sequelizeInstance,
-        modelName: "practioner",
-        tableName: "practioner",
+        modelName: "pegawai",
+        tableName: "pegawai",
+        underscored: true,
         timestamps: false,
         hooks: hookModel,
     }
-);
-
-PractitionerModel.belongsTo(PegawaiModel, {
-    foreignKey: "pegawai_uuid",
-    as: "pegawai",
-    constraints: false,
-});
+)

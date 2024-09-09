@@ -11,6 +11,9 @@ import RawatJalanModel from "../models/rawat-jalan-model.js";
 
 export class RawatJalanService {
     static async getALl(args) {
+        if(!args.start_date || !args.end_date){
+            throw new BadRequestException("Start date and end date is required");
+        }
         return await RawatJalanRepository.getAll(args);
     }
 
