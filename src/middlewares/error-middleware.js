@@ -15,16 +15,16 @@ const errorMiddleware = (error, request, response, nextFunction) => {
     return response.status(error.code).json(errorResponse(error.message));
   }
   else if(error instanceof BadRequestException){
-    response.status(error.status).json({message: error.message});
+    response.status(error.status).json(errorResponse("Bad Request", error.errors));
   }
   else if(error instanceof DuplicateException){
     response.status(error.code).json(errorResponse(error.message, error.errors));
   }
   else if(error instanceof UniqueConstraintError){
-    response.status(400).json({message: error.errors[0].message})
+    response.status(400).json(errorResponse("Duplicate Data", error.errors));
   }
   else if( error instanceof ZodError){
-    response.status(400).json({message: zodErrorParser(error.errors)});
+    response.status(400).json(errorResponse("Validation Error", zodErrorParser(error.errors)));
   }else{
     response.status(500).json(errorResponse(error.message))
   }

@@ -37,7 +37,7 @@ export default class RawatJalanController {
     static async cancelVisitRawatJalan(request, response, nextFunction) {
         try {
             const data = await RawatJalanService.cancelVisit(request.body);
-            return response.status(200).json(successResponse("Data Rawat Jalan Berhasil Dibatalkan", data));
+            return response.status(200).json(successResponse("Data Rawat Jalan Berhasil Dibatalkan"));
         } catch (error) {
             nextFunction(error);
         }

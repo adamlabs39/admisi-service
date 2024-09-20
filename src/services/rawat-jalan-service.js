@@ -24,7 +24,7 @@ export class RawatJalanService {
 
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
-        const result = await RawatJalanRepository.processRJ('create',null, validData);
+        const result = await RawatJalanRepository.create(validData);
         if (!result) throw new Error("Failed to create rawat jalan");
 
         return result;
@@ -39,7 +39,7 @@ export class RawatJalanService {
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
-        const result = await RawatJalanRepository.processRJ('update',uuid, validData);
+        const result = await RawatJalanRepository.update(uuid, validData);
         if (!result) throw new Error("Failed to create rawat jalan");
 
         return result;

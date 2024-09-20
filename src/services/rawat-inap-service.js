@@ -7,6 +7,7 @@ import FaskesRepository from "../repositories/faskes-repository.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import RawatInapRepository from "../repositories/rawat-inap-repository.js";
 import RawatInapModel from "../models/rawat-inap-model.js";
+import BadRequestException from "../exception/bad-request-exception.js";
 
 export default class RawatInapService{
     static async registRI(data){
@@ -18,17 +19,12 @@ export default class RawatInapService{
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
-        validData.patient_data.faskesUuid = faskes.uuid;
-        validData.patient_data.address.faskesUuid = faskes.uuid;
-        validData.patient_data.birth_detail.faskesUuid = faskes.uuid;
-        validData.patient_data.faskes_code = faskes.code;
-        validData.patient_data.birth_detail = convertSnakeToCamel(validData.patient_data.birth_detail);
-        validData.patient_data = convertSnakeToCamel(validData.patient_data);
         validData = convertSnakeToCamel(validData);
         const result = await RawatInapRepository.registBaby(validData);
         if (!result) throw new Error("Failed to create rawat inap");
         return result;
     }
+
 
     static async update(uuid, data){
         const user = Context.get(CTX_AUTHOR);
@@ -36,22 +32,41 @@ export default class RawatInapService{
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
-        let validData = ZodValidator.validate(RawatInapValidation.UPDATE, data);
+        const schema = data.is_newborn ? RawatInapValidation.UPDATE_NEWBORN : RawatInapValidation.UPDATE_PATIENT;
+        const pepek = data.is_newborn ? 'newborn' : 'patient';
+        let validData = ZodValidator.validate(schema, data);
         if (!validData) throw new Error("Bad Request");
 
         const checkExist = await checkExistData(RawatInapModel, uuid);
         if(!checkExist) throw new NotfoundException('Rawat Inap tidak ditemukan');
 
-        validData.patient_data.faskesUuid = faskes.uuid;
-        validData.patient_data.address.faskesUuid = faskes.uuid;
-        validData.patient_data.birth_detail.faskesUuid = faskes.uuid;
-        validData.patient_data.faskes_code = faskes.code;
-        validData.patient_data.birth_detail = convertSnakeToCamel(validData.patient_data.birth_detail);
-        validData.patient_data = convertSnakeToCamel(validData.patient_data);
-        validData = convertSnakeToCamel(validData);
-        const result = await RawatInapRepository.registBaby(validData);
+        const result = await RawatInapRepository.updateRawatInap(uuid, validData);
         if (!result) throw new Error("Failed to create rawat inap");
 
+        return result;
+    }
+
+
+    static async getAll(args){
+        if(!args.start_date || !args.end_date){
+            throw new BadRequestException("Start date and end date is required");
+        }
+        return await RawatInapRepository.getAll(args);
+    }
+
+
+    static async getDetail(uuid){
+        const result = await RawatInapRepository.getDetail(uuid);
+        if(!result) throw new Error("Data not found");
+        return result;
+    }
+
+    static async cancelVisitRawatInap(data){
+        const validData = ZodValidator.validate(RawatInapValidation.CANCELVISIT, data);
+        if (!validData) throw new Error("Bad Request");
+
+        const result = await RawatInapRepository.cancelVisit(validData);
+        if (!result) throw new Error("Failed to cancel visit");
         return result;
     }
 }

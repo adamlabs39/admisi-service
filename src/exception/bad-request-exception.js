@@ -3,5 +3,11 @@ export default class BadRequestException extends Error {
     super(message);
     this.message = message;
     this.status = 400;
+    this.errors = [
+      {
+        type: "Bad Request",
+        message: message,
+      }
+    ];
   }
 }

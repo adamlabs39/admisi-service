@@ -228,4 +228,20 @@ export default class PatientRepository{
             throw error;
         }
     }
+
+
+    static async getOnePatientBy(col, val){
+        try {
+            return await
+                PatientModel.findOne({
+                    where: {
+                        [col]: val,
+                        deletedAt: null
+                    }
+                });
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
 }

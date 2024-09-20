@@ -8,7 +8,6 @@ export default class HistoryBedListener{
         eventEmitter.on(HISTORY_BED_CHANNEL, this.handleEvent);
     }
 
-
     static async handleEvent(data) {
         try{
             bannerChannel(HISTORY_BED_CHANNEL, data);

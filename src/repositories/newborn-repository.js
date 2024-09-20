@@ -2,14 +2,16 @@ import NewBornModel from "../models/new-born-model.js";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
+import {convertSnakeToCamel} from "../helper/utility.js";
 
 export default class newBornRepository {
     static async upsertNewBorn(data, transaction) {
         const trx = transaction || await sequelizeInstace.transaction();
         const user = Context.get(CTX_AUTHOR);
+        data = convertSnakeToCamel(data);
         try {
-            const uuid = data.uuid || null;
-            let newBorn = uuid ? await this.findByUuid(uuid, trx) : null;
+            const noRmBaby = data.noRmBaby || null;
+            let newBorn = noRmBaby ? await this.findByNoRm(noRmBaby, trx) : null;
             data.faskesUuid = user.faskesUuid;
             if (newBorn) {
                 await newBorn.update(data, { transaction: trx });
@@ -25,10 +27,10 @@ export default class newBornRepository {
         }
     }
 
-    static async findByUuid(uuid, transaction) {
+    static async findByNoRm(noRmBaby, transaction) {
         return await NewBornModel.findOne({
             where: {
-                uuid,
+                noRmBaby,
                 deletedAt: null
             },
             transaction
