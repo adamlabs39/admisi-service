@@ -6,97 +6,88 @@ import moment from "moment";
 import AddressModel from "../models/address-model.js";
 import BirthDetailModel from "../models/birth-detail-model.js";
 import {convertSnakeToCamel, generateNoRM, getInfoAge} from "../helper/utility.js";
+import BadRequestException from "../exception/bad-request-exception.js";
+import {Context} from "../middlewares/context.js";
+import {CTX_AUTHOR} from "../constant/context-constant.js";
+import DuplicateException from "../exception/duplicate-exception.js";
 
 
 export default class PatientRepository{
     static async registPatient(data, externalTransaction = null) {
         const transaction = externalTransaction || await sequelizeInstace.transaction();
-
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        data = convertSnakeToCamel(data);
         data.address = convertSnakeToCamel(data.address);
+        data.birthDetail = convertSnakeToCamel(data.birthDetail);
+
         try {
             const uuid = data.patientUuid || null;
+            const patient = uuid ? await PatientModel.findOne({
+                where: { uuid, deletedAt: { [Op.is]: null } },
+                include: [
+                    { model: AddressModel, as: 'address' },
+                    { model: BirthDetailModel, as: 'birth_detail' } // Update alias here
+                ],
+                transaction
+            }) : null;
 
-            let address = null;
-            if (data.address?.addressUuid) {
-                address = await AddressModel.findOne({
-                    where: {
-                        uuid: data.address.addressUuid,
-                        deletedAt: { [Op.is]: null }
-                    }
-                });
-            }
-
+            // Handle address
+            let address = patient ? patient.address : null;
             if (address) {
-                await address.update(data.address, { transaction });
-            } else {
+                await address.update(data.address || {}, { transaction });
+            } else if (data.address) {
+                data.address.faskesUuid = faskesUuid;
                 address = await AddressModel.create(data.address, { transaction });
             }
+            data.addressUuid = address?.uuid || null;
 
-            data.addressUuid = address.uuid;
-
-            let birthDetail = null;
-            const infoAge = getInfoAge(data.birthDetail.birthDate);
-            if (data.birthDetail?.birthDetailUuid) {
-                birthDetail = await BirthDetailModel.findOne({
-                    where: {
-                        uuid: data.birthDetail.birthDetailUuid,
-                        deletedAt: { [Op.is]: null }
-                    }
-                });
-            }
-
-            data.birthDetail.ageYear = infoAge.year;
-            data.birthDetail.ageMonth = infoAge.month;
-            data.birthDetail.ageDay = infoAge.day;
-
+            // Handle birth detail
+            let birthDetail = patient ? patient.birth_detail : null; // Update alias here
             if (birthDetail) {
-                await birthDetail.update(data.birthDetail, { transaction });
-            } else {
+                const infoAge = getInfoAge(data.birthDetail.birthDate);
+                Object.assign(data.birthDetail, infoAge);
+                await birthDetail.update(data.birthDetail || {}, { transaction });
+            } else if (data.birthDetail) {
+                data.birthDetail.faskesUuid = faskesUuid;
+                const infoAge = getInfoAge(data.birthDetail.birthDate);
+                Object.assign(data.birthDetail, infoAge);
                 birthDetail = await BirthDetailModel.create(data.birthDetail, { transaction });
             }
+            data.birthDetailUuid = birthDetail?.uuid || null;
 
-            data.birthDetailUuid = birthDetail.uuid;
+            // Check noIdentity uniqueness if not updating existing patient
+            if (!uuid && !data.isNewBorn) {
+                const existingPatient = await PatientModel.findOne({
+                    where: { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
+                    transaction
+                });
+                if (existingPatient) throw new DuplicateException("No identity already exists");
+            }
 
-            const [patient, created] = await PatientModel.findOrCreate({
-                where: {
-                    [Op.and]: [
-                        { uuid },
-                        {
-                            deletedAt: {
-                                [Op.is]: null
-                            }
-                        }
-                    ]
-                },
-                defaults: {
+            // Create or update patient
+            data.faskesUuid = faskesUuid;
+            const patientModel = patient
+                ? await patient.update(data, { transaction })
+                : await PatientModel.create({
                     ...data,
-                    noRm: generateNoRM(data.faskes_code || data.faskesCode)
-                },
-                transaction
-            });
+                    noRm: await generateNoRM(),
+                }, { transaction });
 
-            if (!created) {
-                await patient.update(data, { transaction });
-            }
-
-            if (!externalTransaction) {
-                await transaction.commit();
-            }
+            if (!externalTransaction) await transaction.commit();
 
             return {
-                ...patient.get({ plain: true }),
-                address: address.get({ plain: true }),
-                birthDetail: birthDetail.get({ plain: true })
+                ...patientModel.get({ plain: true }),
+                address: address ? address.get({ plain: true }) : null,
+                birthDetail: birthDetail ? birthDetail.get({ plain: true }) : null
             };
 
         } catch (error) {
-            if (!externalTransaction) {
-                await transaction.rollback();
-            }
-            console.log(error);
+            if (!externalTransaction) await transaction.rollback();
+            console.error(error);
             throw error;
         }
     }
+
 
     static async checkExistPatient(uuid){
         try {
@@ -200,6 +191,9 @@ export default class PatientRepository{
                 },
                 noRm: {
                     [Op.like]: `%${args.search || ""}%`
+                },
+                noIdentity:{
+                    [Op.like]: `%${args.search || ""}%`
                 }
             };
 
@@ -230,6 +224,22 @@ export default class PatientRepository{
                 option
             );
         }catch (error){
+            console.log(error);
+            throw error;
+        }
+    }
+
+
+    static async getOnePatientBy(col, val){
+        try {
+            return await
+                PatientModel.findOne({
+                    where: {
+                        [col]: val,
+                        deletedAt: null
+                    }
+                });
+        } catch (error) {
             console.log(error);
             throw error;
         }

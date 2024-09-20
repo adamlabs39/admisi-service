@@ -1,7 +1,13 @@
 export default class DuplicateException extends Error{
-  constructor(message, code) {
+  constructor(message) {
     super(message);
     this.message = message;
-    this.code = code;
+    this.code = 409;
+    this.errors = [
+      {
+        type: "conflict",
+        message: message,
+      }
+    ];
   }
 }

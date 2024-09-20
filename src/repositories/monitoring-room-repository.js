@@ -71,7 +71,7 @@ export default class MonitoringRoomRepository {
             );
             console.log(result.pagination);
 
-            const plainData = result.data.map(room => room.toJSON());
+            const plainData = result.data;
 
             const processedData = plainData.map(room => {
                 const total_bed = room.room_monitorings.length;
@@ -117,6 +117,7 @@ export default class MonitoringRoomRepository {
             return data.map(item => {
                 return {
                     ...item.toJSON(),
+                    total_bed: data.length,
                     is_available: item.patient === null
                 };
             });

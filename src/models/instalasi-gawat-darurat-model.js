@@ -6,6 +6,9 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
+import PatientModel from "./patient-model.js";
+import BirthDetailModel from "./birth-detail-model.js";
+import PractitionerModel from "./practitioner-model.js";
 
 export default class InstalasiGawatDaruratModel extends Model {}
 InstalasiGawatDaruratModel.init(
@@ -40,7 +43,7 @@ InstalasiGawatDaruratModel.init(
             type: DataTypes.STRING(15),
             allowNull: false,
         },
-        practioner_uuid: {
+        practitionerUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
@@ -59,14 +62,17 @@ InstalasiGawatDaruratModel.init(
         newborn: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
+            defaultValue: false,
         },
         multipleBirth: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
+            defaultValue: false,
         },
         withoutIdentity: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
+            defaultValue: false,
         },
         note: {
             type: DataTypes.STRING(255),
@@ -116,22 +122,22 @@ InstalasiGawatDaruratModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        statusPulangLainnya: {
+        statusPulangKeterangan:{
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        instruksiLokasi: {
+        tujuanRujuk: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        instruksiLokasiLainnya: {
+        tujuanRujukLainnya: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        instruksiDate: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
+        // instruksiDate: {
+        //     type: DataTypes.INTEGER,
+        //     allowNull: true,
+        // },
         instruksiNoDarurat: {
             type: DataTypes.STRING(255),
             allowNull: true,
@@ -160,7 +166,7 @@ InstalasiGawatDaruratModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        rujukEksternalText: {
+        instruksiTindakLanjut: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
@@ -195,3 +201,24 @@ InstalasiGawatDaruratModel.init(
         hooks: hookModel,
     }
 )
+
+InstalasiGawatDaruratModel.belongsTo(PatientModel,{
+    as: "patient",
+    foreignKey: "patient_uuid",
+    constraints: false,
+    targetKey: "uuid",
+})
+
+InstalasiGawatDaruratModel.belongsTo(BirthDetailModel,{
+    as: "birth_detail",
+    foreignKey: "birth_detail_uuid",
+    constraints: false,
+    targetKey: "uuid",
+});
+
+InstalasiGawatDaruratModel.belongsTo(PractitionerModel,{
+    as: "practitioner",
+    foreignKey: "practitioner_uuid",
+    constraints: false,
+    targetKey: "uuid",
+})

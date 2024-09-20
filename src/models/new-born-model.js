@@ -28,12 +28,8 @@ NewBornModel.init(
             allowNull: false,
             unique: true,
         },
-        birthPlaceBaby: {
-            type: DataTypes.STRING(150),
-            allowNull: false,
-        },
-        birthDateBaby: {
-            type: DataTypes.DATE,
+        birthDetailUuid: {
+            type: DataTypes.STRING(255),
             allowNull: false,
         },
         birthTimeBaby: {
@@ -65,5 +61,11 @@ NewBornModel.init(
         timestamps: false,
         hooks: hookModel,
         underscored: true,
+        indexes: [
+            {
+                unique: true,
+                fields: ["no_rm_baby", "faskes_uuid"]
+            }
+        ]
     }
 )

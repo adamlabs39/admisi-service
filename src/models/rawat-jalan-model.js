@@ -8,6 +8,9 @@ import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
 import PatientModel from "./patient-model.js";
 import BirthDetailModel from "./birth-detail-model.js";
+import JadwalDokterModel from "./jadwal-dokter-model.js";
+import PractitionerModel from "./practitioner-model.js";
+import LokasiModel from "./lokasi-model.js";
 export default class RawatJalanModel extends Model{}
 
 RawatJalanModel.init(
@@ -59,7 +62,7 @@ RawatJalanModel.init(
             type: DataTypes.INTEGER,
             allowNull: true,
         },
-        practioner_uuid: {
+        practitionerUuid: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
@@ -112,14 +115,6 @@ RawatJalanModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        // rencanaTindaklanut: {
-        //     type: DataTypes.STRING(255),
-        //     allowNull: true,
-        // },
-        // rencanaTindaklanutText: {
-        //     type: DataTypes.TEXT,
-        //     allowNull: true,
-        // },
         kondisiPasienPulang: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -128,22 +123,22 @@ RawatJalanModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        statusPulangLainnya:{
+        statusPulangKeterangan:{
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        instruksiLokasi: {
+        tujuanRujuk: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        instruksiLokasiLainnya: {
+        tujuanRujukLainnya: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        instruksiDate:{
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
+        // instruksiDate:{
+        //     type: DataTypes.INTEGER,
+        //     allowNull: true,
+        // },
         instruksiNoDarurat: {
             type: DataTypes.STRING(255),
             allowNull: true,
@@ -172,7 +167,7 @@ RawatJalanModel.init(
             type: DataTypes.STRING(255),
             allowNull: true,
         },
-        rujukEksternalText: {
+        instruksiTindakLanjut: {
             type: DataTypes.TEXT,
             allowNull: true,
         },
@@ -193,6 +188,18 @@ RawatJalanModel.init(
             allowNull: true,
         },
         farmasiUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        jadwalPeriksa:{
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        jadwalDokterUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        noReferensi: {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
@@ -220,3 +227,21 @@ RawatJalanModel.belongsTo(BirthDetailModel, {
     as: "birth_detail",
     constraints: false,
 });
+
+RawatJalanModel.belongsTo(JadwalDokterModel,{
+    foreignKey: "jadwal_dokter_uuid",
+    as: "jadwal_dokter",
+    constraints: false,
+});
+
+RawatJalanModel.belongsTo(PractitionerModel,{
+    foreignKey: "practitioner_uuid",
+    as: "practitioner",
+    constraints: false,
+})
+
+RawatJalanModel.belongsTo(LokasiModel,{
+    foreignKey: "lokasi_uuid",
+    as: "lokasi",
+    constraints: false,
+})

@@ -7,7 +7,8 @@ import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
 
-export default class InsuranceAdmissionModel extends Model {}
+export default class InsuranceAdmissionModel extends Model {
+}
 InsuranceAdmissionModel.init(
     {
         ...identifierModel,
@@ -17,6 +18,10 @@ InsuranceAdmissionModel.init(
         },
         insuranceAccountUuid: {
             type: DataTypes.STRING(255),
+            allowNull: false,
+        },
+        admissionType: {
+        type: DataTypes.INTEGER,
             allowNull: false,
         },
         ...fieldTime,

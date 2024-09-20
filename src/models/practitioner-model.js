@@ -6,11 +6,16 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
+import PegawaiModel from "./pegawai-model.js";
 
-export default class PractionerModel extends Model {}
-PractionerModel.init(
+export default class PractitionerModel extends Model {}
+PractitionerModel.init(
     {
         ...identifierModel,
+        pegawaiUuid: {
+            type: DataTypes.STRING(255),
+            allowNull: false,
+        },
         sip: {
             type: DataTypes.STRING(255),
             allowNull: false,
@@ -19,18 +24,22 @@ PractionerModel.init(
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        code_bpjs: {
-            type: DataTypes.STRING(255),
-            unique: true,
-            allowNull: false,
-        },
-        satu_sehat_id: {
-            type: DataTypes.STRING(255),
-            allowNull: true,
-        },
         status: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
+        },
+        codeBpjs: {
+            type: DataTypes.STRING(255),
+            unique: true,
+            allowNull: true,
+        },
+        satuSehatId: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        fileSign: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
         },
         ...fieldTime
     },
@@ -42,3 +51,9 @@ PractionerModel.init(
         hooks: hookModel,
     }
 );
+
+PractitionerModel.belongsTo(PegawaiModel, {
+    foreignKey: "pegawai_uuid",
+    as: "pegawai",
+    constraints: false,
+});

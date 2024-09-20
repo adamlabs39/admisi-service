@@ -49,29 +49,38 @@ PatientModel.init(
         },
         phone: {
             type: DataTypes.STRING(15),
-            allowNull: false,
+            allowNull: true,
         },
         religion: {
             type: DataTypes.STRING(25),
-            allowNull: false,
+            allowNull: true,
         },
         addressUuid: {
             type: DataTypes.STRING(255),
-            allowNull: false,
+            allowNull: true,
         },
         language: {
             type: DataTypes.STRING(150),
-            allowNull: false,
+            allowNull: true,
             defaultValue: "ID",
         },
         motherName: {
             type: DataTypes.STRING(150),
-            allowNull: false,
+            allowNull: true,
         },
         maritialStatus: {
             type: DataTypes.STRING(150),
             allowNull: false,
             defaultValue: false,
+        },
+        isNewBorn: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false,
+        },
+        unggahBerkas: {
+            type: DataTypes.BLOB,
+            allowNull: true,
         },
         ...fieldTime
     },

@@ -1,6 +1,5 @@
 const successResponse = (message,payload,properties) => {
     let response = {
-        sucess: true,
         message,
     }
     if(payload)response.payload = payload;
