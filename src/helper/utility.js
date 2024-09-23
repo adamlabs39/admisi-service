@@ -8,6 +8,8 @@ import AntrianPoliModel from "../models/antrian-poli-model.js";
 import {Op} from "sequelize";
 import JadwalDokterModel from "../models/jadwal-dokter-model.js";
 import BadRequestException from "../exception/bad-request-exception.js";
+import InstalasiGawatDaruratModel from "../models/instalasi-gawat-darurat-model.js";
+import RawatInapModel from "../models/rawat-inap-model.js";
 
 dotenv.config();
 
@@ -76,16 +78,44 @@ const generateAntrianPoli = async (jadwalUuid) => {
     };
 };
 
-const generateNoReg = () => {
-    const CODE = 'REG';
-    const randomText = '1234567890';
-    const date = moment().format('YYMMDD');
-    let result = '';
-    for (let i = 0; i < 4; i++) {
-        result += randomText.charAt(Math.floor(Math.random() * randomText.length));
-    }
-    return `${CODE}${date}${result}`;
-}
+const generateNoReg = async () => {
+    const today = moment().format('YYMMDD');
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
+    const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
+
+    const count = (
+        await Promise.all(listModel.map(model =>
+            model.count({
+                where: {
+                    faskesUuid,
+                    createdAt: { [Op.between]: [today, today + 86400] }
+                }
+            })
+        ))
+    ).reduce((total, count) => total + count, 0) + 1;
+
+    return `REG${today}${count.toString().padStart(4, '0')}`;
+};
+
+const generateNoPelayanan = async (service) => {
+    const today = moment().format('YYMMDD');
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
+    const { model, prefix } = {
+        'IGD': { model: InstalasiGawatDaruratModel, prefix: 'IGD' },
+        'RI': { model: RawatInapModel, prefix: 'RI' },
+        'RJ': { model: RawatJalanModel, prefix: 'RJ' }
+    }[service] || {};
+
+    if (!model) throw new Error('Service not found');
+
+    const count = await model.count({
+        where: { faskesUuid, createdAt: { [Op.between]: [today, today + 86400] } }
+    });
+
+    return `${prefix}${today}${(count + 1).toString().padStart(4, '0')}`;
+};
+
+
 
 const generateBookingCode = (length = 6) => {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -203,4 +233,5 @@ export {
     checkExistData,
     generateAntrianPoli,
     generateAntrianAdmisi,
+    generateNoPelayanan
 };

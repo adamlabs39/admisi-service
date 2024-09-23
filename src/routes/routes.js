@@ -23,6 +23,8 @@ routes.delete("/rawat-jalan/cancel", RawatJalanController.cancelVisitRawatJalan)
 routes.post("/igd", InstalasiGawatDaruratController.registIgd);
 routes.put("/igd/:uuid", InstalasiGawatDaruratController.updateIgd);
 routes.get("/igd", InstalasiGawatDaruratController.getAll);
+routes.get("/igd/:uuid", InstalasiGawatDaruratController.getDetail);
+routes.delete("/igd/cancel", InstalasiGawatDaruratController.cancelVisitIgd);
 
 // Rawat Inap
 routes.post("/rawat-inap", RawatInapController.regist);

@@ -55,4 +55,22 @@ export default class InstallasiGawatDaruratService{
 
         return await InstallasiGawatDaruratRepository.getAll(args);
     }
+
+
+    static async getDetail(uuid){
+        const result = await InstallasiGawatDaruratRepository.getDetail(uuid);
+        if(!result) throw new Error("Data not found");
+
+        return result;
+    }
+
+    static async cancelVisit(data){
+        const validData = ZodValidator.validate(InstallasiGawatDaruratValidation.CANCEL_VISIT, data);
+        if (!validData) throw new Error("Bad Request");
+
+        const result = await InstallasiGawatDaruratRepository.cancelVisitIGD(validData);
+        if (!result) throw new Error("Failed to cancel visit");
+
+        return result;
+    }
 }

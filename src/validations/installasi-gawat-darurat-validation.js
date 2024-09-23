@@ -35,4 +35,9 @@ export default class InstallasiGawatDaruratValidation {
         ...InstallasiGawatDaruratValidation.IGD_VALIDATOR.shape,
     });
 
+    static CANCELVISIT = z.object({
+        list_uuid: z.array(z.string().max(255)),
+        cancel_reason: z.string().max(255)
+    });
+
 }

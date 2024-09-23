@@ -3,7 +3,7 @@ import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import PatientRepository from "./patient-repository.js";
-import {convertSnakeToCamel, generateNoReg, selectAttributes} from "../helper/utility.js";
+import {convertSnakeToCamel, generateNoPelayanan, generateNoReg, selectAttributes} from "../helper/utility.js";
 import moment from "moment";
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import PractitionerRepository from "./practitioner-repository.js";
@@ -18,15 +18,16 @@ import BirthDetailModel from "../models/birth-detail-model.js";
 import PractitionerModel from "../models/practitioner-model.js";
 import PegawaiModel from "../models/pegawai-model.js";
 import Pagination from "../helper/pagination.js";
+import BadRequestException from "../exception/bad-request-exception.js";
 
-export default class InstallasiGawatDaruratRepository{
-    static async registIGD(data){
+export default class InstallasiGawatDaruratRepository {
+    static async registIGD(data) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
         const transaction = await sequelizeInstance.transaction();
-        try{
+        try {
             // check if newborn
-            if(data.isNewborn) data.patientData.isNewborn = true;
+            if (data.isNewborn) data.patientData.isNewborn = true;
 
             const patient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!patient) throw new Error("Failed to process patient data");
@@ -37,7 +38,8 @@ export default class InstallasiGawatDaruratRepository{
             const commonIgdData = {
                 faskesUuid,
                 patientUuid: patient.uuid,
-                noReg: generateNoReg(),
+                noReg: await generateNoReg(),
+                noPelayanan: await generateNoPelayanan('IGD'),
                 noRm: patient.noRm,
                 name: patient.name,
                 birthDetailUuid: patient.birthDetailUuid,
@@ -54,12 +56,12 @@ export default class InstallasiGawatDaruratRepository{
 
             let additionalData = {};
             if (data.withoutIdentity) {
-                additionalData = { withoutIdentity: true };
+                additionalData = {withoutIdentity: true};
             } else if (data.isNewborn) {
-                additionalData = { newborn: true };
+                additionalData = {newborn: true};
             }
 
-            const resultIgd = await InstalasiGawatDaruratModel.create({ ...commonIgdData, ...additionalData }, { transaction });
+            const resultIgd = await InstalasiGawatDaruratModel.create({...commonIgdData, ...additionalData}, {transaction});
 
             let insurance = null;
             if (data.paymentMethod === 'ASURANSI') {
@@ -99,7 +101,7 @@ export default class InstallasiGawatDaruratRepository{
 
             const igdAttributes = selectAttributes(resultIgd, [
                 'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity',
-            ],true);
+            ], true);
             const result = {
                 ...igdAttributes,
                 patient: patientAttributes,
@@ -111,7 +113,7 @@ export default class InstallasiGawatDaruratRepository{
             }
 
             return result;
-        }catch (e) {
+        } catch (e) {
             console.log("Error regist IGD", e);
             await transaction.rollback();
             throw e;
@@ -119,31 +121,32 @@ export default class InstallasiGawatDaruratRepository{
     }
 
 
-    static async updateIgd(uuid,data){
+    static async updateIgd(uuid, data) {
         const transaction = await sequelizeInstance.transaction();
         data = convertSnakeToCamel(data);
-        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        const {faskesUuid} = Context.get(CTX_AUTHOR);
         try {
-            const igd = await InstalasiGawatDaruratModel.findOne({ where: { uuid }, transaction });
-            if(!igd) throw new NotfoundException("IGD not found");
+            const igd = await InstalasiGawatDaruratModel.findOne({where: {uuid}, transaction});
+            if (!igd) throw new NotfoundException("IGD not found");
             const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
             if (!practitioner) throw new NotfoundException('Practitioner not found');
 
             let patient = null;
-            if(igd.withoutIdentity !== data.withoutIdentity && igd.patientUuid !== data.patientData.patient_uuid){
-                const checkPatient = await PatientModel.findOne({ where:
+            if (igd.withoutIdentity !== data.withoutIdentity && igd.patientUuid !== data.patientData.patient_uuid) {
+                const checkPatient = await PatientModel.findOne({
+                    where:
                         {
                             uuid: data.patientData.patient_uuid,
                             faskesUuid,
                             deletedAt: null
                         }
                 });
-                if(!checkPatient) throw new NotfoundException("Patient not found");
+                if (!checkPatient) throw new NotfoundException("Patient not found");
                 patient = await PatientRepository.registPatient(data.patientData, transaction);
                 if (!patient) throw new Error("Failed to process patient data");
 
                 data.patientUuid = patient.uuid;
-            }else{
+            } else {
                 patient = await PatientRepository.registPatient({
                     patientUuid: igd.patientUuid,
                     ...data.patientData,
@@ -168,12 +171,12 @@ export default class InstallasiGawatDaruratRepository{
             let additionalData = {};
 
             if (data.withoutIdentity) {
-                additionalData = { withoutIdentity: true };
-            }else if(data.isNewborn){
-                additionalData = { newborn: true };
+                additionalData = {withoutIdentity: true};
+            } else if (data.isNewborn) {
+                additionalData = {newborn: true};
             }
 
-            const resultIgd = await igd.update({ ...commonData, ...additionalData }, { transaction });
+            const resultIgd = await igd.update({...commonData, ...additionalData}, {transaction});
 
             let insurance = null;
             if (data.paymentMethod === 'ASURANSI') {
@@ -185,7 +188,7 @@ export default class InstallasiGawatDaruratRepository{
             }
 
             await transaction.commit();
-            if(data.isNewborn){
+            if (data.isNewborn) {
                 eventEmitter.emit(NEW_BORN_CHANNEL, {
                     identifier_mom: patient.identity,
                     name_mom: patient.motherName,
@@ -212,7 +215,7 @@ export default class InstallasiGawatDaruratRepository{
 
             const igdAttributes = selectAttributes(resultIgd, [
                 'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity',
-            ],true);
+            ], true);
 
             const result = {
                 ...igdAttributes,
@@ -227,15 +230,58 @@ export default class InstallasiGawatDaruratRepository{
 
             return result;
 
-        }catch (e) {
+        } catch (e) {
             console.log("Error update IGD", e);
             await transaction.rollback();
             throw e;
         }
     }
 
-    static async getAll(args){
-        const { faskesUuid } = Context.get(CTX_AUTHOR);
+    static async getDetail(uuid) {
+        try{
+            const {faskesUuid} = Context.get(CTX_AUTHOR);
+            const igd = await InstalasiGawatDaruratModel.findOne({
+                where: {uuid, faskesUuid},
+                include: [
+                    {
+                        model: PatientModel,
+                        as: "patient",
+                        required: true,
+                        where: {deletedAt: {[Op.is]: null}},
+                        include: [
+                            {
+                                model: AddressModel,
+                                as: "address",
+                                required: true,
+                                where: {deletedAt: {[Op.is]: null}},
+                                attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country"]
+                            },
+                            {
+                                model: BirthDetailModel,
+                                as: "birth_detail",
+                                required: true,
+                                where: {deletedAt: {[Op.is]: null}},
+                                attributes: ["birth_place", "birth_date"]
+                            }
+                        ],
+                        attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status", 'is_new_born'],
+                    }
+                ],
+                attributes: [
+                    "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "complaint", "note", "maternity", "payment_method", "status_igd", "newborn", "without_identity", "practitioner_uuid", "no_pelayanan"
+                ]
+            });
+
+            if (!igd) throw new NotfoundException("IGD not found");
+            return igd;
+        }catch (e) {
+            console.log("Error get detail IGD", e);
+            throw e;
+        }
+    }
+
+    static async getAll(args) {
+        const {faskesUuid} = Context.get(CTX_AUTHOR);
         const filter = {
             faskesUuid,
             [Op.or]: [
@@ -249,14 +295,14 @@ export default class InstallasiGawatDaruratRepository{
                     {[Op.iLike]: `%${args.q || ''}%`}
                 ) // Find by address
             ],
-            statusIgd: {[Op.not]:0},
+            statusIgd: {[Op.not]: 0},
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date]
             }
         }
 
-        if(args.payment_method) filter.paymentMethod = args.paymentMethod;
-        if(args.dpjp) filter.practitionerUuid = args.dpjp;
+        if (args.payment_method) filter.paymentMethod = args.paymentMethod;
+        if (args.dpjp) filter.practitionerUuid = args.dpjp;
 
         const options = {
             include: [
@@ -329,5 +375,36 @@ export default class InstallasiGawatDaruratRepository{
             options,
             transform
         )
+    }
+
+    static async cancelVisitIGD(data) {
+        const {faskesUuid} = Context.get(CTX_AUTHOR);
+        data = convertSnakeToCamel(data);
+        try {
+            return sequelizeInstance.transaction(async (t) => {
+                const igd = await InstalasiGawatDaruratModel.findAll({
+                    where: {
+                        uuid: data.listUuid,
+                        faskesUuid,
+                        statusIgd: {[Op.not]: 0}
+                    }
+                })
+                const isDischarged = igd.filter(item => item.statusIgd !== 2);
+                if (isDischarged.length > 0) throw new BadRequestException("IGD Has been discharged can't cancel visit");
+                if (rawatInap.length === 0) throw new NotfoundException("IGD not found");
+                await InstalasiGawatDaruratModel.update({statusIgd: 0}, {
+                    where: {
+                        uuid: data.listUuid,
+                        faskesUuid,
+                        statusIgd: {[Op.not]: 0}
+                    },
+                    transaction: t
+                });
+                return rawatInap;
+            });
+        } catch (e) {
+            console.log("Error cancel IGD", e);
+            throw e;
+        }
     }
 }

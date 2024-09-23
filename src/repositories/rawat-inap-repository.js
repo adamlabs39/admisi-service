@@ -4,7 +4,7 @@ import PatientRepository from "./patient-repository.js";
 import MonitoringRoomRepository from "./monitoring-room-repository.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
-import {convertSnakeToCamel, generateNoReg, selectAttributes} from "../helper/utility.js";
+import {convertSnakeToCamel, generateNoPelayanan, generateNoReg, selectAttributes} from "../helper/utility.js";
 import moment from "moment";
 import {eventEmitter} from "../helper/event.js";
 import {HISTORY_BED_CHANNEL, NEW_BORN_CHANNEL} from "../constant/event-constant.js";
@@ -152,7 +152,8 @@ export default class RawatInapRepository {
             const registRI = await RawatInapModel.create({
                 faskesUuid: user.faskesUuid,
                 patientUuid: patient.uuid,
-                noReg: generateNoReg(),
+                noReg: await generateNoReg(),
+                noPelayanan: await generateNoPelayanan('RI'),
                 noRm: patient.noRm,
                 name: patient.name,
                 birthDetailUuid: patient.birthDetailUuid,
@@ -382,7 +383,7 @@ export default class RawatInapRepository {
                     }
                 ],
                 attributes: [
-                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", 'status_ri', 'multiple_birth', 'entrusted_patient', 'upgrade_class', 'join_bill', 'previous_bill', 'family_bill', 'spare_bed', 'box_baby', 'monitoring_room_uuid', 'no_spri',
+                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", 'status_ri', 'multiple_birth', 'entrusted_patient', 'upgrade_class', 'join_bill', 'previous_bill', 'family_bill', 'spare_bed', 'box_baby', 'monitoring_room_uuid', 'no_spri','no_pelayanan'
                 ]
             });
 
@@ -409,6 +410,7 @@ export default class RawatInapRepository {
 
     static async cancelVisit(data) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
+        data = convertSnakeToCamel(data);
         try{
             return sequelizeInstance.transaction(async (t) => {
                 const rawatInap = await RawatInapModel.findAll({

@@ -10,7 +10,7 @@ import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
 import {
     convertSnakeToCamel,
     generateAntrianPoli,
-    generateBookingCode,
+    generateBookingCode, generateNoPelayanan,
     generateNoReg,
     selectAttributes
 } from "../helper/utility.js";
@@ -167,7 +167,7 @@ export default class RawatJalanRepository {
                     }
                 ],
                 attributes: [
-                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid"
+                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid","no_pelayanan"
                 ]
             });
 
@@ -228,7 +228,8 @@ export default class RawatJalanRepository {
             dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
             dataRJ.jadwalDokterUuid = jadwalDokter.uuid;
             dataRJ.kodeBooking = generateBookingCode();
-            dataRJ.noReg = generateNoReg();
+            dataRJ.noReg = await generateNoReg();
+            dataRJ.noPelayanan = await generateNoPelayanan('RJ');
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
             const patientAttributes = selectAttributes(patient, [
