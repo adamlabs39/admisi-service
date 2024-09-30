@@ -15,4 +15,22 @@ export default class EventValidation{
         tanggal_daftar: z.number().int(),
         status: z.boolean().default(true)
     });
+
+    static LOGPELAYANAN = z.object({
+        tgl_registrasi: z.number().int(),
+        noreg: z.string().max(255),
+        no_pelayanan: z.string().max(255),
+        jenis_kunjungan: z.enum(["IGD", "RI", "RJ"]),
+        patient_uuid: z.string().max(255),
+        practitioner_uuid: z.nullable(z.string().max(255)).default(null).optional(),
+        lokasi_uuid: z.nullable(z.string().max(255)).default(null).optional(),
+        payment_method: z.union([z.literal(1), z.literal(2)]).default(1),
+    });
+
+
+
+    static CANCELLOGPELAYANAN = z.object({
+        list_no_pelayanan: z.array(z.string().max(255)),
+        cancel_reason: z.string().max(255),
+    });
 }

@@ -24,6 +24,8 @@ import JadwalDokterRepository from "./jadwal-dokter-repository.js";
 import PractitionerModel from "../models/practitioner-model.js";
 import PegawaiModel from "../models/pegawai-model.js";
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
+import {eventEmitter} from "../helper/event.js";
+import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
 
 export default class RawatJalanRepository {
     /**
@@ -252,6 +254,16 @@ export default class RawatJalanRepository {
                     insuranceAccountUuid: data.assuranceAccountId,
                 }, t);
 
+                eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+                    tgl_registrasi: regist.tanggalDaftar,
+                    noreg: regist.noReg,
+                    no_pelayanan: regist.noPelayanan,
+                    jenis_kunjungan: 'RJ',
+                    practitioner_uuid: regist.practitionerUuid,
+                    patient_uuid: patient.uuid,
+                    lokasi_uuid: regist.lokasiUuid,
+                    payment_method: 2
+                });
                 return {
                     ...rawatJalanAttributes,
                     patient: patientAttributes,
@@ -260,6 +272,17 @@ export default class RawatJalanRepository {
                     ], true)
                 };
             }
+
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+                tgl_registrasi: regist.tanggalDaftar,
+                noreg: regist.noReg,
+                no_pelayanan: regist.noPelayanan,
+                jenis_kunjungan: 'RJ',
+                practitioner_uuid: regist.practitionerUuid,
+                patient_uuid: patient.uuid,
+                lokasi_uuid: regist.lokasiUuid,
+                payment_method: 1
+            });
 
             return {
                 ...rawatJalanAttributes,
@@ -352,6 +375,17 @@ export default class RawatJalanRepository {
                     insuranceAccountUuid: data.assuranceAccountId,
                 }, t);
 
+                eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+                    tgl_registrasi: updatedRegist.tanggalDaftar,
+                    noreg: updatedRegist.noReg,
+                    no_pelayanan: updatedRegist.noPelayanan,
+                    jenis_kunjungan: 'RJ',
+                    patient_uuid: patient.uuid,
+                    practitioner_uuid: updatedRegist.practitionerUuid,
+                    lokasi_uuid: updatedRegist.lokasiUuid,
+                    payment_method: 2
+                });
+
                 return {
                     ...rawatJalanAttributes,
                     patient: patientAttributes,
@@ -360,6 +394,17 @@ export default class RawatJalanRepository {
                     ], true)
                 };
             }
+
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+                tgl_registrasi: updatedRegist.tanggalDaftar,
+                noreg: updatedRegist.noReg,
+                no_pelayanan: updatedRegist.noPelayanan,
+                practitioner_uuid: updatedRegist.practitionerUuid,
+                jenis_kunjungan: 'RJ',
+                patient_uuid: patient.uuid,
+                lokasi_uuid: updatedRegist.lokasiUuid,
+                payment_method: 1
+            });
 
             return {
                 ...rawatJalanAttributes,
@@ -372,7 +417,7 @@ export default class RawatJalanRepository {
     /**
      * Cancel visit
      * @param data
-     * @returns {Promise<[affectedCount: number, affectedRows: RawatJalanModel[]]>}
+     * @returns {Promise<RawatJalanModel[]>}
      */
     static async cancelVisit(data) {
         try {
@@ -401,6 +446,11 @@ export default class RawatJalanRepository {
                     {statusRj: 0, cancelReason: data.cancelReason},
                     {where: {uuid: data.listUuid, faskesUuid: user.faskesUuid}, transaction: t}
                 );
+
+                eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
+                    list_no_pelayanan: rawatJalan.map(rj => rj.noPelayanan),
+                    cancel_reason: data.cancelReason
+                });
 
                 return rawatJalan;
             });

@@ -39,4 +39,34 @@ export default class Pagination {
             return transformedRow;
         });
     }
+
+
+
+    static async initWithGroup(model, args, filter = {}, options = {}, transformMap = {}, distinct = false) {
+        const page = args.page || 1;
+        const limit = args.limit || 10;
+        const offset = (page - 1) * limit;
+
+        const totalGroups = await model.findAll({
+            where: filter,
+            attributes: options.attributes,
+            group: options.group,
+            raw: true
+        });
+        const totalCount = totalGroups.length;
+
+        const rows = await model.findAll({
+            limit,
+            offset,
+            where: filter,
+            ...options
+        });
+
+        const data = await Pagination.transform(rows, transformMap);
+
+        return {
+            data,
+            pagination: paginationHelper(page, limit, totalCount)
+        };
+    }
 }

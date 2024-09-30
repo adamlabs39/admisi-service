@@ -3,6 +3,10 @@ import sequelizeInstace from "../configurations/sequelize-instance.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {convertSnakeToCamel} from "../helper/utility.js";
+import {Op} from "sequelize";
+import sequelizeInstance from "../configurations/sequelize-instance.js";
+import AddressModel from "../models/address-model.js";
+import Pagination from "../helper/pagination.js";
 
 export default class newBornRepository {
     static async upsertNewBorn(data, transaction) {
@@ -35,5 +39,48 @@ export default class newBornRepository {
             },
             transaction
         });
+    }
+
+
+    static async getReportNewBorn(args){
+        const {faskesUuid} = Context.get(CTX_AUTHOR);
+        try{
+            const filter = {
+                faskesUuid,
+                deletedAt: null,
+                [Op.or]: [
+                    {noRmBaby: {[Op.like]: `%${args.q}%`}},
+                    {nameBaby: {[Op.like]: `%${args.q}%`}},
+                    sequelizeInstance.where(
+                        sequelizeInstance.col('address.full_address'),
+                        {[Op.iLike]: `%${args.q || ''}%`}
+                    ),
+                ]
+            }
+
+            const options = {
+                include: [
+                    {
+                        model: AddressModel,
+                        as: 'address',
+                        attributes: []
+                    }
+                ],
+                attributes:[
+                    "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_detail_uuid", "birth_time_baby", "gender_baby", "multiple_birth", "address_uuid", "tanggal_daftar"
+                ]
+            }
+
+            return await Pagination.init(
+                NewBornModel,
+                args,
+                filter,
+                options,
+            )
+        }catch (e){
+            console.log("Error on getReportNewBorn");
+            console.log(e);
+            throw e;
+        }
     }
 }

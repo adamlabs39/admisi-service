@@ -9,7 +9,7 @@ import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import PractitionerRepository from "./practitioner-repository.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import {eventEmitter} from "../helper/event.js";
-import {NEW_BORN_CHANNEL} from "../constant/event-constant.js";
+import {LOG_PELAYANAN_CHANNEL, NEW_BORN_CHANNEL} from "../constant/event-constant.js";
 import InstalasiGawatDaruratModel from "../models/instalasi-gawat-darurat-model.js";
 import PatientModel from "../models/patient-model.js";
 import {Op} from "sequelize";
@@ -28,6 +28,11 @@ export default class InstallasiGawatDaruratRepository {
         try {
             // check if newborn
             if (data.isNewborn) data.patientData.isNewborn = true;
+
+            if(data.isNewborn){
+                const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
+                if (!mom) throw new NotfoundException("Identity Mom not found! please regist the mother first");
+            }
 
             const patient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!patient) throw new Error("Failed to process patient data");
@@ -100,7 +105,7 @@ export default class InstallasiGawatDaruratRepository {
             ], true);
 
             const igdAttributes = selectAttributes(resultIgd, [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity',
+                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity', 'noPelayanan'
             ], true);
             const result = {
                 ...igdAttributes,
@@ -111,6 +116,17 @@ export default class InstallasiGawatDaruratRepository {
                     'uuid', 'noReg', 'insuranceAccountUuid', 'admissionType', 'status'
                 ], true);
             }
+
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+                tgl_registrasi: moment().unix(),
+                noreg: resultIgd.noReg,
+                no_pelayanan: resultIgd.noPelayanan,
+                practitioner_uuid: resultIgd.practitionerUuid,
+                jenis_kunjungan: "IGD",
+                patient_uuid: result.patient.uuid,
+                lokasi_uuid: null,
+                payment_method: resultIgd.paymentMethod
+            })
 
             return result;
         } catch (e) {
@@ -214,7 +230,7 @@ export default class InstallasiGawatDaruratRepository {
             ], true);
 
             const igdAttributes = selectAttributes(resultIgd, [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity',
+                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity', 'noPelayanan'
             ], true);
 
             const result = {
@@ -227,6 +243,17 @@ export default class InstallasiGawatDaruratRepository {
                     'uuid', 'noReg', 'insuranceAccountUuid', 'admissionType', 'status'
                 ], true);
             }
+
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+                tgl_registrasi: resultIgd.tanggalDaftar,
+                noreg: resultIgd.noReg,
+                no_pelayanan: resultIgd.noPelayanan,
+                practitioner_uuid: resultIgd.practitionerUuid,
+                jenis_kunjungan: "IGD",
+                patient_uuid: result.patient.uuid,
+                lokasi_uuid: null,
+                payment_method: resultIgd.paymentMethod
+            })
 
             return result;
 
@@ -400,6 +427,11 @@ export default class InstallasiGawatDaruratRepository {
                     },
                     transaction: t
                 });
+
+                eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+                    list_no_pelayanan: igd.map(item => item.noPelayanan),
+                    cancel_reason: data.cancelReason
+                })
                 return rawatInap;
             });
         } catch (e) {

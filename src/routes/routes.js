@@ -6,6 +6,7 @@ import MonitoringRoomController from "../controllers/monitoring-room-controller.
 import GeneralConsentController from "../controllers/general-consent-controller.js";
 import RawatInapController from "../controllers/rawat-inap-controller.js";
 import InstalasiGawatDaruratController from "../controllers/instalasi-gawat-darurat-controller.js";
+import ReportController from "../controllers/report-controller.js";
 const routes = express.Router();
 
 routes.use(AuthorizationMiddleware);
@@ -51,4 +52,12 @@ routes.post("/general-consent/:uuid", GeneralConsentController.create);
 routes.get("/general-consent/:uuid", GeneralConsentController.getAll);
 routes.get("/general-consent/detail/:uuid", GeneralConsentController.getDetail);
 
+
+// Report
+routes.get("/report/kunjungan", ReportController.getReport);
+routes.get("/report/penunjang", ReportController.getReportPenunjang);
+routes.get("/report/cancel-visit", ReportController.getCancelVisitReport);
+routes.get("/report/room", ReportController.getReportRoom);
+routes.get("/report/rawat-inap", ReportController.getReportRawatInap);
+routes.get("/report/new-born", ReportController.getReportNewBorn);
 export default routes;

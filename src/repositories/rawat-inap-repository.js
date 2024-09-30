@@ -4,10 +4,20 @@ import PatientRepository from "./patient-repository.js";
 import MonitoringRoomRepository from "./monitoring-room-repository.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
-import {convertSnakeToCamel, generateNoPelayanan, generateNoReg, selectAttributes} from "../helper/utility.js";
+import {
+    convertSnakeToCamel,
+    generateNoPelayanan,
+    generateNoReg,
+    selectAttributes
+} from "../helper/utility.js";
 import moment from "moment";
 import {eventEmitter} from "../helper/event.js";
-import {HISTORY_BED_CHANNEL, NEW_BORN_CHANNEL} from "../constant/event-constant.js";
+import {
+    HISTORY_BED_CHANNEL,
+    LOG_CANCLE_PELAYANAN_CHANNEL,
+    LOG_PELAYANAN_CHANNEL,
+    NEW_BORN_CHANNEL
+} from "../constant/event-constant.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import PractitionerRepository from "./practitioner-repository.js";
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
@@ -23,7 +33,7 @@ import Pagination from "../helper/pagination.js";
 import RoomMonitoringModel from "../models/room-monitoring-model.js";
 
 export default class RawatInapRepository {
-    static async getAll(args){
+    static async getAll(args) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
 
         const filter = {
@@ -45,8 +55,8 @@ export default class RawatInapRepository {
             }
         }
 
-        if(args.payment_method) filter.paymentMethod = args.paymentMethod;
-        if(args.dpjp) filter.practitionerUuid = args.dpjp;
+        if (args.payment_method) filter.paymentMethod = args.paymentMethod;
+        if (args.dpjp) filter.practitionerUuid = args.dpjp;
 
         const options = {
             include: [
@@ -104,7 +114,7 @@ export default class RawatInapRepository {
                     as: "monitoring_room",
                     required: true,
                     where: {deletedAt: {[Op.is]: null}},
-                    attributes: ["uuid", "room_uuid","room_category","room_class","room","bed_name","no_bed"]
+                    attributes: ["uuid", "room_uuid", "room_category", "room_class", "room", "bed_name", "no_bed"]
                 }
             ],
             attributes: [
@@ -127,6 +137,7 @@ export default class RawatInapRepository {
             transform
         )
     }
+
     static async registBaby(data) {
         const transaction = await sequelizeInstance.transaction();
         try {
@@ -210,6 +221,16 @@ export default class RawatInapRepository {
                 tanggal_daftar: moment().unix(),
                 status: true,
             });
+
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
+                tgl_registrasi: registRI.tanggalDaftar,
+                noreg: registRI.noReg,
+                practitioner_uuid: practitioner.uuid,
+                no_pelayanan: registRI.noPelayanan,
+                jenis_kunjungan: "RI",
+                patient_uuid: patient.uuid,
+                payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2,
+            })
 
             const patientAttributes = selectAttributes(patient, [
                 'uuid', 'title', 'name', 'noRm', 'identity', 'noIdentity',
@@ -339,6 +360,16 @@ export default class RawatInapRepository {
                 ], true);
             }
 
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
+                tgl_registrasi: rawatInap.tanggalDaftar,
+                noreg: rawatInap.noReg,
+                no_pelayanan: rawatInap.noPelayanan,
+                practitioner_uuid: practitioner.uuid,
+                jenis_kunjungan: "RI",
+                patient_uuid: updatedPatient.uuid,
+                payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2,
+            });
+
             return result;
 
         } catch (error) {
@@ -383,7 +414,7 @@ export default class RawatInapRepository {
                     }
                 ],
                 attributes: [
-                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", 'status_ri', 'multiple_birth', 'entrusted_patient', 'upgrade_class', 'join_bill', 'previous_bill', 'family_bill', 'spare_bed', 'box_baby', 'monitoring_room_uuid', 'no_spri','no_pelayanan'
+                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", 'status_ri', 'multiple_birth', 'entrusted_patient', 'upgrade_class', 'join_bill', 'previous_bill', 'family_bill', 'spare_bed', 'box_baby', 'monitoring_room_uuid', 'no_spri', 'no_pelayanan'
                 ]
             });
 
@@ -391,7 +422,7 @@ export default class RawatInapRepository {
 
             if (rawatInap.patient.dataValues.is_new_born) {
                 const newBorn = await NewBornModel.findOne({
-                    where: { faskesUuid, no_rm_baby: rawatInap.patient.dataValues.no_rm },
+                    where: {faskesUuid, no_rm_baby: rawatInap.patient.dataValues.no_rm},
                     attributes: [
                         "identifier_mom", "name_mom", "name_baby", "no_rm_baby",
                         "birth_detail_uuid", "birth_time_baby", "gender_baby",
@@ -411,10 +442,10 @@ export default class RawatInapRepository {
     static async cancelVisit(data) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
-        try{
+        try {
             return sequelizeInstance.transaction(async (t) => {
                 const rawatInap = await RawatInapModel.findAll({
-                    where:{
+                    where: {
                         uuid: data.listUuid,
                         faskesUuid,
                         statusRi: {[Op.not]: 0}
@@ -423,24 +454,97 @@ export default class RawatInapRepository {
                 })
 
                 const isProcessed = rawatInap.filter((ri) => ri.statusRi !== 1);
-                if(isProcessed.length > 0) throw new Error("Cannot cancel processed Rawat Inap");
+                if (isProcessed.length > 0) throw new Error("Cannot cancel processed Rawat Inap");
 
-                if(rawatInap.length === 0) throw new NotfoundException("Rawat Inap not found");
+                if (rawatInap.length === 0) throw new NotfoundException("Rawat Inap not found");
 
                 await RawatInapModel.update({
                     statusRi: 0
-                },{
+                }, {
                     where: {
                         uuid: data.listUuid,
                         faskesUuid
                     },
                     transaction: t
                 });
+
+                eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
+                    list_no_pelayanan: rawatInap.map((ri) => ri.noPelayanan),
+                    cancel_reason: data.cancelReason
+                });
+
                 return rawatInap;
             })
-        }catch (error) {
+        } catch (error) {
             console.error("Error cancel visit Rawat Inap:", error);
             throw error;
         }
     }
+
+
+    static async getReport(args) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        try {
+            const filter = {
+                faskesUuid,
+                status_ri: { [Op.not]: 0 },
+                tanggalDaftar: {
+                    [Op.between]: [args.start_date, args.end_date]
+                }
+            };
+
+            // Add search filter if 'args.q' is provided
+            if (args.q) {
+                filter[Op.or] = [
+                    { no_rm: { [Op.iLike]: `%${args.q}%` } },
+                    sequelizeInstance.where(
+                        sequelizeInstance.fn('concat', sequelizeInstance.col('patient.title'), ' ', sequelizeInstance.col('patient.name')),
+                        { [Op.iLike]: `%${args.q}%` }
+                    ),
+                    sequelizeInstance.where(
+                        sequelizeInstance.col('patient.address.full_address'),
+                        { [Op.iLike]: `%${args.q}%` }
+                    )
+                ];
+            }
+
+            // Add filter for room_class if provided
+            if (args.room_class) {
+                filter[Op.and] = [
+                    ...(filter[Op.and] || []),
+                    sequelizeInstance.where(
+                        sequelizeInstance.col('monitoring_room.room_class'),
+                        { [Op.is]: args.room_class }
+                    )
+                ];
+            }
+
+            const options = {
+                include: [
+                    {
+                        model: RoomMonitoringModel,
+                        as: "monitoring_room",
+                        required: true,
+                        where: { deletedAt: { [Op.is]: null } },
+                        attributes: ["uuid", "room_uuid", "room_category", "room_class", "room", "bed_name", "no_bed"]
+                    },
+                ],
+                attributes: [
+                    "no_rm", "tanggal_daftar", "tanggal_dirawat", "discharge_date",
+                ]
+            };
+
+            return await Pagination.init(
+                RawatInapModel,
+                args,
+                filter,
+                options
+            );
+
+        } catch (error) {
+            console.error("Error get report Rawat Inap:", error);
+            throw error;
+        }
+    }
+
 }

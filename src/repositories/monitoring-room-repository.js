@@ -261,4 +261,34 @@ export default class MonitoringRoomRepository {
     }
 
 
+    static async getReportStatusKamar(args) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        try{
+            const filter ={
+                faskesUuid,
+                deletedAt: {[Op.is]: null}
+            }
+            if(args.class) filter.roomClass = args.class;
+
+            const options = {
+                attributes: [
+                    'room_class',
+                    'room',
+                    [sequelizeInstance.fn('COUNT', sequelizeInstance.col('patient_uuid')), 'totalPatients'],
+                ],
+                group: ['room_class', 'room'],
+            }
+
+            return await Pagination.initWithGroup(
+                RoomMonitoringModel,
+                args,
+                filter,
+                options
+            )
+        }catch (error){
+            throw error;
+        }
+    }
+
+
 }

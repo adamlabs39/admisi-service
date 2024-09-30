@@ -19,6 +19,7 @@ import LokasiModel from "./lokasi-model.js";
 import PractitionerModel from "./practitioner-model.js";
 import AntrianPoliModel from "./antrian-poli-model.js";
 import JadwalDokterModel from "./jadwal-dokter-model.js";
+import LogPelayananModel from "./log-pelayanan-model.js";
 
 const MODELMERGE = [
     BpjsModel,
@@ -40,6 +41,7 @@ const MODELMERGE = [
     LokasiModel,
     PractitionerModel,
     JadwalDokterModel,
+    LogPelayananModel,
     sequelizeInstance
 ]
 

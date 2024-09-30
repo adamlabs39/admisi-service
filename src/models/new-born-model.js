@@ -6,6 +6,7 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
+import AddressModel from "./address-model.js";
 
 export default class NewBornModel extends Model {}
 NewBornModel.init(
@@ -69,3 +70,10 @@ NewBornModel.init(
         ]
     }
 )
+
+NewBornModel.belongsTo(AddressModel, {
+    foreignKey: "address_uuid",
+    as: "address",
+    constraints: false,
+    targetKey: "uuid"
+})
