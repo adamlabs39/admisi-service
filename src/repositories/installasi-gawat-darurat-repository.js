@@ -354,7 +354,7 @@ export default class InstallasiGawatDaruratRepository {
                         },
                     ],
                     attributes: [
-                        "uuid", "title", "name", "identity", "no_identity", "phone"
+                        "uuid", "title", "name", "identity", "no_identity", "phone", "gender"
                     ]
                 },
                 {
@@ -384,7 +384,7 @@ export default class InstallasiGawatDaruratRepository {
                 },
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat"
+                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity", "newborn"
             ]
         }
 

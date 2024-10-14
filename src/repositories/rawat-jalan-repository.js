@@ -27,6 +27,7 @@ import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
 import LokasiModel from "../models/lokasi-model.js";
+import JadwalDokterModel from "../models/jadwal-dokter-model.js";
 
 export default class RawatJalanRepository {
     /**
@@ -84,7 +85,7 @@ export default class RawatJalanRepository {
                         },
                     ],
                     attributes: [
-                        "uuid", "title", "name", "identity", "no_identity", "phone"
+                        "uuid", "title", "name", "identity", "no_identity", "phone", "gender",
                     ]
                 },
                 {
@@ -120,6 +121,13 @@ export default class RawatJalanRepository {
                     attributes:[
                         "uuid", "name", "code"
                     ]
+                },
+                {
+                    model: JadwalDokterModel,
+                    as: "jadwal_dokter",
+                    required: true,
+                    where: {deletedAt: {[Op.is]: null}},
+                    attributes: ["start_time", "end_time"],
                 }
             ],
             attributes: [
@@ -138,6 +146,10 @@ export default class RawatJalanRepository {
                 ...row.lokasi.get(),
             }),
             lokasi: (row) => undefined,
+            schedule: (row) => ({
+                ...row.jadwal_dokter.get(),
+            }),
+            jadwal_dokter: (row) => undefined,
         };
 
         return await Pagination.init(
