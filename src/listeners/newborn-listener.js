@@ -5,7 +5,7 @@ import newBornRepository from "../repositories/newborn-repository.js";
 import ZodValidator from "../validations/zod-validator.js";
 import EventValidation from "../validations/event-validation.js";
 
-export default class NewbornListener{
+export default class NewbornListener {
     static registerEvent() {
         eventEmitter.on(NEW_BORN_CHANNEL, this.handleEvent);
     }

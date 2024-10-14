@@ -26,6 +26,7 @@ import PegawaiModel from "../models/pegawai-model.js";
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
+import LokasiModel from "../models/lokasi-model.js";
 
 export default class RawatJalanRepository {
     /**
@@ -110,6 +111,15 @@ export default class RawatJalanRepository {
                             attributes: ["title", "nama", "gender"]
                         }
                     ]
+                },
+                {
+                    model: LokasiModel,
+                    as: "lokasi",
+                    required: true,
+                    where: {deletedAt: {[Op.is]: null}},
+                    attributes:[
+                        "uuid", "name", "code"
+                    ]
                 }
             ],
             attributes: [
@@ -117,11 +127,17 @@ export default class RawatJalanRepository {
             ],
         };
 
+
+
         const transform = {
             practitioner: (row) => ({
                 uuid: undefined, // delete practitioner uuid
                 ...row.practitioner.pegawai.get(),
             }),
+            polyclinic: (row) => ({
+                ...row.lokasi.get(),
+            }),
+            lokasi: (row) => undefined,
         };
 
         return await Pagination.init(
