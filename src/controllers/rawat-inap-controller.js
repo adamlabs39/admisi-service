@@ -32,7 +32,10 @@ export default class RawatInapController{
     static async getAll(req, res, next){
         try{
             const data = await RawatInapService.getAll(req.query);
-            return res.status(200).json(successResponse("List Rawat Inap", data));
+            return res.status(200).json(successResponse("List Rawat Inap",
+                data.data,
+                data.pagination
+            ));
         }catch (e){
             next(e);
         }

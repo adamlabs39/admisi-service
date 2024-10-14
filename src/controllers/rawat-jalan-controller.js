@@ -4,12 +4,11 @@ import successResponse from "../responses/success-response.js";
 export default class RawatJalanController {
     static async getAll(request, response, nextFunction) {
         try {
-            const rawatJalan = await RawatJalanService.getALl(request.query);
-            console.log(response.locals.jwtData)
+            const data = await RawatJalanService.getALl(request.query);
             return response.status(200).json(successResponse(
                 "Data Rawat Jalan Berhasil Ditampilkan",
-                rawatJalan.data,
-                rawatJalan.pagination
+                data.data,
+                data.pagination
             ));
         } catch (error) {
             nextFunction(error);
