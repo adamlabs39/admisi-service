@@ -4,12 +4,13 @@ import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import PatientModel from "../models/patient-model.js";
 import RawatJalanModel from "../models/rawat-jalan-model.js";
-import AntrianPoliModel from "../models/antrian-poli-model.js";
 import {Op} from "sequelize";
 import JadwalDokterModel from "../models/jadwal-dokter-model.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 import InstalasiGawatDaruratModel from "../models/instalasi-gawat-darurat-model.js";
 import RawatInapModel from "../models/rawat-inap-model.js";
+import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
+import InsuranceAccountModel from "../models/insurance-account-model.js";
 
 dotenv.config();
 
@@ -217,6 +218,33 @@ const checkExistData = async (model, value, column = 'uuid') => {
 };
 
 
+const getInfoInsurance = async (pelayanan, noReg) => {
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
+    const typeMap = {
+        'IGD': 2,
+        'RI': 3,
+        'RJ': 1
+    };
+    const type = typeMap[pelayanan];
+    if (!type) {
+        throw new Error('Service not found');
+    }
+    return InsuranceAdmissionModel.findOne({
+        where: {
+            faskesUuid,
+            noReg,
+            admissionType: type
+        },
+        include: {
+            model: InsuranceAccountModel,
+            as: 'insurance',
+            attributes: ['code', 'account_number', 'name']
+        },
+        attributes: ['uuid']
+    });
+};
+
+
 
 
 
@@ -233,5 +261,6 @@ export {
     checkExistData,
     generateAntrianPoli,
     generateAntrianAdmisi,
-    generateNoPelayanan
+    generateNoPelayanan,
+    getInfoInsurance
 };

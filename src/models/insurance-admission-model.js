@@ -6,9 +6,9 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
+import InsuranceAccountModel from "./insurance-account-model.js";
 
-export default class InsuranceAdmissionModel extends Model {
-}
+export default class InsuranceAdmissionModel extends Model {}
 InsuranceAdmissionModel.init(
     {
         ...identifierModel,
@@ -35,3 +35,11 @@ InsuranceAdmissionModel.init(
         hooks: hookModel,
     }
 )
+
+
+InsuranceAdmissionModel.belongsTo(InsuranceAccountModel,{
+    foreignKey: 'insurance_account_uuid',
+    as: 'insurance',
+    targetKey: 'uuid',
+    constraints: false
+})

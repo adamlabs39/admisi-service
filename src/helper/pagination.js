@@ -23,7 +23,7 @@ export default class Pagination {
     }
 
     static async transform(data, transformMap) {
-        return data.map(row => {
+        return Promise.all(data.map(async (row) => {
             let transformedRow = { ...row.get() };
 
             for (const [key, transformFn] of Object.entries(transformMap)) {
@@ -31,13 +31,13 @@ export default class Pagination {
                     if (key === 'remove') {
                         transformFn.forEach(k => delete transformedRow[k]);
                     } else {
-                        transformedRow[key] = transformFn(transformedRow);
+                        transformedRow[key] = await transformFn(transformedRow);
                     }
                 }
             }
 
             return transformedRow;
-        });
+        }));
     }
 
 

@@ -1,7 +1,7 @@
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import LogPelayananModel from "../models/log-pelayanan-model.js"
-import {convertSnakeToCamel} from "../helper/utility.js";
+import {convertSnakeToCamel, getInfoInsurance} from "../helper/utility.js";
 import {Op} from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import PatientModel from "../models/patient-model.js";
@@ -10,6 +10,7 @@ import BirthDetailModel from "../models/birth-detail-model.js";
 import PractitionerModel from "../models/practitioner-model.js";
 import PegawaiModel from "../models/pegawai-model.js";
 import Pagination from "../helper/pagination.js";
+import LokasiModel from "../models/lokasi-model.js";
 
 export default class LogPelayananRepository {
 
@@ -125,12 +126,12 @@ export default class LogPelayananRepository {
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
                                 attributes: [
-                                    'age_year', 'age_month', 'age_day'
+                                    "age_year", "age_month", "age_day", "birth_date"
                                 ]
                             },
                         ],
                         attributes: [
-                            "uuid", "title", "name", "identity", "no_identity", "phone"
+                            "uuid", "title", "name", "identity", "no_identity", "phone", "gender"
                         ]
                     },
                     {
@@ -149,9 +150,16 @@ export default class LogPelayananRepository {
                             }
                         ]
                     },
+                    {
+                        model: LokasiModel,
+                        as: "lokasi",
+                        required: false,
+                        where: {deletedAt: {[Op.is]: null}},
+                        attributes: ["name"]
+                    },
                 ],
                 attributes: [
-                    "tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "lokasi_uuid"
+                    "tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid"
                 ]
             }
 
@@ -160,6 +168,8 @@ export default class LogPelayananRepository {
                     uuid: undefined, // delete practitioner uuid
                     ...row.practitioner.pegawai.get(),
                 }),
+                polyclinic: (row) => row.lokasi ? row.lokasi.get().name : '-',
+                lokasi: (row) => undefined
             };
             return await Pagination.init(
                 LogPelayananModel,
@@ -280,7 +290,7 @@ export default class LogPelayananRepository {
         }
     }
 
-    static async getAllLogPenunjang(args) {
+    static async getAllLogPenjamin(args) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         try {
             const filter = {
@@ -307,6 +317,8 @@ export default class LogPelayananRepository {
             }
 
             if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
+            if (args.penjamin) filter.paymentMethod = args.penjamin;
+            if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
 
             const options = {
                 include: [
@@ -335,13 +347,20 @@ export default class LogPelayananRepository {
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
                                 attributes: [
-                                    'age_year', 'age_month', 'age_day'
+                                    'age_year', 'age_month', 'age_day', 'birth_date'
                                 ]
                             },
                         ],
                         attributes: [
-                            "uuid", "title", "name", "identity", "no_identity", "phone"
+                            "uuid", "title", "name", "identity", "no_identity", "phone", "gender"
                         ]
+                    },
+                    {
+                        model: LokasiModel,
+                        as: "lokasi",
+                        required: false,
+                        where: {deletedAt: {[Op.is]: null}},
+                        attributes: ["name"]
                     },
                     {
                         model: PractitionerModel,
@@ -370,6 +389,7 @@ export default class LogPelayananRepository {
                     uuid: undefined, // delete practitioner uuid
                     ...row.practitioner.pegawai.get(),
                 }),
+                no_penjamin: async (row) => row.payment_method === 2 ? (await getInfoInsurance(row.jenis_kunjungan, row.noreg)).insurance : null,
             };
 
             return await Pagination.init(

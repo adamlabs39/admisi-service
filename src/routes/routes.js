@@ -55,7 +55,7 @@ routes.get("/general-consent/detail/:uuid", GeneralConsentController.getDetail);
 
 // Report
 routes.get("/report/kunjungan", ReportController.getReport);
-routes.get("/report/penunjang", ReportController.getReportPenunjang);
+routes.get("/report/penunjang", ReportController.getReportPenjamin);
 routes.get("/report/cancel-visit", ReportController.getCancelVisitReport);
 routes.get("/report/room", ReportController.getReportRoom);
 routes.get("/report/rawat-inap", ReportController.getReportRawatInap);
