@@ -7,6 +7,7 @@ import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
 import AddressModel from "./address-model.js";
+import BirthDetailModel from "./birth-detail-model.js";
 
 export default class NewBornModel extends Model {}
 NewBornModel.init(
@@ -74,6 +75,13 @@ NewBornModel.init(
 NewBornModel.belongsTo(AddressModel, {
     foreignKey: "address_uuid",
     as: "address",
+    constraints: false,
+    targetKey: "uuid"
+})
+
+NewBornModel.belongsTo(BirthDetailModel, {
+    foreignKey: "birth_detail_uuid",
+    as: "birth_detail",
     constraints: false,
     targetKey: "uuid"
 })

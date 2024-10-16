@@ -43,7 +43,7 @@ export default class PatientController {
     static async findAll(req, res, next) {
         try {
             const patient = await PatientService.findAll(req.query);
-            return res.status(200).json(successResponse("Berhasil Menampilkan Pasien", patient));
+            return res.status(200).json(successResponse("Berhasil Menampilkan Pasien", patient.data, patient.pagination));
         } catch (error) {
             next(error);
         }

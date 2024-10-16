@@ -54,6 +54,14 @@ LogPelayananModel.init(
             type: DataTypes.INTEGER,
             allowNull: true,
         },
+        cancelDate: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+        },
+        cancelBy: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
         ...fieldTime
     },
     {

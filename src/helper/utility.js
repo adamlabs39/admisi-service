@@ -245,7 +245,26 @@ const getInfoInsurance = async (pelayanan, noReg) => {
 };
 
 
+const getInfoPelayanan = async (pelayanan, noreg, column = ['uuid']) => {
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
+    const availableModel = {
+        'IGD': InstalasiGawatDaruratModel,
+        'RI': RawatInapModel,
+        'RJ': RawatJalanModel
+    };
 
+    const model = availableModel[pelayanan];
+
+    if (!model) throw new Error('Service not found');
+
+    return model.findOne({
+        where: {
+            faskesUuid,
+            noReg: noreg
+        },
+        attributes: column
+    });
+}
 
 
 export {

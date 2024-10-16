@@ -268,7 +268,7 @@ export default class MonitoringRoomRepository {
                 faskesUuid,
                 deletedAt: {[Op.is]: null}
             }
-            if(args.class) filter.roomClass = args.class;
+            if(args.room) filter.room = args.room;
 
             const options = {
                 attributes: [

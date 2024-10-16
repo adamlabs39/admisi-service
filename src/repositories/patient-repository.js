@@ -183,18 +183,26 @@ export default class PatientRepository{
         }
     }
 
-    static async getAllPatient(args){
-        try{
+    static async getAllPatient(args) {
+        try {
             const filter = {
-                name: {
-                    [Op.like]: `%${args.search || ""}%`
-                },
-                noRm: {
-                    [Op.like]: `%${args.search || ""}%`
-                },
-                noIdentity:{
-                    [Op.like]: `%${args.search || ""}%`
-                }
+                [Op.or]: [
+                    {
+                        name: {
+                            [Op.like]: `%${args.q || ""}%`
+                        }
+                    },
+                    {
+                        noRm: {
+                            [Op.like]: `%${args.q || ""}%`
+                        }
+                    },
+                    {
+                        noIdentity: {
+                            [Op.like]: `%${args.q || ""}%`
+                        }
+                    }
+                ]
             };
 
             const option = {
@@ -202,8 +210,8 @@ export default class PatientRepository{
                     model: AddressModel,
                     required: true,
                     as: "address",
-                    attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "country"]
-                },{
+                    attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country"]
+                }, {
                     model: BirthDetailModel,
                     required: true,
                     as: "birth_detail",
@@ -215,19 +223,22 @@ export default class PatientRepository{
                     "name",
                     "gender",
                     "status",
+                    "phone"
                 ],
-            }
+            };
+
             return await Pagination.init(
                 PatientModel,
                 args,
                 filter,
                 option
             );
-        }catch (error){
+        } catch (error) {
             console.log(error);
             throw error;
         }
     }
+
 
 
     static async getOnePatientBy(col, val){

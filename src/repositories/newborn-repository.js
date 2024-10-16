@@ -7,6 +7,7 @@ import {Op} from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import AddressModel from "../models/address-model.js";
 import Pagination from "../helper/pagination.js";
+import BirthDetailModel from "../models/birth-detail-model.js";
 
 export default class newBornRepository {
     static async upsertNewBorn(data, transaction) {
@@ -64,10 +65,15 @@ export default class newBornRepository {
                         model: AddressModel,
                         as: 'address',
                         attributes: []
+                    },
+                    {
+                        model: BirthDetailModel,
+                        as: 'birth_detail',
+                        attributes: ["birth_place", "birth_date"]
                     }
                 ],
                 attributes:[
-                    "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_detail_uuid", "birth_time_baby", "gender_baby", "multiple_birth", "address_uuid", "tanggal_daftar"
+                    "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"
                 ]
             }
 

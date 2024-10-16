@@ -508,13 +508,12 @@ export default class RawatInapRepository {
                 ];
             }
 
-            // Add filter for room_class if provided
-            if (args.room_class) {
+            if (args.room) {
                 filter[Op.and] = [
                     ...(filter[Op.and] || []),
                     sequelizeInstance.where(
-                        sequelizeInstance.col('monitoring_room.room_class'),
-                        { [Op.is]: args.room_class }
+                        sequelizeInstance.col('monitoring_room.room'),
+                        { [Op.eq]: args.room }
                     )
                 ];
             }

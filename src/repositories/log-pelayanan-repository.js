@@ -11,6 +11,7 @@ import PractitionerModel from "../models/practitioner-model.js";
 import PegawaiModel from "../models/pegawai-model.js";
 import Pagination from "../helper/pagination.js";
 import LokasiModel from "../models/lokasi-model.js";
+import moment from "moment";
 
 export default class LogPelayananRepository {
 
@@ -48,12 +49,14 @@ export default class LogPelayananRepository {
 
 
     static async cancelVisitLogPelayanan(data) {
-        const {faskesUuid} = Context.get(CTX_AUTHOR);
+        const {faskesUuid, name} = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
         try {
             return await LogPelayananModel.update({
                 status: false,
-                cancelReason: data.cancelReason
+                cancelReason: data.cancelReason,
+                cancelDate: moment().unix(),
+                cancelBy: name,
             }, {
                 where: {
                     faskesUuid,
@@ -131,7 +134,7 @@ export default class LogPelayananRepository {
                             },
                         ],
                         attributes: [
-                            "uuid", "title", "name", "identity", "no_identity", "phone", "gender"
+                            "uuid", "title", "name", "identity", "no_identity", "phone", "gender", "no_rm"
                         ]
                     },
                     {
@@ -245,7 +248,7 @@ export default class LogPelayananRepository {
                             },
                         ],
                         attributes: [
-                            "uuid", "title", "name", "identity", "no_identity", "phone"
+                            "uuid", "title", "name", "identity", "no_identity", "phone", "no_rm"
                         ]
                     },
                     {
@@ -264,9 +267,16 @@ export default class LogPelayananRepository {
                             }
                         ]
                     },
+                    {
+                        model: LokasiModel,
+                        as: "lokasi",
+                        required: false,
+                        where: {deletedAt: {[Op.is]: null}},
+                        attributes: ["name"]
+                    }
                 ],
                 attributes: [
-                    "tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "lokasi_uuid", "cancel_reason"
+                    "tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "lokasi_uuid", "cancel_reason", "cancel_date", "cancel_by"
                 ]
             }
 
@@ -275,6 +285,8 @@ export default class LogPelayananRepository {
                     uuid: undefined, // delete practitioner uuid
                     ...row.practitioner.pegawai.get(),
                 }),
+                polyclinic: (row) => row.lokasi ? row.lokasi.get().name : '-',
+                lokasi: (row) => undefined
             };
             return await Pagination.init(
                 LogPelayananModel,
@@ -352,7 +364,7 @@ export default class LogPelayananRepository {
                             },
                         ],
                         attributes: [
-                            "uuid", "title", "name", "identity", "no_identity", "phone", "gender"
+                            "uuid", "title", "name", "identity", "no_identity", "phone", "gender", "no_rm"
                         ]
                     },
                     {
