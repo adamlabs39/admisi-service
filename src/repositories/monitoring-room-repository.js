@@ -10,6 +10,8 @@ import PatientModel from "../models/patient-model.js";
 import RuanganRepository from "./ruangan-repository.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import BadRequestException from "../exception/bad-request-exception.js";
+import DuplicateException from "../exception/duplicate-exception.js";
+import moment from "moment";
 
 export default class MonitoringRoomRepository {
     static async getAllRoom(args) {
@@ -110,17 +112,22 @@ export default class MonitoringRoomRepository {
                         model: PatientModel,
                         required: false,
                         as: "patient",
+                        attributes: ["no_rm", "name", "gender"]
                     }
                 ],
+                order: [["no_bed", "ASC"]],
                 attributes: ["uuid", "patient_uuid", "room_category", "room_class", "room", "bed_name", "no_bed"]
             });
-            return data.map(item => {
-                return {
-                    ...item.toJSON(),
-                    total_bed: data.length,
-                    is_available: item.patient === null
-                };
-            });
+
+            return {
+                total_bed: data.length,
+                detail: data.map(item => {
+                    return {
+                        ...item.toJSON(),
+                        is_available: item.patient === null
+                    };
+                })
+            }
         } catch (error) {
             console.log(error);
             throw error;
@@ -203,12 +210,20 @@ export default class MonitoringRoomRepository {
                 // Delete beds that are not in the incoming data
                 for (const bed of existingBeds) {
                     if (!incomingUuids.includes(bed.uuid)) {
-                        await bed.destroy({transaction: t});
+                        if (bed.patientUuid) throw new BadRequestException("Bed is occupied");
+                        await bed.update({deletedAt: moment().unix()}, {transaction: t});
                     }
                 }
 
                 // Update existing beds or create new ones
                 for (const bedData of data) {
+                    // check no bed is duplicated
+                    const checkDuplicate = data.filter(bed => bed.no_bed === bedData.no_bed);
+
+                    if (checkDuplicate.length > 1) {
+                        throw new DuplicateException(`No bed is duplicated: ${bedData.no_bed}`);
+                    }
+
                     if (bedData.uuid) {
                         await RoomMonitoringModel.update(
                             {
