@@ -487,39 +487,45 @@ export default class RawatInapRepository {
         try {
             const filter = {
                 faskesUuid,
+                [Op.or]: [
+                    {no_rm: {[Op.iLike]: `%${args.q || ''}%`}}, // Find by no_rm
+                    sequelizeInstance.where(
+                        sequelizeInstance.fn('concat', sequelizeInstance.col('patient.title'), ' ', sequelizeInstance.col('patient.name')),
+                        {[Op.iLike]: `%${args.q || ''}%`}
+                    ), // Find by title and name
+                    sequelizeInstance.where(
+                        sequelizeInstance.col('patient.address.full_address'),
+                        {[Op.iLike]: `%${args.q || ''}%`}
+                    ) // Find by address
+                ],
                 status_ri: { [Op.not]: 0 },
                 tanggalDaftar: {
                     [Op.between]: [args.start_date, args.end_date]
                 }
             };
 
-            // Add search filter if 'args.q' is provided
-            if (args.q) {
-                filter[Op.or] = [
-                    { no_rm: { [Op.iLike]: `%${args.q}%` } },
-                    sequelizeInstance.where(
-                        sequelizeInstance.fn('concat', sequelizeInstance.col('patient.title'), ' ', sequelizeInstance.col('patient.name')),
-                        { [Op.iLike]: `%${args.q}%` }
-                    ),
-                    sequelizeInstance.where(
-                        sequelizeInstance.col('patient.address.full_address'),
-                        { [Op.iLike]: `%${args.q}%` }
-                    )
-                ];
-            }
 
-            if (args.room) {
-                filter[Op.and] = [
-                    ...(filter[Op.and] || []),
-                    sequelizeInstance.where(
-                        sequelizeInstance.col('monitoring_room.room'),
-                        { [Op.eq]: args.room }
-                    )
-                ];
-            }
 
             const options = {
                 include: [
+                    {
+                        model: PatientModel,
+                        as: "patient",
+                        required: true,
+                        where: { deletedAt: { [Op.is]: null } },
+                        include: [
+                            {
+                                model: AddressModel,
+                                as: "address",
+                                required: true,
+                                where: {
+                                    deletedAt: {[Op.is]: null}
+                                },
+                                attributes: [],
+                            },
+                        ],
+                        attributes: [],
+                    },
                     {
                         model: RoomMonitoringModel,
                         as: "monitoring_room",

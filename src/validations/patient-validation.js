@@ -16,7 +16,7 @@ export default class PatientValidation{
         phone: z.string().max(15),
         religion: z.string().max(25),
         language: z.string().max(50),
-        maritialStatus: z.string().max(50),
+        maritial_status: z.string().max(50),
         mother_name: z.string().max(255),
         address: z.object({
             prov: z.string().max(150),
