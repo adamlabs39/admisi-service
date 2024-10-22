@@ -55,9 +55,14 @@ export default class RawatInapRepository {
             }
         }
 
-        if (args.payment_method) filter.paymentMethod = args.paymentMethod;
+        if (args.payment_method) filter.paymentMethod = args.payment_method;
         if (args.dpjp) filter.practitionerUuid = args.dpjp;
-
+        if (args.room) {
+            filter[Op.and] = sequelizeInstance.where(
+                sequelizeInstance.col('monitoring_room.room'),
+                {[Op.iLike]: `%${args.room}%`}
+            );
+        }
         const options = {
             include: [
                 {
@@ -118,7 +123,7 @@ export default class RawatInapRepository {
                 }
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat"
+                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method"
             ]
         }
 
