@@ -331,7 +331,7 @@ export default class InstallasiGawatDaruratRepository {
 
         if (args.payment_method) filter.paymentMethod = args.payment_method;
         if (args.dpjp) filter.practitionerUuid = args.dpjp;
-        if (args.without_identity) filter.withoutIdentity = args.without_identity;
+        if (args.without_identity) filter.withoutIdentity = Boolean(args.without_identity);
 
         const options = {
             include: [
