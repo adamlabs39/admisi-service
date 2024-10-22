@@ -19,6 +19,7 @@ import PractitionerModel from "../models/practitioner-model.js";
 import PegawaiModel from "../models/pegawai-model.js";
 import Pagination from "../helper/pagination.js";
 import BadRequestException from "../exception/bad-request-exception.js";
+import {boolean} from "zod";
 
 export default class InstallasiGawatDaruratRepository {
     static async registIGD(data) {
@@ -330,6 +331,7 @@ export default class InstallasiGawatDaruratRepository {
 
         if (args.payment_method) filter.paymentMethod = args.paymentMethod;
         if (args.dpjp) filter.practitionerUuid = args.dpjp;
+        if (args.without_identity) filter.withoutIdentity = args.without_identity;
 
         const options = {
             include: [

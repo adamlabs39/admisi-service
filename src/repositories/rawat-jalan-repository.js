@@ -57,10 +57,9 @@ export default class RawatJalanRepository {
         };
 
         if (args.poly) filter.lokasiUuid = args.poly;
-
         if (args.platform) filter.platform = args.platform;
-
         if (args.payment_method) filter.paymentMethod = args.payment_method;
+        if (args.dpjp) filter.practitionerUuid = args.dpjp;
 
         const options = {
             include: [
