@@ -389,7 +389,7 @@ export default class InstallasiGawatDaruratRepository {
                 },
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity", "newborn"
+                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity", "newborn", "payment_method"
             ]
         }
 
