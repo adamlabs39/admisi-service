@@ -130,7 +130,7 @@ export default class RawatJalanRepository {
                 }
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method"
+                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj"
             ],
         };
 
@@ -181,7 +181,7 @@ export default class RawatJalanRepository {
                                 as: "address",
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
-                                attributes:["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country"]
+                                attributes:["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"]
                             },
                             {
                                 model: BirthDetailModel,

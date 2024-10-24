@@ -331,9 +331,6 @@ export default class InstallasiGawatDaruratRepository {
 
         if (args.payment_method) filter.paymentMethod = args.payment_method;
         if (args.dpjp) filter.practitionerUuid = args.dpjp;
-        console.log('===========================')
-        console.log(args)
-        console.log('===========================')
         if (args.without_identity) filter.withoutIdentity = args.without_identity;
 
         const options = {
@@ -359,7 +356,7 @@ export default class InstallasiGawatDaruratRepository {
                         },
                     ],
                     attributes: [
-                        "uuid", "title", "name", "identity", "no_identity", "phone", "gender"
+                        "uuid", "title", "name", "identity", "no_identity", "phone", "gender", "is_new_born"
                     ]
                 },
                 {
@@ -389,7 +386,7 @@ export default class InstallasiGawatDaruratRepository {
                 },
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity", "newborn", "payment_method"
+                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity",  "payment_method"
             ]
         }
 

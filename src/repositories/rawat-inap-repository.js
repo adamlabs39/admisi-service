@@ -86,7 +86,7 @@ export default class RawatInapRepository {
                         },
                     ],
                     attributes: [
-                        "uuid", "title", "name", "identity", "no_identity", "phone", "gender"
+                        "uuid", "title", "name", "identity", "no_identity", "phone", "gender", "is_new_born"
                     ]
                 },
                 {
