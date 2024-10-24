@@ -405,7 +405,7 @@ export default class RawatInapRepository {
                                 as: "address",
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country"]
+                                attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"]
                             },
                             {
                                 model: BirthDetailModel,

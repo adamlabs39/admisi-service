@@ -32,7 +32,6 @@ export default class PatientValidation{
     })
 
     static NEWBORN_VALIDATOR = z.object({
-        patient_uuid: z.nullable(z.string().max(255)),
         title: z.string().max(255),
         name: z.string().max(255),
         identity: z.string().max(255).nullable(),
@@ -51,7 +50,6 @@ export default class PatientValidation{
         language: z.string().max(50).nullable(),
         mother_name: z.string().max(255),
         address: z.object({
-            address_uuid: z.nullable(z.string().max(255).optional()),
             prov: z.string().max(150),
             city: z.string().max(150),
             district: z.string().max(150),

@@ -21,7 +21,6 @@ export default class RawatInapValidation {
     static UPDATE_NEWBORN = z.object({
         is_newborn: z.boolean().default(false).optional(),
         patient_data: z.object({
-            patient_uuid: z.string().max(255),
             ...PatientValidation.NEWBORN_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),

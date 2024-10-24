@@ -33,7 +33,6 @@ export default class RawatInapService{
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
         const schema = data.is_newborn ? RawatInapValidation.UPDATE_NEWBORN : RawatInapValidation.UPDATE_PATIENT;
-        const pepek = data.is_newborn ? 'newborn' : 'patient';
         let validData = ZodValidator.validate(schema, data);
         if (!validData) throw new Error("Bad Request");
 
