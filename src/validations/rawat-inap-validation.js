@@ -7,7 +7,6 @@ export default class RawatInapValidation {
             ...PatientValidation.NEWBORN_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        polyclinic: z.string().max(255),
         complaint: z.string().max(255),
         note: z.string().max(255),
         join_bill: z.boolean().default(false),
@@ -26,7 +25,6 @@ export default class RawatInapValidation {
             ...PatientValidation.NEWBORN_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        polyclinic: z.string().max(255),
         complaint: z.string().max(255),
         note: z.string().max(255),
         join_bill: z.boolean().default(false),
@@ -43,7 +41,6 @@ export default class RawatInapValidation {
             ...PatientValidation.PATIENT_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        polyclinic: z.string().max(255),
         complaint: z.string().max(255),
         note: z.string().max(255),
         join_bill: z.boolean().default(false),
