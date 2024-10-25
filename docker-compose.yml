@@ -22,3 +22,8 @@ services:
       - type: bind
         source: /home/admin/adameds/private.key
         target: /adameds-admisi/private.key
+    networks:
+      - admisi-bridge
+networks:
+  admisi-bridge:
+    driver: bridge
