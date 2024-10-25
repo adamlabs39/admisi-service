@@ -4,7 +4,7 @@ services:
     container_name: admisi-service
     image: admisi-service:dev
     ports:
-      - 8084:8001
+      - 8084:8004
     environment:
       APP_MODE: ${APP_MODE}
       APP_NAME: ${APP_NAME}
