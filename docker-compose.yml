@@ -1,6 +1,7 @@
 version: '3.8'
 services:
   adameds-admisi:
+    container_name: admisi-service
     image: admisi-service:dev
     ports:
       - "${APP_PORT}:8001"
