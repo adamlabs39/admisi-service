@@ -1,6 +1,8 @@
 FROM node:19.5.0-alpine
 WORKDIR /adameds-admisi
 COPY . .
+ENV APP_PORT=8083
+ENV APP_HOST=0.0.0.0
 RUN npm install
-EXPOSE 8003/tcp
+EXPOSE ${APP_PORT}/tcp
 CMD ["npm", "run", "start"]

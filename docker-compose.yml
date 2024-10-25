@@ -6,7 +6,6 @@ services:
     environment:
       APP_MODE: ${APP_MODE}
       APP_NAME: ${APP_NAME}
-      APP_PORT: ${APP_PORT}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
