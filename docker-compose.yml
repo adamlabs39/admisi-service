@@ -3,8 +3,6 @@ services:
   adameds-admisi:
     container_name: admisi-service
     image: admisi-service:dev
-    ports:
-      - 8083:8003
     environment:
       APP_MODE: ${APP_MODE}
       APP_NAME: ${APP_NAME}
@@ -23,7 +21,9 @@ services:
         source: /home/admin/adameds/private.key
         target: /adameds-admisi/private.key
     networks:
-      - admisi-bridge
+      - admisi
+    ports:
+      - 8083:8083
 networks:
-  admisi-bridge:
+  admisi:
     driver: bridge

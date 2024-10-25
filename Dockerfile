@@ -3,4 +3,4 @@ WORKDIR /adameds-admisi
 COPY . .
 RUN npm install
 EXPOSE 8003/tcp
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]
