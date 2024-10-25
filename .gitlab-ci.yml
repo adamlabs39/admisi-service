@@ -5,9 +5,7 @@ stages:
 build-image:
   stage: build
   before_script:
-    - docker compose down --rmi all
-    - echo "@adameds:registry=https://gitlab.com/api/v4/groups/93029767/-/packages/npm/"
-    - echo "//gitlab.com/api/v4/groups/93029767/-/packages/npm/:_authToken=$AUTH_TOKEN"
+    - docker compose --env-file /home/admin/adameds/.env-admisi down --rmi all
   script:
     - docker build -t admisi-service:dev ./ --no-cache
   only:

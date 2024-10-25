@@ -14,8 +14,6 @@ services:
       DB_HOST: ${DB_HOST}
       DB_PORT: ${DB_PORT}
       SYNC_DB: ${SYNC_DB}
-    env_file:
-      - /home/admin/adameds/.env-admisi
     volumes:
       - type: bind
         source: /home/admin/adameds/public.key
