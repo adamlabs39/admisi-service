@@ -1,34 +1,25 @@
 version: '3.8'
-
 services:
-  app:
-    build: .
+  adameds-admisi:
+    image: admisi-service:dev
     ports:
       - "${APP_PORT}:8001"
     environment:
-      - APP_MODE=${APP_MODE}
-      - APP_NAME=${APP_NAME}
-      - APP_PORT=${APP_PORT}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - SYNC_DB=${SYNC_DB}
+      APP_MODE: ${APP_MODE}
+      APP_NAME: ${APP_NAME}
+      APP_PORT: ${APP_PORT}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      SYNC_DB: ${SYNC_DB}
     env_file:
-      - .env
-
-  db:
-    image: postgres:latest
-    restart: always
-    environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "54322:5432"
+      - /home/admin/adameds/.env-admisi
     volumes:
-      - pg_data:/var/lib/postgresql/data
-
-volumes:
-  pg_data:
+      - type: bind
+        source: /home/admin/adameds/public.key
+        target: /adameds-admisi/public.key
+      - type: bind
+        source: /home/admin/adameds/private.key
+        target: /adameds-admisi/private.key
