@@ -4,12 +4,7 @@ import PatientRepository from "./patient-repository.js";
 import MonitoringRoomRepository from "./monitoring-room-repository.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
-import {
-    convertSnakeToCamel,
-    generateNoPelayanan,
-    generateNoReg,
-    selectAttributes
-} from "../helper/utility.js";
+import {convertSnakeToCamel, generateNoPelayanan, generateNoReg, selectAttributes} from "../helper/utility.js";
 import moment from "moment";
 import {eventEmitter} from "../helper/event.js";
 import {
@@ -31,6 +26,7 @@ import PractitionerModel from "../models/practitioner-model.js";
 import PegawaiModel from "../models/pegawai-model.js";
 import Pagination from "../helper/pagination.js";
 import RoomMonitoringModel from "../models/room-monitoring-model.js";
+import RuanganModel from "../models/ruangan-model.js";
 
 export default class RawatInapRepository {
     static async getAll(args) {
@@ -443,6 +439,17 @@ export default class RawatInapRepository {
                 });
                 if (newBorn) rawatInap.patient.dataValues.new_born = newBorn.dataValues;
             }
+
+            if (rawatInap.monitoring_room) {
+                const detailRuangan = await RuanganModel.findOne({
+                    where: { uuid: rawatInap.monitoring_room.room_uuid },
+                    attributes: ["kategori_ruangan_uuid"]
+                });
+                if (detailRuangan) {
+                    rawatInap.monitoring_room.dataValues.kategori_ruangan_uuid = detailRuangan.kategori_ruangan_uuid;
+                }
+            }
+
             return rawatInap;
         } catch (error) {
             console.error("Error get detail Rawat Inap:", error);
