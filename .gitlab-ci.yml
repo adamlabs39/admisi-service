@@ -16,4 +16,4 @@ deploy-app:
   only:
     - main
   script:
-    - docker compose up -d
+    - docker compose --env-file /home/admin/adameds/.env-admisi up -d
