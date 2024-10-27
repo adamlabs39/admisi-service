@@ -25,7 +25,7 @@ export default class MonitoringRoomController{
 
     static async updateBed(req,res,next){
         try{
-            const data = await MonitoringRoomService.updateBed(req.params.uuid, req.body);
+            await MonitoringRoomService.updateBed(req.params.uuid, req.body);
             return res.status(200).json(successResponse("Success update bed"));
         }catch (error){
             console.log(error);
