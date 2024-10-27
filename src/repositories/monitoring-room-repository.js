@@ -225,21 +225,23 @@ export default class MonitoringRoomRepository {
                     }
 
                     if (bedData.uuid) {
-                        await RoomMonitoringModel.update(
+                        console.log("ada uuid", bedData.uuid);
+                       await RoomMonitoringModel.update(
                             {
-                                bed_name: bedData.bed_name,
-                                no_bed: bedData.no_bed
+                                bedName: bedData.bed_name,
+                                noBed: bedData.no_bed
                             },
                             {
                                 where: {
                                     uuid: bedData.uuid,
-                                    room_uuid: uuid,
-                                    faskesUuid: user.faskesUuid
+                                    faskesUuid: user.faskesUuid,
+                                    deletedAt: {[Op.is]: null}
                                 },
                                 transaction: t
                             }
                         );
                     } else {
+                        console.log("tidak ada uuid");
                         await RoomMonitoringModel.create(
                             {
                                 roomUuid: uuid,
