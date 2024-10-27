@@ -54,10 +54,15 @@ export default class RawatInapRepository {
         if (args.payment_method) filter.paymentMethod = args.payment_method;
         if (args.dpjp) filter.practitionerUuid = args.dpjp;
         if (args.room) {
-            filter[Op.and] = sequelizeInstance.where(
-                sequelizeInstance.col('monitoring_room.room'),
-                {[Op.iLike]: `%${args.room}%`}
-            );
+            const roomArray = args.room.split(',').map(item => item.trim());
+            filter[Op.and] = {
+                [Op.or]: roomArray.map(room =>
+                    sequelizeInstance.where(
+                        sequelizeInstance.col('monitoring_room.room'),
+                        { [Op.iLike]: `%${room}%` }
+                    )
+                )
+            };
         }
         const options = {
             include: [
@@ -159,6 +164,7 @@ export default class RawatInapRepository {
 
             // Get Bed Details
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
+            console.log("Bed Data:", bedData);
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
             // Insert into RawatInap
             const registRI = await RawatInapModel.create({

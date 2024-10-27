@@ -28,10 +28,15 @@ export default class MonitoringRoomRepository {
                 [Op.and]: [
                     {faskesUuid: user.faskesUuid},
                     {deletedAt: {[Op.is]: null}},
-                    {kelasRuangan: args.filter_kelas || {[Op.ne]: null}},
-                    {kategoriRuanganUuid: args.filter_kategori || {[Op.ne]: null}},
                 ]
             };
+
+            if(args.filter_kategori) {
+                const kategoriArr = args.filter_kategori.split(",");
+                filter.kategoriRuanganUuid = {
+                    [Op.in]: kategoriArr
+                };
+            }
 
             const option = {
                 include: [
@@ -39,6 +44,9 @@ export default class MonitoringRoomRepository {
                         model: RoomMonitoringModel,
                         required: true,
                         as: "room_monitorings",
+                        where: {
+                            deletedAt: {[Op.is]: null}
+                        },
                         attributes: [
                             "uuid",
                             "patient_uuid",
@@ -138,7 +146,7 @@ export default class MonitoringRoomRepository {
     static async getDetailBed(uuid) {
         const user = Context.get(CTX_AUTHOR);
         try{
-            return await RoomMonitoringModel.findOne({
+            const result =  await RoomMonitoringModel.findOne({
                 where: {
                     [Op.and]: [
                         {uuid},
@@ -147,6 +155,8 @@ export default class MonitoringRoomRepository {
                     ]
                 },
             });
+            if(!result) throw new NotfoundException("Bed not found");
+            return result;
         }catch (error){
             throw new NotfoundException("Bed not found");
         }
