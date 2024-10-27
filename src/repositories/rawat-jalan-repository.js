@@ -56,9 +56,21 @@ export default class RawatJalanRepository {
             }
         };
 
-        if (args.poly) filter.lokasiUuid = args.poly;
-        if (args.platform) filter.platform = args.platform;
-        if (args.payment_method) filter.paymentMethod = args.payment_method;
+        if (args.poly) {
+            const polyArray = args.poly.split(',').map(item => item.trim());
+            filter.lokasiUuid = { [Op.in]: polyArray };
+        }
+
+        if (args.platform) {
+            const platformArray = args.platform.split(',').map(item => item.trim());
+            filter.platform = { [Op.in]: platformArray };
+        }
+
+        if (args.payment_method) {
+            const paymentMethodArray = args.payment_method.split(',').map(item => item.trim());
+            filter.paymentMethod = { [Op.in]: paymentMethodArray };
+        }
+
         if (args.dpjp) filter.practitionerUuid = args.dpjp;
 
         const options = {
