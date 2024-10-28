@@ -404,7 +404,7 @@ export default class RawatJalanRepository {
             ], true);
 
             const rawatJalanAttributes = selectAttributes(updatedRegist.get(), [
-                'uuid', 'noReg', 'lokasiUuid as polyclinicUuid', 'practitionerUuid as dpjpUuid', 'complaint', 'note', 'maternity'
+                'uuid', 'noReg', 'lokasiUuid as polyclinicUuid', 'practitionerUuid as dpjpUuid', 'complaint', 'note', 'maternity', 'jadwal_dokter_uuid'
             ], true);
 
             if (data.paymentMethod === 'ASURANSI') {
