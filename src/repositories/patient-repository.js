@@ -26,10 +26,14 @@ export default class PatientRepository{
                 where: { uuid, deletedAt: { [Op.is]: null } },
                 include: [
                     { model: AddressModel, as: 'address' },
-                    { model: BirthDetailModel, as: 'birth_detail' } // Update alias here
+                    { model: BirthDetailModel, as: 'birth_detail' }
                 ],
                 transaction
             }) : null;
+            // Set isNewBorn to false if not provided during update
+            if (data.isNewBorn === undefined || !data.isNewBorn) {
+                data.isNewBorn = false;
+            }
 
             // Handle address
             let address = patient ? patient.address : null;
@@ -42,7 +46,7 @@ export default class PatientRepository{
             data.addressUuid = address?.uuid || null;
 
             // Handle birth detail
-            let birthDetail = patient ? patient.birth_detail : null; // Update alias here
+            let birthDetail = patient ? patient.birth_detail : null;
             if (birthDetail) {
                 const infoAge = getInfoAge(data.birthDetail.birthDate);
                 Object.assign(data.birthDetail, infoAge);
@@ -54,6 +58,13 @@ export default class PatientRepository{
                 birthDetail = await BirthDetailModel.create(data.birthDetail, { transaction });
             }
             data.birthDetailUuid = birthDetail?.uuid || null;
+
+            // If updating and newborn status is changing to false, ensure unique noIdentity
+            if (uuid && patient.isNewBorn && !data.isNewBorn) {
+                if (!data.noIdentity || data.noIdentity === data.motherNoIdentity) {
+                    throw new DuplicateException("Patient must have a unique noIdentity upon reaching adulthood.");
+                }
+            }
 
             // Check noIdentity uniqueness if not updating existing patient
             if (!uuid && !data.isNewBorn) {

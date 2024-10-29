@@ -34,8 +34,8 @@ export default class PatientValidation{
     static NEWBORN_VALIDATOR = z.object({
         title: z.string().max(255),
         name: z.string().max(255),
-        identity: z.string().max(255).nullable(),
-        no_identity: z.string().max(255).nullable(),
+        identity: z.string().max(255),
+        no_identity: z.string().max(255),
         birth_detail: z.object({
             birth_place: z.string().max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
@@ -45,9 +45,9 @@ export default class PatientValidation{
         multiple_birth: z.boolean().default(false).optional(),
         birth_time: z.string().max(255),
         gender: z.string().max(15),
-        phone: z.string().max(15).nullable(),
-        religion: z.string().max(25).nullable(),
-        language: z.string().max(50).nullable(),
+        phone: z.nullable(z.string().max(15)),
+        religion: z.nullable(z.string().max(25)),
+        language: z.nullable(z.string().max(50)),
         mother_name: z.string().max(255),
         address: z.object({
             prov: z.string().max(150),
@@ -70,8 +70,8 @@ export default class PatientValidation{
                 message: "Invalid date format"
             }).transform(value => new Date(value)),
         }),
-        identity: z.string().max(255).nullable(),
-        no_identity: z.string().max(255).nullable(),
+        identity: z.string().max(255),
+        no_identity: z.string().max(255),
         gender: z.string().max(15),
         phone: z.nullable(z.string().max(15)),
     });

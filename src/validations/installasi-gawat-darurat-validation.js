@@ -30,7 +30,7 @@ export default class InstallasiGawatDaruratValidation {
     static IGD_VALIDATOR_NEW_BORN = z.object({
         patient_data: z.object({
             patient_uuid: z.optional(z.string().max(255).uuid()),
-            ...PatientValidation.PATIENT_VALIDATOR.shape,
+            ...PatientValidation.NEWBORN_VALIDATOR.shape,
         }),
         ...InstallasiGawatDaruratValidation.IGD_VALIDATOR.shape,
     });
