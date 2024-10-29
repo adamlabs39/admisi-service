@@ -325,7 +325,7 @@ export default class RawatJalanRepository {
 
             return {
                 ...rawatJalanAttributes,
-                patient_data: patientAttributes
+                patient: patientAttributes
             };
         });
     }
@@ -447,7 +447,7 @@ export default class RawatJalanRepository {
 
             return {
                 ...rawatJalanAttributes,
-                patient_data: patientAttributes
+                patient: patientAttributes
             };
         });
     }

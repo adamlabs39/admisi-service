@@ -65,7 +65,7 @@ export default class InstallasiGawatDaruratService{
     }
 
     static async cancelVisit(data){
-        const validData = ZodValidator.validate(InstallasiGawatDaruratValidation.CANCEL_VISIT, data);
+        const validData = ZodValidator.validate(InstallasiGawatDaruratValidation.CANCELVISIT, data);
         if (!validData) throw new Error("Bad Request");
 
         const result = await InstallasiGawatDaruratRepository.cancelVisitIGD(validData);

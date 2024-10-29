@@ -27,12 +27,10 @@ export default class InstallasiGawatDaruratRepository {
         data = convertSnakeToCamel(data);
         const transaction = await sequelizeInstance.transaction();
         try {
-            // check if newborn
-            if (data.isNewborn) data.patientData.isNewborn = true;
-
             if(data.isNewborn){
                 const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
                 if (!mom) throw new NotfoundException("Identity Mom not found! please regist the mother first");
+                data.patientData.isNewBorn = true;
             }
 
             const patient = await PatientRepository.registPatient(data.patientData, transaction);
@@ -159,6 +157,11 @@ export default class InstallasiGawatDaruratRepository {
                         }
                 });
                 if (!checkPatient) throw new NotfoundException("Patient not found");
+                if(data.isNewborn){
+                    const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
+                    if (!mom) throw new NotfoundException("Identity Mom not found! please regist the mother first");
+                    data.patientData.isNewBorn = true;
+                }
                 patient = await PatientRepository.registPatient(data.patientData, transaction);
                 if (!patient) throw new Error("Failed to process patient data");
 
@@ -185,13 +188,10 @@ export default class InstallasiGawatDaruratRepository {
             };
 
 
-            let additionalData = {};
-
-            if (data.withoutIdentity) {
-                additionalData = {withoutIdentity: true};
-            } else if (data.isNewborn) {
-                additionalData = {newborn: true};
-            }
+            const additionalData = {
+                withoutIdentity: !!data.withoutIdentity,
+                newborn: !!data.isNewborn
+            };
 
             const resultIgd = await igd.update({...commonData, ...additionalData}, {transaction});
 
@@ -236,7 +236,7 @@ export default class InstallasiGawatDaruratRepository {
 
             const result = {
                 ...igdAttributes,
-                patient: patientAttributes,
+                patient_data: patientAttributes,
             };
 
             if (insurance) {
