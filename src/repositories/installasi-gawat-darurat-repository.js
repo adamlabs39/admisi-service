@@ -140,7 +140,7 @@ export default class InstallasiGawatDaruratRepository {
     static async updateIgd(uuid, data) {
         data = convertSnakeToCamel(data);
         const { faskesUuid } = Context.get(CTX_AUTHOR);
-
+        console.log("Data IGD", data);
         return await sequelizeInstance.transaction(async (transaction) => {
             const igd = await InstalasiGawatDaruratModel.findOne({ where: { uuid }, transaction });
             if (!igd) throw new NotfoundException("IGD not found");
@@ -152,7 +152,7 @@ export default class InstallasiGawatDaruratRepository {
             if (igd.withoutIdentity !== data.withoutIdentity && igd.patientUuid !== data.patientData.patient_uuid) {
                 const checkPatient = await PatientModel.findOne({
                     where: {
-                        uuid: data.patientData.patient_uuid,
+                        uuid: data.patientData?.patient_uuid || igd.patientUuid,
                         faskesUuid,
                         deletedAt: null
                     },
@@ -196,7 +196,6 @@ export default class InstallasiGawatDaruratRepository {
             };
 
             const resultIgd = await igd.update({ ...commonData, ...additionalData }, { transaction });
-
             let insurance = null;
             if (data.paymentMethod === 'ASURANSI') {
                 insurance = await InsuranceAdmissionRepository.upsertInsuranceAdmission({
