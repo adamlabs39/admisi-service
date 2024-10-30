@@ -10,7 +10,7 @@ import zodErrorParser from "../helper/zod-error-parser.js";
 const errorMiddleware = (error, request, response, nextFunction) => {
   console.error("Error Middleware", error);
   if (error instanceof NotfoundException) {
-    return response.status(error.code).json(errorResponse(error.message));
+    return response.status(error.code).json(errorResponse(error.message, error.errors));
   }else if(error instanceof UnauthorizedException){
     return response.status(error.code).json(errorResponse(error.message));
   }
@@ -26,7 +26,12 @@ const errorMiddleware = (error, request, response, nextFunction) => {
   else if( error instanceof ZodError){
     response.status(400).json(errorResponse("Validation Error", zodErrorParser(error.errors)));
   }else{
-    response.status(500).json(errorResponse(error.message))
+    response.status(500).json(errorResponse("Internal Server Error", [
+      {
+        type: "internal server error",
+        message: error.message
+      }
+    ]));
   }
 };
 

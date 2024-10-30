@@ -238,7 +238,7 @@ export default class InstallasiGawatDaruratRepository {
 
             const result = {
                 ...igdAttributes,
-                patient_data: patientAttributes,
+                patient: patientAttributes,
             };
 
             if (insurance) {
@@ -253,7 +253,7 @@ export default class InstallasiGawatDaruratRepository {
                 no_pelayanan: resultIgd.noPelayanan,
                 practitioner_uuid: resultIgd.practitionerUuid,
                 jenis_kunjungan: "IGD",
-                patient_uuid: result.patient_data.uuid,
+                patient_uuid: result.patient.uuid,
                 lokasi_uuid: null,
                 payment_method: resultIgd.paymentMethod
             });
