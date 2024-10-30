@@ -283,7 +283,7 @@ export default class RawatJalanRepository {
             ], true);
 
             const rawatJalanAttributes = selectAttributes(regist.get(), [
-                'uuid', 'noReg', 'lokasiUuid as polyclinicUuid', 'practitionerUuid as dpjpUuid', 'complaint', 'note', 'maternity', 'jadwalDokterUuid', 'noReferensi'
+                'uuid', 'noReg', 'lokasiUuid as polyclinicUuid', 'practitionerUuid as dpjpUuid', 'complaint', 'note', 'maternity', 'jadwalDokterUuid', 'noReferensi', 'paymentMethod'
             ], true);
 
             if (data.paymentMethod === 'ASURANSI') {
@@ -404,7 +404,7 @@ export default class RawatJalanRepository {
             ], true);
 
             const rawatJalanAttributes = selectAttributes(updatedRegist.get(), [
-                'uuid', 'noReg', 'lokasiUuid as polyclinicUuid', 'practitionerUuid as dpjpUuid', 'complaint', 'note', 'maternity', 'jadwal_dokter_uuid'
+                'uuid', 'noReg', 'lokasiUuid as polyclinicUuid', 'practitionerUuid as dpjpUuid', 'complaint', 'note', 'maternity', 'jadwal_dokter_uuid', 'paymentMethod'
             ], true);
 
             if (data.paymentMethod === 'ASURANSI') {

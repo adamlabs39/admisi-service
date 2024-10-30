@@ -250,7 +250,7 @@ export default class RawatInapRepository {
             ], true);
 
             const rawatInapAttributes = selectAttributes(registRI, [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'noSpri', 'entrustedPatient', 'upgradeClass', 'previousBill', 'spareBed', 'joinBill', 'familyBill', 'boxBaby', 'multipleBirth', 'monitoringRoomUuid'
+                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'noSpri', 'entrustedPatient', 'upgradeClass', 'previousBill', 'spareBed', 'joinBill', 'familyBill', 'boxBaby', 'multipleBirth', 'monitoringRoomUuid', 'paymentMethod'
             ], true);
             const result = {
                 ...rawatInapAttributes,
@@ -353,7 +353,7 @@ export default class RawatInapRepository {
             ], true);
 
             const rawatInapAttributes = selectAttributes(updatedRawatInap, [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'maternity', 'noSpri', 'entrustedPatient', 'upgradeClass', 'previousBill', 'spareBed', 'joinBill', 'familyBill', 'boxBaby', 'multipleBirth', 'monitoringRoomUuid'
+                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'maternity', 'noSpri', 'entrustedPatient', 'upgradeClass', 'previousBill', 'spareBed', 'joinBill', 'familyBill', 'boxBaby', 'multipleBirth', 'monitoringRoomUuid', 'paymentMethod'
             ], true);
 
             const result = {

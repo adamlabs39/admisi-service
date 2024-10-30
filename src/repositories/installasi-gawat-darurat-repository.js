@@ -19,7 +19,7 @@ import PractitionerModel from "../models/practitioner-model.js";
 import PegawaiModel from "../models/pegawai-model.js";
 import Pagination from "../helper/pagination.js";
 import BadRequestException from "../exception/bad-request-exception.js";
-import {boolean} from "zod";
+import NewBornModel from "../models/new-born-model.js";
 
 export default class InstallasiGawatDaruratRepository {
     static async registIGD(data) {
@@ -104,12 +104,13 @@ export default class InstallasiGawatDaruratRepository {
             ], true);
 
             const igdAttributes = selectAttributes(resultIgd, [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity', 'noPelayanan'
+                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity', 'noPelayanan', 'paymentMethod'
             ], true);
             const result = {
                 ...igdAttributes,
                 patient: patientAttributes,
             };
+
             if (insurance) {
                 result.insurance = selectAttributes(insurance, [
                     'uuid', 'noReg', 'insuranceAccountUuid', 'admissionType', 'status'
@@ -137,29 +138,30 @@ export default class InstallasiGawatDaruratRepository {
 
 
     static async updateIgd(uuid, data) {
-        const transaction = await sequelizeInstance.transaction();
         data = convertSnakeToCamel(data);
-        const {faskesUuid} = Context.get(CTX_AUTHOR);
-        try {
-            const igd = await InstalasiGawatDaruratModel.findOne({where: {uuid}, transaction});
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+
+        return await sequelizeInstance.transaction(async (transaction) => {
+            const igd = await InstalasiGawatDaruratModel.findOne({ where: { uuid }, transaction });
             if (!igd) throw new NotfoundException("IGD not found");
+
             const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
             if (!practitioner) throw new NotfoundException('Practitioner not found');
 
             let patient = null;
             if (igd.withoutIdentity !== data.withoutIdentity && igd.patientUuid !== data.patientData.patient_uuid) {
                 const checkPatient = await PatientModel.findOne({
-                    where:
-                        {
-                            uuid: data.patientData.patient_uuid,
-                            faskesUuid,
-                            deletedAt: null
-                        }
+                    where: {
+                        uuid: data.patientData.patient_uuid,
+                        faskesUuid,
+                        deletedAt: null
+                    },
+                    transaction
                 });
                 if (!checkPatient) throw new NotfoundException("Patient not found");
-                if(data.isNewborn){
+                if (data.isNewborn) {
                     const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
-                    if (!mom) throw new NotfoundException("Identity Mom not found! please regist the mother first");
+                    if (!mom) throw new NotfoundException("Identity Mom not found! please register the mother first");
                     data.patientData.isNewBorn = true;
                 }
                 patient = await PatientRepository.registPatient(data.patientData, transaction);
@@ -173,6 +175,7 @@ export default class InstallasiGawatDaruratRepository {
                 }, transaction);
                 if (!patient) throw new NotfoundException('Patient not found');
             }
+
             const commonData = {
                 faskesUuid,
                 patientUuid: patient.uuid,
@@ -187,13 +190,12 @@ export default class InstallasiGawatDaruratRepository {
                 paymentMethod: data.paymentMethod === 'TUNAI' ? 1 : 2,
             };
 
-
             const additionalData = {
                 withoutIdentity: !!data.withoutIdentity,
                 newborn: !!data.isNewborn
             };
 
-            const resultIgd = await igd.update({...commonData, ...additionalData}, {transaction});
+            const resultIgd = await igd.update({ ...commonData, ...additionalData }, { transaction });
 
             let insurance = null;
             if (data.paymentMethod === 'ASURANSI') {
@@ -204,7 +206,6 @@ export default class InstallasiGawatDaruratRepository {
                 }, transaction);
             }
 
-            await transaction.commit();
             if (data.isNewborn) {
                 eventEmitter.emit(NEW_BORN_CHANNEL, {
                     identifier_mom: patient.identity,
@@ -220,6 +221,7 @@ export default class InstallasiGawatDaruratRepository {
                     status: true,
                 });
             }
+
             const patientAttributes = selectAttributes(patient, [
                 'uuid', 'title', 'name', 'noRm', 'identity', 'noIdentity',
                 'address.uuid', 'address.status', 'address.prov', 'address.city',
@@ -231,7 +233,7 @@ export default class InstallasiGawatDaruratRepository {
             ], true);
 
             const igdAttributes = selectAttributes(resultIgd, [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity', 'noPelayanan'
+                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity', 'noPelayanan', 'paymentMethod'
             ], true);
 
             const result = {
@@ -245,25 +247,24 @@ export default class InstallasiGawatDaruratRepository {
                 ], true);
             }
 
-            eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: resultIgd.tanggalDaftar,
                 noreg: resultIgd.noReg,
                 no_pelayanan: resultIgd.noPelayanan,
                 practitioner_uuid: resultIgd.practitionerUuid,
                 jenis_kunjungan: "IGD",
-                patient_uuid: result.patient.uuid,
+                patient_uuid: result.patient_data.uuid,
                 lokasi_uuid: null,
                 payment_method: resultIgd.paymentMethod
-            })
+            });
 
             return result;
-
-        } catch (e) {
+        }).catch(async (e) => {
             console.log("Error update IGD", e);
-            await transaction.rollback();
             throw e;
-        }
+        });
     }
+
 
     static async getDetail(uuid) {
         try{
@@ -299,7 +300,18 @@ export default class InstallasiGawatDaruratRepository {
                     "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "complaint", "note", "maternity", "payment_method", "status_igd", "newborn", "without_identity", "practitioner_uuid", "no_pelayanan"
                 ]
             });
-
+            if(igd.newborn){
+                igd.patient.dataValues.new_born = await NewBornModel.findOne({
+                    where: {
+                        faskesUuid,
+                        no_rm_baby: igd.dataValues.no_rm,
+                        status: true
+                    },
+                    attributes: ["identifier_mom", "name_mom", "name_baby", "no_rm_baby",
+                        "birth_detail_uuid", "birth_time_baby", "gender_baby",
+                        "multiple_birth", "address_uuid", "tanggal_daftar"]
+                });
+            }
             if (!igd) throw new NotfoundException("IGD not found");
             return igd;
         }catch (e) {
