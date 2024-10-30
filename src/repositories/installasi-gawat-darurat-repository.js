@@ -151,6 +151,7 @@ export default class InstallasiGawatDaruratRepository {
             let patient = null;
             if (igd.withoutIdentity !== data.withoutIdentity && igd.patientUuid !== data.patientData.patient_uuid) {
                 const uuidPatient = data.patientData.patient_uuid || igd.patientUuid;
+                data.patientData.patientUuid = uuidPatient;
                 const checkPatient = await PatientModel.findOne({
                     where: {
                         uuid: uuidPatient,
