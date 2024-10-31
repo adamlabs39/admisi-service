@@ -30,6 +30,7 @@ export default class PatientRepository{
                 ],
                 transaction
             }) : null;
+
             // Set isNewBorn to false if not provided during update
             if (data.isNewBorn === undefined || !data.isNewBorn) {
                 data.isNewBorn = false;
@@ -59,17 +60,28 @@ export default class PatientRepository{
             }
             data.birthDetailUuid = birthDetail?.uuid || null;
 
-            // If updating and newborn status is changing to false, ensure unique noIdentity
-            if (uuid && patient.isNewBorn && !data.isNewBorn) {
-                if (!data.noIdentity || data.noIdentity === data.motherNoIdentity) {
-                    throw new DuplicateException("Patient must have a unique noIdentity upon reaching adulthood.");
-                }
-            }
-
-            // Check noIdentity uniqueness if not updating existing patient
-            if (!uuid && !data.isNewBorn) {
+            // Validate noIdentity and identity
+            if (uuid && !data.isNewBorn) {
+                // Check uniqueness of noIdentity and identity for updates
                 const existingPatient = await PatientModel.findOne({
-                    where: { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
+                    where: {
+                        [Op.and]: [
+                            { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
+                            { faskesUuid: faskesUuid } // Ensure same faskesUuid
+                        ]
+                    },
+                    transaction
+                });
+                if (existingPatient && existingPatient.uuid !== uuid) {
+                    throw new DuplicateException("No identity already exists for this faskes.");
+                }
+            } else if (!uuid && !data.isNewBorn) {
+                // Check uniqueness for new patients
+                const existingPatient = await PatientModel.findOne({
+                    where: {
+                        noIdentity: data.noIdentity,
+                        deletedAt: { [Op.is]: null }
+                    },
                     transaction
                 });
                 if (existingPatient) throw new DuplicateException("No identity already exists");
