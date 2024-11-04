@@ -10,6 +10,7 @@ export default class InstallasiGawatDaruratValidation {
         complaint: z.string().max(255),
         note: z.string().max(255),
         maternity: z.boolean().default(false),
+        assurance_account_id: z.string().max(255).optional(),
     });
 
     static IGD_VALIDATOR_REGISTRATION_WITHOUT_IDENTITY = z.object({
