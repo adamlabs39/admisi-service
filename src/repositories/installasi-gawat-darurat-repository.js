@@ -20,6 +20,7 @@ import PegawaiModel from "../models/pegawai-model.js";
 import Pagination from "../helper/pagination.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 import NewBornModel from "../models/new-born-model.js";
+import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
 
 export default class InstallasiGawatDaruratRepository {
     static async registIGD(data) {
@@ -72,7 +73,7 @@ export default class InstallasiGawatDaruratRepository {
                 insurance = await InsuranceAdmissionRepository.upsertInsuranceAdmission({
                     admissionType: 2,
                     noReg: resultIgd.noReg,
-                    insuranceAccountUuid: data.insuranceAccountUuid,
+                    insuranceAccountUuid: data.assuranceAccountId,
                 }, transaction);
             }
 
@@ -203,7 +204,7 @@ export default class InstallasiGawatDaruratRepository {
                 insurance = await InsuranceAdmissionRepository.upsertInsuranceAdmission({
                     admissionType: 2,
                     noReg: resultIgd.noReg,
-                    insuranceAccountUuid: data.insuranceAccountUuid,
+                    insuranceAccountUuid: data.assuranceAccountId,
                 }, transaction);
             }
 
@@ -301,6 +302,7 @@ export default class InstallasiGawatDaruratRepository {
                     "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "complaint", "note", "maternity", "payment_method", "status_igd", "newborn", "without_identity", "practitioner_uuid", "no_pelayanan"
                 ]
             });
+            if (!igd) throw new NotfoundException("IGD not found");
             if(igd.newborn){
                 igd.patient.dataValues.new_born = await NewBornModel.findOne({
                     where: {
@@ -313,7 +315,18 @@ export default class InstallasiGawatDaruratRepository {
                         "multiple_birth", "address_uuid", "tanggal_daftar"]
                 });
             }
-            if (!igd) throw new NotfoundException("IGD not found");
+
+            if (igd.dataValues.payment_method === 2) {
+                igd.dataValues.insurance = (await InsuranceAdmissionModel.findOne({
+                    where: {noReg: igd.dataValues.no_reg},
+                    attributes: ["insurance_account_uuid"]
+                })).dataValues.insurance_account_uuid;
+
+                return {
+                    ...igd.get(),
+                    patient: igd.patient.get()
+                }
+            }
             return igd;
         }catch (e) {
             console.log("Error get detail IGD", e);

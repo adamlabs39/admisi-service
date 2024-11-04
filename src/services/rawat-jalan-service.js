@@ -20,7 +20,7 @@ export class RawatJalanService {
     static async registRawatJalan(data) {
         const user = Ctx.get(CTX_AUTHOR);
         const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
-        if (!validData) throw new BadRequestException("Bad Request");
+        if(validData.payment_method === "ASURANSI" && !validData.assurance_account_id) throw new BadRequestException("Assurance account id is required");
 
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
@@ -34,8 +34,10 @@ export class RawatJalanService {
         const user = Ctx.get(CTX_AUTHOR);
         const checkExist = await checkExistData(RawatJalanModel, uuid);
         if(!checkExist) throw new NotfoundException('Data tidak ditemukan');
+
         const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
-        if (!validData) throw new BadRequestException("Bad Request");
+        if(validData.payment_method === "ASURANSI" && !validData.assurance_account_id) throw new BadRequestException("Assurance account id is required");
+
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 

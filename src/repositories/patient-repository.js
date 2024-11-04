@@ -60,14 +60,12 @@ export default class PatientRepository{
             }
             data.birthDetailUuid = birthDetail?.uuid || null;
 
-            // Validate noIdentity and identity
             if (uuid && !data.isNewBorn) {
-                // Check uniqueness of noIdentity and identity for updates
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
                             { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
-                            { faskesUuid: faskesUuid } // Ensure same faskesUuid
+                            { faskesUuid: faskesUuid }
                         ]
                     },
                     transaction

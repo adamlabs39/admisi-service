@@ -27,6 +27,7 @@ import PegawaiModel from "../models/pegawai-model.js";
 import Pagination from "../helper/pagination.js";
 import RoomMonitoringModel from "../models/room-monitoring-model.js";
 import RuanganModel from "../models/ruangan-model.js";
+import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
 
 export default class RawatInapRepository {
     static async getAll(args) {
@@ -275,7 +276,7 @@ export default class RawatInapRepository {
         try {
             const {faskesUuid} = Context.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
-
+            console.log("Update Rawat Inap Data:", data);
             // Get Rawat Inap Data
             const rawatInap = await RawatInapModel.findOne({
                 where: {
@@ -295,6 +296,7 @@ export default class RawatInapRepository {
             if (!practitioner) throw new NotfoundException("Practitioner not found");
             // Update Patient Data
             data.patientData.patient_uuid = rawatInap.dataValues.patientUuid;
+            data.patientData.is_new_born = patient.isNewBorn || false;
             const updatedPatient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!updatedPatient) throw new Error("Failed to update patient");
             // Update Bed and Monitoring Room (if statusRi is 1)
@@ -312,12 +314,18 @@ export default class RawatInapRepository {
             }
 
             // Update Rawat Inap Data
-            const updatedRawatInap = await RawatInapModel.update({
+            const updatedRawatInap = await rawatInap.update({
                 noRm: updatedPatient.noRm,
                 name: updatedPatient.name,
                 birthDetailUuid: updatedPatient.birthDetailUuid,
                 gender: updatedPatient.gender,
                 familyBill: data.familyBill,
+                maternity: data.maternity,
+                upgradeClass: data.upgradeClass,
+                entrustedPatient: data.entrustedPatient,
+                previousBill: data.previousBill,
+                spareBed: data.spareBed,
+                boxBaby: data.boxBaby,
                 note: data.note,
                 complaint: data.complaint,
                 multipleBirth: data.multipleBirth,
@@ -338,9 +346,6 @@ export default class RawatInapRepository {
                 }, transaction);
             }
 
-            // Commit transaction
-            await transaction.commit();
-
             // Prepare response
             const patientAttributes = selectAttributes(updatedPatient, [
                 'uuid', 'title', 'name', 'noRm', 'identity', 'noIdentity',
@@ -352,13 +357,13 @@ export default class RawatInapRepository {
                 'birthDetail.ageMonth', 'birthDetail.ageDay'
             ], true);
 
-            const rawatInapAttributes = selectAttributes(updatedRawatInap, [
+            const rawatInapAttributes = selectAttributes(updatedRawatInap.get(), [
                 'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'maternity', 'noSpri', 'entrustedPatient', 'upgradeClass', 'previousBill', 'spareBed', 'joinBill', 'familyBill', 'boxBaby', 'multipleBirth', 'monitoringRoomUuid', 'paymentMethod'
             ], true);
 
             const result = {
-                ...patientAttributes,
-                ...rawatInapAttributes
+                ...rawatInapAttributes,
+                patient: patientAttributes,
             };
 
             if (insurance) {
@@ -376,6 +381,7 @@ export default class RawatInapRepository {
                 patient_uuid: updatedPatient.uuid,
                 payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2,
             });
+            await transaction.commit();
 
             return result;
 
@@ -445,6 +451,19 @@ export default class RawatInapRepository {
                 });
                 if (newBorn) rawatInap.patient.dataValues.new_born = newBorn.dataValues;
             }
+
+            if (rawatInap.dataValues.payment_method === 2) {
+                rawatInap.dataValues.insurance = (await InsuranceAdmissionModel.findOne({
+                    where: {noReg: rawatInap.dataValues.no_reg},
+                    attributes: ["insurance_account_uuid"]
+                })).dataValues.insurance_account_uuid;
+
+                return {
+                    ...rawatInap.get(),
+                    patient: rawatInap.patient.get()
+                }
+            }
+
 
             if (rawatInap.monitoring_room) {
                 const detailRuangan = await RuanganModel.findOne({
