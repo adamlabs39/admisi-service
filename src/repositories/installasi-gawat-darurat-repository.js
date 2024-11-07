@@ -121,131 +121,111 @@ export default class InstallasiGawatDaruratRepository {
     static async updateIgd(uuid, data) {
         data = convertSnakeToCamel(data);
         const { faskesUuid } = Context.get(CTX_AUTHOR);
-        console.log("Data IGD", data);
-        return await sequelizeInstance.transaction(async (transaction) => {
-            const igd = await InstalasiGawatDaruratModel.findOne({ where: { uuid }, transaction });
-            if (!igd) throw new NotfoundException("IGD not found");
 
-            const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
-            if (!practitioner) throw new NotfoundException('Practitioner not found');
+        try {
+            return await sequelizeInstance.transaction(async (transaction) => {
+                const igd = await InstalasiGawatDaruratModel.findOne({ where: { uuid }, transaction });
+                if (!igd) throw new NotfoundException("IGD not found");
 
-            let patient = null;
-            if (igd.withoutIdentity !== data.withoutIdentity && igd.patientUuid !== data.patientData.patient_uuid) {
-                const uuidPatient = data.patientData.patient_uuid || igd.patientUuid;
-                data.patientData.patientUuid = uuidPatient;
-                const checkPatient = await PatientModel.findOne({
-                    where: {
-                        uuid: uuidPatient,
-                        faskesUuid,
-                        deletedAt: null
-                    },
-                    transaction
-                });
-                if (!checkPatient) throw new NotfoundException("Patient not found");
-                if (data.isNewborn) {
-                    const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
-                    if (!mom) throw new NotfoundException("Identity Mom not found! please register the mother first");
-                    data.patientData.isNewBorn = true;
+                const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
+                if (!practitioner) throw new NotfoundException('Practitioner not found');
+
+                let patient = null;
+                if (igd.withoutIdentity !== data.withoutIdentity && igd.patientUuid !== data.patientData.patient_uuid) {
+                    const uuidPatient = data.patientData.patient_uuid || igd.patientUuid;
+                    data.patientData.patientUuid = uuidPatient;
+                    const checkPatient = await PatientModel.findOne({
+                        where: {
+                            uuid: uuidPatient,
+                            faskesUuid,
+                            deletedAt: null
+                        },
+                        transaction
+                    });
+                    if (!checkPatient) throw new NotfoundException("Patient not found");
+                    if (data.isNewborn) {
+                        const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
+                        if (!mom) throw new NotfoundException("Identity Mom not found! please register the mother first");
+                        data.patientData.isNewBorn = true;
+                    }
+                    patient = await PatientRepository.registPatient(data.patientData, transaction);
+                    if (!patient) throw new Error("Failed to process patient data");
+
+                    data.patientUuid = patient.uuid;
+                } else {
+                    patient = await PatientRepository.registPatient({
+                        patientUuid: igd.patientUuid,
+                        ...data.patientData,
+                    }, transaction);
+                    if (!patient) throw new NotfoundException('Patient not found');
                 }
-                patient = await PatientRepository.registPatient(data.patientData, transaction);
-                if (!patient) throw new Error("Failed to process patient data");
 
-                data.patientUuid = patient.uuid;
-            } else {
-                patient = await PatientRepository.registPatient({
-                    patientUuid: igd.patientUuid,
-                    ...data.patientData,
-                }, transaction);
-                if (!patient) throw new NotfoundException('Patient not found');
-            }
+                const commonData = {
+                    faskesUuid,
+                    patientUuid: patient.uuid,
+                    noRm: patient.noRm,
+                    name: patient.name,
+                    birthDetailUuid: patient.birthDetailUuid,
+                    gender: patient.gender,
+                    practitionerUuid: data.practitionerUuid,
+                    complaint: data.complaint,
+                    note: data.note,
+                    maternity: data.maternity,
+                    paymentMethod: data.paymentMethod === 'TUNAI' ? 1 : 2,
+                };
 
-            const commonData = {
-                faskesUuid,
-                patientUuid: patient.uuid,
-                noRm: patient.noRm,
-                name: patient.name,
-                birthDetailUuid: patient.birthDetailUuid,
-                gender: patient.gender,
-                practitionerUuid: data.practitionerUuid,
-                complaint: data.complaint,
-                note: data.note,
-                maternity: data.maternity,
-                paymentMethod: data.paymentMethod === 'TUNAI' ? 1 : 2,
-            };
+                const additionalData = {
+                    withoutIdentity: !!data.withoutIdentity,
+                    newborn: !!data.isNewborn
+                };
 
-            const additionalData = {
-                withoutIdentity: !!data.withoutIdentity,
-                newborn: !!data.isNewborn
-            };
+                const resultIgd = await igd.update({ ...commonData, ...additionalData }, { transaction });
+                if (data.paymentMethod === 'ASURANSI') {
+                    await InsuranceAdmissionRepository.AsuransiPelayanan({
+                        patientUuid: resultIgd.patientUuid,
+                        penjaminUuid: data.insurance.penjamin_uuid,
+                        accountNumber: data.insurance.account_number,
+                        classEntitle: data.insurance.class_entitle,
+                        noReg: resultIgd.noReg,
+                        admissionType: 2
+                    }, transaction);
+                }
 
-            const resultIgd = await igd.update({ ...commonData, ...additionalData }, { transaction });
-            let insurance = null;
-            if (data.paymentMethod === 'ASURANSI') {
-                insurance = await InsuranceAdmissionRepository.upsertInsuranceAdmission({
-                    admissionType: 2,
-                    noReg: resultIgd.noReg,
-                    insuranceAccountUuid: data.assuranceAccountId,
-                }, transaction);
-            }
+                if (data.isNewborn) {
+                    eventEmitter.emit(NEW_BORN_CHANNEL, {
+                        identifier_mom: patient.identity,
+                        name_mom: patient.motherName,
+                        name_baby: patient.name,
+                        no_rm_baby: patient.noRm,
+                        birth_detail_uuid: patient.birthDetailUuid,
+                        birth_time_baby: moment(data.birthtime).format('HH:mm:ss'),
+                        gender_baby: patient.gender,
+                        multiple_birth: data.multipleBirth,
+                        address_uuid: patient.address.uuid,
+                        tanggal_daftar: moment().unix(),
+                        status: true,
+                    });
+                }
 
-            if (data.isNewborn) {
-                eventEmitter.emit(NEW_BORN_CHANNEL, {
-                    identifier_mom: patient.identity,
-                    name_mom: patient.motherName,
-                    name_baby: patient.name,
-                    no_rm_baby: patient.noRm,
-                    birth_detail_uuid: patient.birthDetailUuid,
-                    birth_time_baby: moment(data.birthtime).format('HH:mm:ss'),
-                    gender_baby: patient.gender,
-                    multiple_birth: data.multipleBirth,
-                    address_uuid: patient.address.uuid,
-                    tanggal_daftar: moment().unix(),
-                    status: true,
+                eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
+                    tgl_registrasi: resultIgd.tanggalDaftar,
+                    noreg: resultIgd.noReg,
+                    no_pelayanan: resultIgd.noPelayanan,
+                    practitioner_uuid: resultIgd.practitionerUuid,
+                    jenis_kunjungan: "IGD",
+                    patient_uuid: patient.uuid,
+                    lokasi_uuid: null,
+                    payment_method: resultIgd.paymentMethod
                 });
-            }
 
-            const patientAttributes = selectAttributes(patient, [
-                'uuid', 'title', 'name', 'noRm', 'identity', 'noIdentity',
-                'address.uuid', 'address.status', 'address.prov', 'address.city',
-                'address.district', 'address.rt', 'address.rw', 'address.fullAddress',
-                'address.country', 'address.village', 'address.postalCode', 'address.faskesUuid',
-                'birthDetail.uuid', 'birthDetail.status', 'birthDetail.birthPlace',
-                'birthDetail.birthDate', 'birthDetail.faskesUuid', 'birthDetail.ageYear',
-                'birthDetail.ageMonth', 'birthDetail.ageDay'
-            ], true);
-
-            const igdAttributes = selectAttributes(resultIgd, [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity', 'noPelayanan', 'paymentMethod'
-            ], true);
-
-            const result = {
-                ...igdAttributes,
-                patient: patientAttributes,
-            };
-
-            if (insurance) {
-                result.insurance = selectAttributes(insurance, [
-                    'uuid', 'noReg', 'insuranceAccountUuid', 'admissionType', 'status'
-                ], true);
-            }
-
-            eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
-                tgl_registrasi: resultIgd.tanggalDaftar,
-                noreg: resultIgd.noReg,
-                no_pelayanan: resultIgd.noPelayanan,
-                practitioner_uuid: resultIgd.practitionerUuid,
-                jenis_kunjungan: "IGD",
-                patient_uuid: result.patient.uuid,
-                lokasi_uuid: null,
-                payment_method: resultIgd.paymentMethod
+                return await this.getDetail(resultIgd.uuid);
             });
-
-            return result;
-        }).catch(async (e) => {
-            console.log("Error update IGD", e);
+        } catch (e) {
+            console.error("Error updating IGD", e);
             throw e;
-        });
+        }
     }
+
 
 
     static async getDetail(uuid) {
@@ -272,7 +252,7 @@ export default class InstallasiGawatDaruratRepository {
                                 as: "birth_detail",
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["birth_place", "birth_date"]
+                                attributes: ["birth_place", "birth_date", "age_year", "age_month", "age_day"]
                             }
                         ],
                         attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status", 'is_new_born'],
