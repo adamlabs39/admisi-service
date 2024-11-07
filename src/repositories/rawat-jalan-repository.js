@@ -28,6 +28,7 @@ import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
 import LokasiModel from "../models/lokasi-model.js";
 import JadwalDokterModel from "../models/jadwal-dokter-model.js";
+import InsuranceAccountModel from "../models/insurance-account-model.js";
 
 export default class RawatJalanRepository {
     /**
@@ -58,17 +59,17 @@ export default class RawatJalanRepository {
 
         if (args.poly) {
             const polyArray = args.poly.split(',').map(item => item.trim());
-            filter.lokasiUuid = { [Op.in]: polyArray };
+            filter.lokasiUuid = {[Op.in]: polyArray};
         }
 
         if (args.platform) {
             const platformArray = args.platform.split(',').map(item => item.trim());
-            filter.platform = { [Op.in]: platformArray };
+            filter.platform = {[Op.in]: platformArray};
         }
 
         if (args.payment_method) {
             const paymentMethodArray = args.payment_method.split(',').map(item => item.trim());
-            filter.paymentMethod = { [Op.in]: paymentMethodArray };
+            filter.paymentMethod = {[Op.in]: paymentMethodArray};
         }
 
         if (args.dpjp) filter.practitionerUuid = args.dpjp;
@@ -129,7 +130,7 @@ export default class RawatJalanRepository {
                     as: "lokasi",
                     required: true,
                     where: {deletedAt: {[Op.is]: null}},
-                    attributes:[
+                    attributes: [
                         "uuid", "name", "code"
                     ]
                 },
@@ -145,7 +146,6 @@ export default class RawatJalanRepository {
                 "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj"
             ],
         };
-
 
 
         const transform = {
@@ -193,7 +193,7 @@ export default class RawatJalanRepository {
                                 as: "address",
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
-                                attributes:["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"]
+                                attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"]
                             },
                             {
                                 model: BirthDetailModel,
@@ -208,22 +208,43 @@ export default class RawatJalanRepository {
                     }
                 ],
                 attributes: [
-                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid","no_pelayanan"
+                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan"
                 ]
             });
 
-            if (!result) throw new Error("Data not found");
+            if (!result) throw new NotfoundException("Data not found");
             if (result.dataValues.payment_method === 2) {
-                result.dataValues.insurance = (await InsuranceAdmissionModel.findOne({
-                    where: {noReg: result.dataValues.no_reg},
+                const insuranceData = await InsuranceAdmissionModel.findOne({
+                    where: { noReg: result.dataValues.no_reg },
+                    include: [
+                        {
+                            model: InsuranceAccountModel,
+                            as: "insurance",
+                            required: true,
+                            where: {
+                                deletedAt: { [Op.is]: null }
+                            },
+                            attributes: [
+                                "account_number",
+                                "code",
+                                "name",
+                                "class_entitle"
+                            ]
+                        }
+                    ],
                     attributes: ["insurance_account_uuid"]
-                })).dataValues.insurance_account_uuid;
+                });
+
+                if (insuranceData) {
+                    result.dataValues.insurance = insuranceData.dataValues.insurance;
+                }
 
                 return {
                     ...result.get(),
                     patient: result.patient.get()
-                }
+                };
             }
+
 
             return {
                 ...result.get(),
@@ -235,7 +256,7 @@ export default class RawatJalanRepository {
     }
 
     static async create(data) {
-        return await sequelizeInstace.transaction(async (t) => {
+        const create = await sequelizeInstace.transaction(async (t) => {
             const {faskesUuid} = Ctx.get(CTX_AUTHOR);
             const patient = await PatientRepository.registPatient(data.patient_data, t);
             if (!patient) throw new Error("Failed to create patient");
@@ -273,46 +294,19 @@ export default class RawatJalanRepository {
             dataRJ.noPelayanan = await generateNoPelayanan('RJ');
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
-            const patientAttributes = selectAttributes(patient, [
-                'uuid', 'title', 'name', 'noRm', 'identity', 'noIdentity',
-                'address.uuid', 'address.status', 'address.prov', 'address.city',
-                'address.district', 'address.rt', 'address.rw', 'address.fullAddress',
-                'address.country', 'address.village', 'address.postalCode', 'address.faskesUuid',
-                'birthDetail.uuid', 'birthDetail.status', 'birthDetail.birthPlace',
-                'birthDetail.birthDate', 'birthDetail.faskesUuid', 'ageYear', 'ageMonth', 'ageDay'
-            ], true);
-
-            const rawatJalanAttributes = selectAttributes(regist.get(), [
-                'uuid', 'noReg', 'lokasiUuid as polyclinicUuid', 'practitionerUuid as dpjpUuid', 'complaint', 'note', 'maternity', 'jadwalDokterUuid', 'noReferensi', 'paymentMethod'
-            ], true);
 
             if (data.paymentMethod === 'ASURANSI') {
-                const asuransi = await InsuranceAdmissionRepository.upsertInsuranceAdmission({
-                    admissionType: 1,
+                await InsuranceAdmissionRepository.AsuransiPelayanan({
+                    patientUuid: patient.uuid,
+                    penjaminUuid: data.insurance.penjamin_uuid,
+                    accountNumber: data.insurance.account_number,
+                    classEntitle: data.insurance.class_entitle,
                     noReg: regist.noReg,
-                    insuranceAccountUuid: data.assuranceAccountId,
-                }, t);
-
-                eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
-                    tgl_registrasi: regist.tanggalDaftar,
-                    noreg: regist.noReg,
-                    no_pelayanan: regist.noPelayanan,
-                    jenis_kunjungan: 'RJ',
-                    practitioner_uuid: regist.practitionerUuid,
-                    patient_uuid: patient.uuid,
-                    lokasi_uuid: regist.lokasiUuid,
-                    payment_method: 2
-                });
-                return {
-                    ...rawatJalanAttributes,
-                    patient: patientAttributes,
-                    insurance: selectAttributes(asuransi, [
-                        'uuid', 'status', 'noReg', 'insuranceAccountUuid', 'faskesUuid'
-                    ], true)
-                };
+                    admissionType: 1,
+                })
             }
 
-            eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: regist.tanggalDaftar,
                 noreg: regist.noReg,
                 no_pelayanan: regist.noPelayanan,
@@ -320,19 +314,17 @@ export default class RawatJalanRepository {
                 practitioner_uuid: regist.practitionerUuid,
                 patient_uuid: patient.uuid,
                 lokasi_uuid: regist.lokasiUuid,
-                payment_method: 1
+                payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2
             });
-
-            return {
-                ...rawatJalanAttributes,
-                patient: patientAttributes
-            };
+            return regist.dataValues.uuid;
         });
+
+        return await this.getOne(create);
     }
 
 
     static async update(uuid, data) {
-        return await sequelizeInstace.transaction(async (t) => {
+        const update = await sequelizeInstace.transaction(async (t) => {
             const {faskesUuid} = Ctx.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
 
@@ -345,10 +337,10 @@ export default class RawatJalanRepository {
                 transaction: t
             });
             if (!existingRegist) throw new NotfoundException("Data not found");
-            
+
             const jadwalDokter = (await JadwalDokterRepository.getJadwalBy('uuid', data.jadwalDokterUuid)).dataValues;
             if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter not found");
-            
+
             data.patientData.patient_uuid = existingRegist.dataValues.patientUuid;
             const patient = await PatientRepository.registPatient(data.patientData, t);
             if (!patient) throw new Error("Failed to create patient");
@@ -366,7 +358,6 @@ export default class RawatJalanRepository {
                 complaint: data.complaint,
                 platform: data.platform,
                 paymentMethod: data.paymentMethod === 'TUNAI' ? 1 : 2,
-                tanggalDaftar: moment().unix(),
             };
 
             const {
@@ -394,47 +385,18 @@ export default class RawatJalanRepository {
 
             const updatedRegist = await existingRegist.update(dataRJ, {transaction: t});
 
-            const patientAttributes = selectAttributes(patient, [
-                'uuid', 'title', 'name', 'noRm', 'identity', 'noIdentity',
-                'address.uuid', 'address.status', 'address.prov', 'address.city',
-                'address.district', 'address.rt', 'address.rw', 'address.fullAddress',
-                'address.country', 'address.village', 'address.postalCode', 'address.faskesUuid',
-                'birthDetail.uuid', 'birthDetail.status', 'birthDetail.birthPlace',
-                'birthDetail.birthDate', 'birthDetail.faskesUuid', 'ageYear', 'ageMonth', 'ageDay'
-            ], true);
-
-            const rawatJalanAttributes = selectAttributes(updatedRegist.get(), [
-                'uuid', 'noReg', 'lokasiUuid as polyclinicUuid', 'practitionerUuid as dpjpUuid', 'complaint', 'note', 'maternity', 'jadwal_dokter_uuid', 'paymentMethod'
-            ], true);
-
             if (data.paymentMethod === 'ASURANSI') {
-                const asuransi = await InsuranceAdmissionRepository.upsertInsuranceAdmission({
-                    admissionType: 1,
+                await InsuranceAdmissionRepository.AsuransiPelayanan({
+                    patientUuid: patient.uuid,
+                    penjaminUuid: data.insurance.penjamin_uuid,
+                    accountNumber: data.insurance.account_number,
+                    classEntitle: data.insurance.class_entitle,
                     noReg: updatedRegist.noReg,
-                    insuranceAccountUuid: data.assuranceAccountId,
-                }, t);
-
-                eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
-                    tgl_registrasi: updatedRegist.tanggalDaftar,
-                    noreg: updatedRegist.noReg,
-                    no_pelayanan: updatedRegist.noPelayanan,
-                    jenis_kunjungan: 'RJ',
-                    patient_uuid: patient.uuid,
-                    practitioner_uuid: updatedRegist.practitionerUuid,
-                    lokasi_uuid: updatedRegist.lokasiUuid,
-                    payment_method: 2
-                });
-
-                return {
-                    ...rawatJalanAttributes,
-                    patient: patientAttributes,
-                    insurance: selectAttributes(asuransi.get(), [
-                        'uuid', 'status', 'noReg', 'insuranceAccountUuid', 'faskesUuid'
-                    ], true)
-                };
+                    admissionType: 1,
+                }, t)
             }
 
-            eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: updatedRegist.tanggalDaftar,
                 noreg: updatedRegist.noReg,
                 no_pelayanan: updatedRegist.noPelayanan,
@@ -442,14 +404,13 @@ export default class RawatJalanRepository {
                 jenis_kunjungan: 'RJ',
                 patient_uuid: patient.uuid,
                 lokasi_uuid: updatedRegist.lokasiUuid,
-                payment_method: 1
+                payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2
             });
 
-            return {
-                ...rawatJalanAttributes,
-                patient: patientAttributes
-            };
+            return updatedRegist.dataValues.uuid;
         });
+
+        return await this.getOne(update);
     }
 
 

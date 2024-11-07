@@ -14,7 +14,7 @@ export default class RawatInapService{
         const user = Context.get(CTX_AUTHOR);
 
         let validData = ZodValidator.validate(RawatInapValidation.CREATE, data);
-        if(validData.payment_method === "ASURANSI" && !validData.assurance_account_id) throw new BadRequestException("Assurance account id is required");
+        if(validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Assurance account id is required");
 
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
@@ -34,7 +34,7 @@ export default class RawatInapService{
 
         const schema = data.is_newborn ? RawatInapValidation.UPDATE_NEWBORN : RawatInapValidation.UPDATE_PATIENT;
         let validData = ZodValidator.validate(schema, data);
-        if(validData.payment_method === "ASURANSI" && !validData.assurance_account_id) throw new BadRequestException("Assurance account id is required");
+        if(validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Assurance account id is required");
 
         const checkExist = await checkExistData(RawatInapModel, uuid);
         if(!checkExist) throw new NotfoundException('Rawat Inap tidak ditemukan');

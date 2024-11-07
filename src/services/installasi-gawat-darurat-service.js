@@ -20,7 +20,7 @@ export default class InstallasiGawatDaruratService{
                 : InstallasiGawatDaruratValidation.IGD_VALIDATOR_REGISTRATION;
 
         validData = ZodValidator.validate(validator, data);
-        if(validData.payment_method === "ASURANSI" && !validData.assurance_account_id) throw new BadRequestException("Assurance account id is required");
+        if(validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Assurance account id is required");
 
 
         const result = await InstallasiGawatDaruratRepository.registIGD(validData);
@@ -42,7 +42,8 @@ export default class InstallasiGawatDaruratService{
                 : InstallasiGawatDaruratValidation.IGD_VALIDATOR_REGISTRATION;
 
         validData = ZodValidator.validate(validator, data);
-        if(validData.payment_method === "ASURANSI" && !validData.assurance_account_id) throw new BadRequestException("Assurance account id is required");
+        if(validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Assurance account id is required");
+
         const result = await InstallasiGawatDaruratRepository.updateIgd(uuid, validData);
         if (!result) throw new Error("Failed to update IGD");
 

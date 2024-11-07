@@ -7,6 +7,7 @@ import PractitionerSeeder from "./practitioner-seeder.js";
 import AntrianPoliSeeder from "./antrian-poli-seeder.js";
 import JadwalDokterSeeder from "./jadwal-dokter-seeder.js";
 import PegawaiSeeder from "./pegawai-seeder.js";
+import PenjaminSeeder from "./penjamin-seeder.js";
 
 export const dbSeeder = async () => {
     const transaction = await sequelizeInstance.transaction();
@@ -18,6 +19,7 @@ export const dbSeeder = async () => {
         await PegawaiSeeder.seed(transaction);
         await PractitionerSeeder.seed(transaction);
         await JadwalDokterSeeder.seed(transaction);
+        await PenjaminSeeder.seed(transaction);
         await transaction.commit();
     } catch (error) {
         await transaction.rollback();

@@ -70,6 +70,63 @@ export default class LogPelayananRepository {
         }
     }
 
+    static async GetHistoryPemeriksaan(patient_uuid, args) {
+        try {
+            const { faskesUuid } = Context.get(CTX_AUTHOR);
+            const filter = {
+                patientUuid: patient_uuid,
+                status: true,
+                faskesUuid,
+            }
+
+            const options = {
+                include: [
+                    {
+                        model: PractitionerModel,
+                        as: "practitioner",
+                        required: true,
+                        where: {deletedAt: {[Op.is]: null}},
+                        attributes: ["uuid"],
+                        include: [
+                            {
+                                model: PegawaiModel,
+                                as: "pegawai",
+                                required: true,
+                                where: {deletedAt: {[Op.is]: null}},
+                                attributes: ["title", "nama"]
+                            }
+                        ]
+                    },
+                ],
+                order: [
+                    ['tgl_registrasi', 'DESC']
+                ],
+                attributes: [
+                    'tgl_registrasi', 'jenis_kunjungan', 'no_pelayanan', 'payment_method'
+                ]
+            }
+
+            const transform = {
+                practitioner: (row) => ({
+                    uuid: undefined,
+                    ...row.practitioner.pegawai.get(),
+                }),
+            };
+
+            return await Pagination.init(
+                LogPelayananModel,
+                args,
+                filter,
+                options,
+                transform
+            )
+
+        }catch (error) {
+            console.log("Error on LogPelayananRepository");
+            throw error;
+        }
+    }
+
 
     static async getAllLogPelayanan(args) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);

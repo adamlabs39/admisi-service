@@ -21,19 +21,20 @@ import Pagination from "../helper/pagination.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 import NewBornModel from "../models/new-born-model.js";
 import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
+import InsuranceAccountModel from "../models/insurance-account-model.js";
 
 export default class InstallasiGawatDaruratRepository {
     static async registIGD(data) {
-        const {faskesUuid} = Context.get(CTX_AUTHOR);
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
         const transaction = await sequelizeInstance.transaction();
+        console.log(data);
         try {
             if(data.isNewborn){
                 const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
                 if (!mom) throw new NotfoundException("Identity Mom not found! please regist the mother first");
                 data.patientData.isNewBorn = true;
             }
-
             const patient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!patient) throw new Error("Failed to process patient data");
 
@@ -68,13 +69,15 @@ export default class InstallasiGawatDaruratRepository {
 
             const resultIgd = await InstalasiGawatDaruratModel.create({...commonIgdData, ...additionalData}, {transaction});
 
-            let insurance = null;
             if (data.paymentMethod === 'ASURANSI') {
-                insurance = await InsuranceAdmissionRepository.upsertInsuranceAdmission({
-                    admissionType: 2,
+                await InsuranceAdmissionRepository.AsuransiPelayanan({
+                    patientUuid: resultIgd.patientUuid,
+                    penjaminUuid: data.insurance.penjamin_uuid,
+                    accountNumber: data.insurance.account_number,
+                    classEntitle: data.insurance.class_entitle,
                     noReg: resultIgd.noReg,
-                    insuranceAccountUuid: data.assuranceAccountId,
-                }, transaction);
+                    admissionType: 2
+                },transaction)
             }
 
             await transaction.commit();
@@ -94,29 +97,6 @@ export default class InstallasiGawatDaruratRepository {
                     status: true,
                 });
             }
-            const patientAttributes = selectAttributes(patient, [
-                'uuid', 'title', 'name', 'noRm', 'identity', 'noIdentity',
-                'address.uuid', 'address.status', 'address.prov', 'address.city',
-                'address.district', 'address.rt', 'address.rw', 'address.fullAddress',
-                'address.country', 'address.village', 'address.postalCode', 'address.faskesUuid',
-                'birthDetail.uuid', 'birthDetail.status', 'birthDetail.birthPlace',
-                'birthDetail.birthDate', 'birthDetail.faskesUuid', 'birthDetail.ageYear',
-                'birthDetail.ageMonth', 'birthDetail.ageDay'
-            ], true);
-
-            const igdAttributes = selectAttributes(resultIgd, [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'newborn', 'withoutIdentity', 'noPelayanan', 'paymentMethod'
-            ], true);
-            const result = {
-                ...igdAttributes,
-                patient: patientAttributes,
-            };
-
-            if (insurance) {
-                result.insurance = selectAttributes(insurance, [
-                    'uuid', 'noReg', 'insuranceAccountUuid', 'admissionType', 'status'
-                ], true);
-            }
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
                 tgl_registrasi: moment().unix(),
@@ -124,12 +104,12 @@ export default class InstallasiGawatDaruratRepository {
                 no_pelayanan: resultIgd.noPelayanan,
                 practitioner_uuid: resultIgd.practitionerUuid,
                 jenis_kunjungan: "IGD",
-                patient_uuid: result.patient.uuid,
+                patient_uuid: resultIgd.patientUuid,
                 lokasi_uuid: null,
                 payment_method: resultIgd.paymentMethod
             })
 
-            return result;
+            return await this.getDetail(resultIgd.uuid);
         } catch (e) {
             console.log("Error regist IGD", e);
             await transaction.rollback();
@@ -317,15 +297,35 @@ export default class InstallasiGawatDaruratRepository {
             }
 
             if (igd.dataValues.payment_method === 2) {
-                igd.dataValues.insurance = (await InsuranceAdmissionModel.findOne({
-                    where: {noReg: igd.dataValues.no_reg},
+                const insuranceData = await InsuranceAdmissionModel.findOne({
+                    where: { noReg: igd.dataValues.no_reg },
+                    include: [
+                        {
+                            model: InsuranceAccountModel,
+                            as: "insurance",
+                            required: true,
+                            where: {
+                                deletedAt: { [Op.is]: null }
+                            },
+                            attributes: [
+                                "account_number",
+                                "code",
+                                "name",
+                                "class_entitle"
+                            ]
+                        }
+                    ],
                     attributes: ["insurance_account_uuid"]
-                })).dataValues.insurance_account_uuid;
+                });
+
+                if (insuranceData) {
+                    igd.dataValues.insurance = insuranceData.dataValues.insurance;
+                }
 
                 return {
                     ...igd.get(),
                     patient: igd.patient.get()
-                }
+                };
             }
             return igd;
         }catch (e) {

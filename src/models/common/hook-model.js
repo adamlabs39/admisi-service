@@ -10,7 +10,6 @@ export const hookModel = {
         instance.updatedAt = moment().unix();
     },
     beforeDefine(attributes, options) {
-        console.log("totoot");
         Object.keys(attributes).forEach((key) => {
             const snakeCase = key.replace(/([A-Z])/g, "_$1").toLowerCase();
             if (snakeCase !== key) {

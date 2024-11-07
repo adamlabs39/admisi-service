@@ -41,6 +41,7 @@ routes.get("/patient/:uuid", PatientController.findByUuid);
 routes.post("/patient", PatientController.create);
 routes.put("/patient/:uuid", PatientController.update);
 routes.delete("/patient/:uuid", PatientController.delete);
+routes.get("/patient/history/:uuid", PatientController.getHistoryPatient);
 
 // Monitoring Room
 routes.get("/monitoring-rooms", MonitoringRoomController.getAllRoom);
@@ -51,6 +52,7 @@ routes.patch("/monitoring-rooms/:uuid", MonitoringRoomController.updateBed);
 routes.post("/general-consent/:uuid", GeneralConsentController.create);
 routes.get("/general-consent/:uuid", GeneralConsentController.getAll);
 routes.get("/general-consent/detail/:uuid", GeneralConsentController.getDetail);
+routes.delete("/general-consent/:uuid", GeneralConsentController.delete);
 
 
 // Report

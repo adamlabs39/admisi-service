@@ -1,5 +1,6 @@
 import { z } from "zod";
 import PatientValidation from "./patient-validation.js";
+import AsuransiValidator from "./asuransi-validator.js";
 
 export default class RawatJalanValidation {
     static RAJAL_VALIDATOR = z.object({
@@ -13,8 +14,17 @@ export default class RawatJalanValidation {
         note: z.string().max(255),
         maternity: z.boolean().default(false),
         platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("ADMISI").optional(),
-        assurance_account_id: z.string().max(255).optional()
+        insurance: AsuransiValidator.ASURANSI_VALIDATOR.optional(),
+    }).refine((data) => {
+        if (data.payment_method === "ASURANSI" && !data.insurance) {
+            return false;
+        }
+        return true;
+    }, {
+        message: "Insurance information is required when payment method is ASURANSI",
+        path: ["insurance"],
     });
+
 
     static cancelVisit = z.object({
         list_uuid: z.array(z.string().max(255)),

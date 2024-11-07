@@ -28,4 +28,14 @@ export default class GeneralConsentController{
             next(error);
         }
     }
+
+
+    static async delete(req,res,next){
+        try {
+            const result = await GeneralConsentService.delete(req.params.uuid);
+            return res.status(200).json(successResponse("General Consent Deleted"));
+        } catch (error) {
+            next(error);
+        }
+    }
 }

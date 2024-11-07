@@ -1,22 +1,31 @@
+// Penjamin		UNIQUE	REQUIRED
+// id	int (AI)	✅	✅
+// uuid	varchar(255)(PK)	✅	✅
+// faskes_uuid	varchar(255)(FK)		✅
+// code	varchar(255)	✅	✅
+// name	varchar(255)		✅
+// phone	varchar(255)
+// address	varchar(255)
+// status	bool		✅
+// createdAt	Integer
+// updatedAt	Integer
+// deletedAt	Integer
+
 import {
     DataTypes,
-    Model
+    Model,
 } from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
-import PatientFamilyModel from "./patient-family-model.js";
 
-export default class GeneralConsentModel extends Model {}
-GeneralConsentModel.init(
+export default class PenjaminModel extends Model{}
+
+PenjaminModel.init(
     {
         ...identifierModel,
-        faskesUuid: {
-            type: DataTypes.STRING(255),
-            allowNull: false,
-        },
-        patientUuid: {
+        code: {
             type: DataTypes.STRING(255),
             allowNull: false,
         },
@@ -24,28 +33,26 @@ GeneralConsentModel.init(
             type: DataTypes.STRING(255),
             allowNull: false,
         },
-        generalConsent: {
-            type: DataTypes.TEXT,
-            allowNull: false,
-        },
-        patientFamiliesUuid: {
+        phone: {
             type: DataTypes.STRING(255),
             allowNull: true,
+        },
+        address: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        status: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
         },
         ...fieldTime
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "GeneralConsent",
-        tableName: "general_consents",
+        modelName: "Penjamin",
+        tableName: "penjamin",
         underscored: true,
         timestamps: false,
         hooks: hookModel,
     }
 )
-
-GeneralConsentModel.belongsTo(PatientFamilyModel,{
-    foreignKey: "patient_families_uuid",
-    as: "patient_family",
-    constraints: false,
-})

@@ -28,6 +28,7 @@ import Pagination from "../helper/pagination.js";
 import RoomMonitoringModel from "../models/room-monitoring-model.js";
 import RuanganModel from "../models/ruangan-model.js";
 import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
+import InsuranceAccountModel from "../models/insurance-account-model.js";
 
 export default class RawatInapRepository {
     static async getAll(args) {
@@ -151,23 +152,17 @@ export default class RawatInapRepository {
             const user = Context.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
 
-            // find mom baby by identity
             const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
             if (!mom) throw new NotfoundException("Identity Mom not found! please regist the mother first");
 
             const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
             if (!practitioner) throw new NotfoundException("Practitioner not found");
 
-
-            // Regist Patient
             const patient = await PatientRepository.registPatient({...data.patientData, isNewBorn: true}, transaction);
             if (!patient) throw new Error("Failed to create patient");
 
-            // Get Bed Details
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
-            console.log("Bed Data:", bedData);
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
-            // Insert into RawatInap
             const registRI = await RawatInapModel.create({
                 faskesUuid: user.faskesUuid,
                 patientUuid: patient.uuid,
@@ -188,26 +183,26 @@ export default class RawatInapRepository {
                 paymentMethod: data.paymentMethod === 'TUNAI' ? 1 : 2,
                 monitoringRoomUuid: bedData.dataValues.uuid,
                 statusRi: 3,
-                encounter: "RI", // For Baby Encounter Just Use RI
+                encounter: "RI",
                 practitionerUuid: practitioner.uuid,
             }, {
                 transaction: transaction,
                 returning: true
             });
 
-            let insurance = null
             if (data.paymentMethod === 'ASURANSI') {
-                insurance = await InsuranceAdmissionRepository.upsertInsuranceAdmission({
-                    admissionType: 3,
+                await InsuranceAdmissionRepository.AsuransiPelayanan({
+                    patientUuid: patient.uuid,
+                    penjaminUuid: data.insurance.penjamin_uuid,
+                    accountNumber: data.insurance.account_number,
+                    classEntitle: data.insurance.class_entitle,
                     noReg: registRI.noReg,
-                    insuranceAccountUuid: data.assuranceAccountId,
-                }, transaction);
+                    admissionType: 3,
+                }, transaction)
             }
 
-            // Commit Transaction
             await transaction.commit();
 
-            // Send History Bed Event
             eventEmitter.emit(HISTORY_BED_CHANNEL, {
                 faskesUuid: user.faskesUuid,
                 admissionUuid: registRI.uuid,
@@ -215,7 +210,6 @@ export default class RawatInapRepository {
             });
 
 
-            // Send New Born Event
             eventEmitter.emit(NEW_BORN_CHANNEL, {
                 identifier_mom: patient.identity,
                 name_mom: patient.motherName,
@@ -240,30 +234,7 @@ export default class RawatInapRepository {
                 payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2,
             })
 
-            const patientAttributes = selectAttributes(patient, [
-                'uuid', 'title', 'name', 'noRm', 'identity', 'noIdentity',
-                'address.uuid', 'address.status', 'address.prov', 'address.city',
-                'address.district', 'address.rt', 'address.rw', 'address.fullAddress',
-                'address.country', 'address.village', 'address.postalCode', 'address.faskesUuid',
-                'birthDetail.uuid', 'birthDetail.status', 'birthDetail.birthPlace',
-                'birthDetail.birthDate', 'birthDetail.faskesUuid', 'birthDetail.ageYear',
-                'birthDetail.ageMonth', 'birthDetail.ageDay'
-            ], true);
-
-            const rawatInapAttributes = selectAttributes(registRI, [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'noSpri', 'entrustedPatient', 'upgradeClass', 'previousBill', 'spareBed', 'joinBill', 'familyBill', 'boxBaby', 'multipleBirth', 'monitoringRoomUuid', 'paymentMethod'
-            ], true);
-            const result = {
-                ...rawatInapAttributes,
-                patient: patientAttributes,
-            };
-            if (data.paymentMethod === 'ASURANSI') {
-                result.insurance = selectAttributes(insurance, [
-                    'uuid', 'status', 'noReg', 'insuranceAccountUuid', 'faskesUuid'
-                ], true)
-            }
-
-            return result;
+            return await this.getDetail(registRI.uuid);
         } catch (error) {
             console.error("Error during Rawat Inap registration:", error);
             await transaction.rollback();
@@ -277,7 +248,6 @@ export default class RawatInapRepository {
             const {faskesUuid} = Context.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
             console.log("Update Rawat Inap Data:", data);
-            // Get Rawat Inap Data
             const rawatInap = await RawatInapModel.findOne({
                 where: {
                     uuid: uuid,
@@ -287,23 +257,18 @@ export default class RawatInapRepository {
                 transaction
             });
             if (!rawatInap) throw new NotfoundException("Rawat Inap not found");
-            // Get Patient
             const patient = await PatientRepository.getOnePatientBy('uuid', rawatInap.patientUuid);
             if (!patient) throw new NotfoundException("Patient not found");
 
-            // Get Practitioner
             const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
             if (!practitioner) throw new NotfoundException("Practitioner not found");
-            // Update Patient Data
             data.patientData.patient_uuid = rawatInap.dataValues.patientUuid;
             data.patientData.is_new_born = patient.isNewBorn || false;
             const updatedPatient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!updatedPatient) throw new Error("Failed to update patient");
-            // Update Bed and Monitoring Room (if statusRi is 1)
             if (data.monitoringRoomUuid && rawatInap.statusRi === 1) {
                 const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
                 await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, updatedPatient.uuid, transaction);
-                // Emit Event for History Bed
                 eventEmitter.emit(HISTORY_BED_CHANNEL, {
                     faskesUuid: faskesUuid,
                     admissionUuid: rawatInap.uuid,
@@ -313,7 +278,6 @@ export default class RawatInapRepository {
                 throw new DuplicateException("Cannot update bed, Rawat Inap status is being processed");
             }
 
-            // Update Rawat Inap Data
             const updatedRawatInap = await rawatInap.update({
                 noRm: updatedPatient.noRm,
                 name: updatedPatient.name,
@@ -337,39 +301,15 @@ export default class RawatInapRepository {
                 transaction
             });
 
-            let insurance = null;
             if (data.paymentMethod === 'ASURANSI') {
-                insurance = await InsuranceAdmissionRepository.upsertInsuranceAdmission({
+                await InsuranceAdmissionRepository.AsuransiPelayanan({
+                    patientUuid: updatedPatient.uuid,
+                    penjaminUuid: data.insurance.penjamin_uuid,
+                    accountNumber: data.insurance.account_number,
+                    classEntitle: data.insurance.class_entitle,
+                    noReg: updatedRawatInap.noReg,
                     admissionType: 3,
-                    noReg: rawatInap.noReg,
-                    insuranceAccountUuid: data.assuranceAccountId,
-                }, transaction);
-            }
-
-            // Prepare response
-            const patientAttributes = selectAttributes(updatedPatient, [
-                'uuid', 'title', 'name', 'noRm', 'identity', 'noIdentity',
-                'address.uuid', 'address.status', 'address.prov', 'address.city',
-                'address.district', 'address.rt', 'address.rw', 'address.fullAddress',
-                'address.country', 'address.village', 'address.postalCode', 'address.faskesUuid',
-                'birthDetail.uuid', 'birthDetail.status', 'birthDetail.birthPlace',
-                'birthDetail.birthDate', 'birthDetail.faskesUuid', 'birthDetail.ageYear',
-                'birthDetail.ageMonth', 'birthDetail.ageDay'
-            ], true);
-
-            const rawatInapAttributes = selectAttributes(updatedRawatInap.get(), [
-                'uuid', 'noReg', 'practitionerUuid', 'complaint', 'note', 'maternity', 'maternity', 'noSpri', 'entrustedPatient', 'upgradeClass', 'previousBill', 'spareBed', 'joinBill', 'familyBill', 'boxBaby', 'multipleBirth', 'monitoringRoomUuid', 'paymentMethod'
-            ], true);
-
-            const result = {
-                ...rawatInapAttributes,
-                patient: patientAttributes,
-            };
-
-            if (insurance) {
-                result.insurance = selectAttributes(insurance, [
-                    'uuid', 'status', 'noReg', 'insuranceAccountUuid',
-                ], true);
+                }, transaction)
             }
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
@@ -383,7 +323,7 @@ export default class RawatInapRepository {
             });
             await transaction.commit();
 
-            return result;
+            return await this.getDetail(updatedRawatInap.uuid);
 
         } catch (error) {
             console.error("Error updating Rawat Inap:", error);
@@ -392,12 +332,12 @@ export default class RawatInapRepository {
         }
     }
 
-    static async getDetail(uuuid) {
+    static async getDetail(uuid) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         try {
             const rawatInap = await RawatInapModel.findOne({
                 where: {
-                    uuid: uuuid,
+                    uuid: uuid,
                     faskesUuid,
                     deletedAt: null
                 },
@@ -452,18 +392,6 @@ export default class RawatInapRepository {
                 if (newBorn) rawatInap.patient.dataValues.new_born = newBorn.dataValues;
             }
 
-            if (rawatInap.dataValues.payment_method === 2) {
-                rawatInap.dataValues.insurance = (await InsuranceAdmissionModel.findOne({
-                    where: {noReg: rawatInap.dataValues.no_reg},
-                    attributes: ["insurance_account_uuid"]
-                })).dataValues.insurance_account_uuid;
-
-                return {
-                    ...rawatInap.get(),
-                    patient: rawatInap.patient.get()
-                }
-            }
-
 
             if (rawatInap.monitoring_room) {
                 const detailRuangan = await RuanganModel.findOne({
@@ -473,6 +401,38 @@ export default class RawatInapRepository {
                 if (detailRuangan) {
                     rawatInap.monitoring_room.dataValues.kategori_ruangan_uuid = detailRuangan.kategori_ruangan_uuid;
                 }
+            }
+
+            if (rawatInap.dataValues.payment_method === 2) {
+                const insuranceData = await InsuranceAdmissionModel.findOne({
+                    where: { noReg: rawatInap.dataValues.no_reg },
+                    include: [
+                        {
+                            model: InsuranceAccountModel,
+                            as: "insurance",
+                            required: true,
+                            where: {
+                                deletedAt: { [Op.is]: null }
+                            },
+                            attributes: [
+                                "account_number",
+                                "code",
+                                "name",
+                                "class_entitle"
+                            ]
+                        }
+                    ],
+                    attributes: ["insurance_account_uuid"]
+                });
+
+                if (insuranceData) {
+                    rawatInap.dataValues.insurance = insuranceData.dataValues.insurance;
+                }
+
+                return {
+                    ...rawatInap.get(),
+                    patient: rawatInap.patient.get()
+                };
             }
 
             return rawatInap;
@@ -497,7 +457,7 @@ export default class RawatInapRepository {
                     transaction: t
                 })
 
-                const isProcessed = rawatInap.filter((ri) => ri.statusRi !== 1);
+                const isProcessed = rawatInap.filter((ri) => ri.statusRi >= 2);
                 if (isProcessed.length > 0) throw new Error("Cannot cancel processed Rawat Inap");
 
                 if (rawatInap.length === 0) throw new NotfoundException("Rawat Inap not found");
