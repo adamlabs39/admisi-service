@@ -11,7 +11,6 @@ import {
     HISTORY_BED_CHANNEL,
     LOG_CANCLE_PELAYANAN_CHANNEL,
     LOG_PELAYANAN_CHANNEL,
-    NEW_BORN_CHANNEL
 } from "../constant/event-constant.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import PractitionerRepository from "./practitioner-repository.js";
@@ -29,6 +28,7 @@ import RoomMonitoringModel from "../models/room-monitoring-model.js";
 import RuanganModel from "../models/ruangan-model.js";
 import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
 import InsuranceAccountModel from "../models/insurance-account-model.js";
+import newBornRepository from "./newborn-repository.js";
 
 export default class RawatInapRepository {
     static async getAll(args) {
@@ -210,7 +210,7 @@ export default class RawatInapRepository {
             });
 
 
-            eventEmitter.emit(NEW_BORN_CHANNEL, {
+            await newBornRepository.upsertNewBorn({
                 identifier_mom: patient.identity,
                 name_mom: patient.motherName,
                 name_baby: patient.name,
@@ -222,7 +222,7 @@ export default class RawatInapRepository {
                 address_uuid: patient.address.uuid,
                 tanggal_daftar: moment().unix(),
                 status: true,
-            });
+            }, transaction);
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: registRI.tanggalDaftar,

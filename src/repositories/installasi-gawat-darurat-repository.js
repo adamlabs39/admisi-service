@@ -9,7 +9,7 @@ import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import PractitionerRepository from "./practitioner-repository.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import {eventEmitter} from "../helper/event.js";
-import {LOG_PELAYANAN_CHANNEL, NEW_BORN_CHANNEL} from "../constant/event-constant.js";
+import {LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
 import InstalasiGawatDaruratModel from "../models/instalasi-gawat-darurat-model.js";
 import PatientModel from "../models/patient-model.js";
 import {Op} from "sequelize";
@@ -22,6 +22,7 @@ import BadRequestException from "../exception/bad-request-exception.js";
 import NewBornModel from "../models/new-born-model.js";
 import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
 import InsuranceAccountModel from "../models/insurance-account-model.js";
+import newBornRepository from "./newborn-repository.js";
 
 export default class InstallasiGawatDaruratRepository {
     static async registIGD(data) {
@@ -83,7 +84,7 @@ export default class InstallasiGawatDaruratRepository {
             await transaction.commit();
 
             if (data.isNewborn) {
-                eventEmitter.emit(NEW_BORN_CHANNEL, {
+                await newBornRepository.upsertNewBorn({
                     identifier_mom: patient.identity,
                     name_mom: patient.motherName,
                     name_baby: patient.name,
@@ -95,7 +96,7 @@ export default class InstallasiGawatDaruratRepository {
                     address_uuid: patient.address.uuid,
                     tanggal_daftar: moment().unix(),
                     status: true,
-                });
+                }, transaction);
             }
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
@@ -192,7 +193,7 @@ export default class InstallasiGawatDaruratRepository {
                 }
 
                 if (data.isNewborn) {
-                    eventEmitter.emit(NEW_BORN_CHANNEL, {
+                    await newBornRepository.upsertNewBorn({
                         identifier_mom: patient.identity,
                         name_mom: patient.motherName,
                         name_baby: patient.name,
@@ -204,7 +205,7 @@ export default class InstallasiGawatDaruratRepository {
                         address_uuid: patient.address.uuid,
                         tanggal_daftar: moment().unix(),
                         status: true,
-                    });
+                    }, transaction);
                 }
 
                 eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {

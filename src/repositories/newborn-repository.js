@@ -10,7 +10,7 @@ import Pagination from "../helper/pagination.js";
 import BirthDetailModel from "../models/birth-detail-model.js";
 
 export default class newBornRepository {
-    static async upsertNewBorn(data, transaction) {
+    static async upsertNewBorn(data, transaction = null) {
         const trx = transaction || await sequelizeInstace.transaction();
         const user = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
