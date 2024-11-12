@@ -1,6 +1,9 @@
-version: '3.8'
 services:
   adameds-admisi:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      no_cache: true
     container_name: admisi-service
     image: admisi-service:dev
     environment:
@@ -19,6 +22,9 @@ services:
       - type: bind
         source: /home/admin/adameds/private.key
         target: /adameds-admisi/private.key
+      - type: bind
+        source: /home/admin/adameds/.env.vault
+        target: /adameds-admisi/.env.vault
     networks:
       - admisi
     ports:
