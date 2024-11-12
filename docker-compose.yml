@@ -7,13 +7,7 @@ services:
     container_name: admisi-service
     image: admisi-service:dev
     environment:
-      APP_MODE: ${APP_MODE}
-      APP_NAME: ${APP_NAME}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
+      DOTENV_KEY: ${DOTENV_KEY}
       SYNC_DB: ${SYNC_DB}
     volumes:
       - type: bind
