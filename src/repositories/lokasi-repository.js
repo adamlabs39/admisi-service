@@ -1,4 +1,6 @@
-import LokasiModel from "../models/lokasi-model.js";
+import {
+    LokasiModel
+} from "@adameds/model-sdk/datamaster";
 import NotfoundException from "../exception/notfound-exception.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";

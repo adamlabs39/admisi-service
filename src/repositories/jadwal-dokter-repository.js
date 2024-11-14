@@ -1,4 +1,6 @@
-import JadwalDokterModel from "../models/jadwal-dokter-model.js";
+import {
+    JadwalDokterModel
+} from "@adameds/model-sdk/antrian";
 import NotfoundException from "../exception/notfound-exception.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {Context} from "../middlewares/context.js";

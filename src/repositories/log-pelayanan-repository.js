@@ -1,16 +1,26 @@
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
-import LogPelayananModel from "../models/log-pelayanan-model.js"
 import {convertSnakeToCamel, getInfoInsurance} from "../helper/utility.js";
 import {Op} from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
-import PatientModel from "../models/patient-model.js";
-import AddressModel from "../models/address-model.js";
-import BirthDetailModel from "../models/birth-detail-model.js";
-import PractitionerModel from "../models/practitioner-model.js";
-import PegawaiModel from "../models/pegawai-model.js";
+import {
+    LogPelayananModel,
+} from "@adameds/model-sdk/pelayanan";
+import {
+    PatientModel,
+    BirthDetailModel
+} from "@adameds/model-sdk/admisi";
+import {
+    AddressModel
+} from "@adameds/model-sdk/setting";
+import {
+    PractitionerModel,
+    PegawaiModel,
+    LokasiModel
+} from "@adameds/model-sdk/datamaster";
+
+
 import Pagination from "../helper/pagination.js";
-import LokasiModel from "../models/lokasi-model.js";
 import moment from "moment";
 
 export default class LogPelayananRepository {

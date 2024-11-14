@@ -3,25 +3,33 @@ import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import PatientRepository from "./patient-repository.js";
-import {convertSnakeToCamel, generateNoPelayanan, generateNoReg, selectAttributes} from "../helper/utility.js";
+import {convertSnakeToCamel, generateNoPelayanan, generateNoReg} from "../helper/utility.js";
 import moment from "moment";
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import PractitionerRepository from "./practitioner-repository.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import InstalasiGawatDaruratModel from "../models/instalasi-gawat-darurat-model.js";
-import PatientModel from "../models/patient-model.js";
 import {Op} from "sequelize";
-import AddressModel from "../models/address-model.js";
-import BirthDetailModel from "../models/birth-detail-model.js";
-import PractitionerModel from "../models/practitioner-model.js";
-import PegawaiModel from "../models/pegawai-model.js";
-import Pagination from "../helper/pagination.js";
 import BadRequestException from "../exception/bad-request-exception.js";
-import NewBornModel from "../models/new-born-model.js";
-import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
-import InsuranceAccountModel from "../models/insurance-account-model.js";
+import {
+    InstalasiGawatDaruratModel,
+    InsuranceAdmissionModel
+} from "@adameds/model-sdk/pelayanan";
+import {
+    PatientModel,
+    BirthDetailModel,
+    NewBornModel,
+    InsuranceAccountModel
+} from "@adameds/model-sdk/admisi";
+import {
+    AddressModel
+} from "@adameds/model-sdk/setting";
+import {
+    PractitionerModel,
+    PegawaiModel
+} from "@adameds/model-sdk/datamaster";
+import Pagination from "../helper/pagination.js";
 import newBornRepository from "./newborn-repository.js";
 
 export default class InstallasiGawatDaruratRepository {

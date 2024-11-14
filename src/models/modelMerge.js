@@ -44,7 +44,10 @@ const MODELMERGE = [
     JadwalDokterModel,
     LogPelayananModel,
     PenjaminModel,
-    sequelizeInstance
+    sequelizeInstance,
+    AntrianPoliModel
 ]
+
+
 
 export default MODELMERGE;

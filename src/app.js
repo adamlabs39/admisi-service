@@ -27,12 +27,12 @@ const corsConfig = {
     optionsSuccessStatus: 204
 };
 app.use(cors(corsConfig));
-const limiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutes
-    max: 100,
-    message: "Too many requests from this IP, please try again after 5 minutes"
-});
-app.use(limiter);
+// const limiter = rateLimit({
+//     windowMs: 5 * 60 * 1000, // 5 minutes
+//     max: 100,
+//     message: "Too many requests from this IP, please try again after 5 minutes"
+// });
+// app.use(limiter);
 app.use("/api", routes);
 app.use(errorMiddleware);
 

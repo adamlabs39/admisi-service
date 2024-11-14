@@ -1,5 +1,4 @@
 import sequelizeInstance from "../configurations/sequelize-instance.js";
-import RawatInapModel from "../models/rawat-inap-model.js";
 import PatientRepository from "./patient-repository.js";
 import MonitoringRoomRepository from "./monitoring-room-repository.js";
 import {Context} from "../middlewares/context.js";
@@ -16,18 +15,27 @@ import NotfoundException from "../exception/notfound-exception.js";
 import PractitionerRepository from "./practitioner-repository.js";
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import DuplicateException from "../exception/duplicate-exception.js";
-import PatientModel from "../models/patient-model.js";
 import {Op} from "sequelize";
-import AddressModel from "../models/address-model.js";
-import BirthDetailModel from "../models/birth-detail-model.js";
-import NewBornModel from "../models/new-born-model.js";
-import PractitionerModel from "../models/practitioner-model.js";
-import PegawaiModel from "../models/pegawai-model.js";
+import {
+    PatientModel,
+    BirthDetailModel,
+    NewBornModel,
+    InsuranceAccountModel,
+    RoomMonitoringModel,
+} from "@adameds/model-sdk/admisi";
+import {
+    RawatInapModel,
+    InsuranceAdmissionModel
+} from "@adameds/model-sdk/pelayanan";
+import {
+    AddressModel
+} from "@adameds/model-sdk/setting";
+import {
+    PractitionerModel,
+    PegawaiModel,
+    RuanganModel
+} from "@adameds/model-sdk/datamaster";
 import Pagination from "../helper/pagination.js";
-import RoomMonitoringModel from "../models/room-monitoring-model.js";
-import RuanganModel from "../models/ruangan-model.js";
-import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
-import InsuranceAccountModel from "../models/insurance-account-model.js";
 import newBornRepository from "./newborn-repository.js";
 
 export default class RawatInapRepository {

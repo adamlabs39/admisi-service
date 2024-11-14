@@ -1,9 +1,15 @@
-import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
+import {
+    InsuranceAdmissionModel
+} from "@adameds/model-sdk/pelayanan";
+import {
+    PenjaminModel
+} from "@adameds/model-sdk/datamaster";
+import {
+    InsuranceAccountModel
+} from "@adameds/model-sdk/admisi";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
-import InsuranceAccountModel from "../models/insurance-account-model.js";
-import PenjaminModel from "../models/penjamin-model.js";
 import NotfoundException from "../exception/notfound-exception.js";
 
 export default class InsuranceAdmissionRepository {

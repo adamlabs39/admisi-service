@@ -2,11 +2,15 @@ import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {Op} from "sequelize";
 import Pagination from "../helper/pagination.js";
-import RuanganModel from "../models/ruangan-model.js";
-import RoomMonitoringModel from "../models/room-monitoring-model.js";
-import KategoriRuanganModel from "../models/kategori-ruangan-model.js";
+import {
+    RuanganModel,
+    KategoriRuanganModel
+} from "@adameds/model-sdk/datamaster";
+import {
+    RoomMonitoringModel,
+    PatientModel
+} from "@adameds/model-sdk/admisi";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
-import PatientModel from "../models/patient-model.js";
 import RuanganRepository from "./ruangan-repository.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import BadRequestException from "../exception/bad-request-exception.js";

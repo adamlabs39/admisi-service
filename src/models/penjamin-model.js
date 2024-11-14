@@ -1,16 +1,3 @@
-// Penjamin		UNIQUE	REQUIRED
-// id	int (AI)	✅	✅
-// uuid	varchar(255)(PK)	✅	✅
-// faskes_uuid	varchar(255)(FK)		✅
-// code	varchar(255)	✅	✅
-// name	varchar(255)		✅
-// phone	varchar(255)
-// address	varchar(255)
-// status	bool		✅
-// createdAt	Integer
-// updatedAt	Integer
-// deletedAt	Integer
-
 import {
     DataTypes,
     Model,

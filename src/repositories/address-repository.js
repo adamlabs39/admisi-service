@@ -1,4 +1,6 @@
-import AddressModel from "../models/address-model.js";
+import {
+    AddressModel
+} from "@adameds/model-sdk/setting";
 import SequelizeInstance from "../configurations/sequelize-instance.js";
 import {Op} from "sequelize";
 

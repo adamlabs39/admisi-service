@@ -2,7 +2,7 @@ import { DataTypes, Model } from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import identifierModel from "./common/identifier-model.js";
 import fieldTime from "./common/fieldTime-model.js";
-import {uuidv4, uuidv7} from "uuidv7";
+import { uuidv7 } from "uuidv7";
 import moment from "moment";
 
 export default class AddressModel extends Model {}

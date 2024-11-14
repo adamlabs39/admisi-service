@@ -1,6 +1,8 @@
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
-import RiwayatRuanganModel from "../models/riwayat-ruangan-model.js";
+import {
+    RiwayatRuanganModel
+} from "@adameds/model-sdk/pelayanan";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 
 export default class RiwayatRuanganRepository{

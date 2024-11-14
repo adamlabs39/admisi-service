@@ -7,9 +7,16 @@ import GeneralConsentController from "../controllers/general-consent-controller.
 import RawatInapController from "../controllers/rawat-inap-controller.js";
 import InstalasiGawatDaruratController from "../controllers/instalasi-gawat-darurat-controller.js";
 import ReportController from "../controllers/report-controller.js";
+import authorizationSdk from "@adameds/authorization-sdk";
+import {Context} from "../middlewares/context.js";
+import {CTX_AUTHOR} from "../constant/context-constant.js";
+
 const routes = express.Router();
 
-routes.use(AuthorizationMiddleware);
+routes.use(AuthorizationMiddleware)
+// routes.use(async (req, res, next) => {
+//     Context.set(CTX_AUTHOR, req.author);
+// });
 
 
 // Rawat Jalan

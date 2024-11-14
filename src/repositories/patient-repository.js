@@ -1,12 +1,15 @@
 import sequelizeInstace from "../configurations/sequelize-instance.js";
-import PatientModel from "../models/patient-model.js";
+import {
+    PatientModel,
+    BirthDetailModel
+} from "@adameds/model-sdk/admisi";
+import {
+    AddressModel
+} from "@adameds/model-sdk/setting";
 import {Op} from "sequelize";
 import Pagination from "../helper/pagination.js";
 import moment from "moment";
-import AddressModel from "../models/address-model.js";
-import BirthDetailModel from "../models/birth-detail-model.js";
 import {convertSnakeToCamel, generateNoRM, getInfoAge} from "../helper/utility.js";
-import BadRequestException from "../exception/bad-request-exception.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import DuplicateException from "../exception/duplicate-exception.js";

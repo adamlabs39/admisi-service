@@ -45,8 +45,8 @@ PractitionerModel.init(
     },
     {
         sequelize: sequelizeInstance,
-        modelName: "practioner",
-        tableName: "practioner",
+        modelName: "practitioner",
+        tableName: "practitioner",
         timestamps: false,
         hooks: hookModel,
     }

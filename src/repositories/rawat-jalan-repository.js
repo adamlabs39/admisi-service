@@ -1,34 +1,44 @@
-import PatientModel from "../models/patient-model.js";
 import {Op} from "sequelize";
 import Pagination from "../helper/pagination.js";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
-import RawatJalanModel from "../models/rawat-jalan-model.js";
 import {Context, Context as Ctx} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
-import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
 import {
     convertSnakeToCamel,
     generateAntrianPoli,
     generateBookingCode, generateNoPelayanan,
     generateNoReg,
-    selectAttributes
 } from "../helper/utility.js";
 import PatientRepository from "./patient-repository.js";
-import BirthDetailModel from "../models/birth-detail-model.js";
-import AddressModel from "../models/address-model.js";
 import moment from "moment";
 import NotfoundException from "../exception/notfound-exception.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 import JadwalDokterRepository from "./jadwal-dokter-repository.js";
-import PractitionerModel from "../models/practitioner-model.js";
-import PegawaiModel from "../models/pegawai-model.js";
+import {
+    PractitionerModel,
+    PegawaiModel,
+    LokasiModel
+} from "@adameds/model-sdk/datamaster";
+import {
+    BirthDetailModel,
+    PatientModel,
+    InsuranceAccountModel
+} from "@adameds/model-sdk/admisi";
+import {
+    AddressModel
+} from "@adameds/model-sdk/setting";
+import {
+    JadwalDokterModel
+} from "@adameds/model-sdk/antrian";
+import {
+    RawatJalanModel,
+    InsuranceAdmissionModel
+} from "@adameds/model-sdk/pelayanan";
+
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import LokasiModel from "../models/lokasi-model.js";
-import JadwalDokterModel from "../models/jadwal-dokter-model.js";
-import InsuranceAccountModel from "../models/insurance-account-model.js";
 
 export default class RawatJalanRepository {
     /**

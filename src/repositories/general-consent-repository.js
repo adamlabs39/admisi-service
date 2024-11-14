@@ -2,8 +2,10 @@ import sequelizeInstace from "../configurations/sequelize-instance.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import PatientFamilyRepository from "./patient-family-repository.js";
-import GeneralConsentModel from "../models/general-consent-model.js";
-import PatientFamilyModel from "../models/patient-family-model.js";
+import {
+    GeneralConsentModel,
+    PatientFamilyModel
+} from "@adameds/model-sdk/admisi";
 import NotfoundException from "../exception/notfound-exception.js";
 import moment from "moment";
 
