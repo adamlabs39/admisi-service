@@ -7,8 +7,7 @@ import fieldTime from "./common/fieldTime-model.js";
 import identifierModel from "./common/identifier-model.js";
 import {hookModel} from "./common/hook-model.js";
 
-export default class AntrianPoliModel extends Model {
-}
+export default class AntrianPoliModel extends Model {}
 AntrianPoliModel.init(
     {
         ...identifierModel,
@@ -44,6 +43,7 @@ AntrianPoliModel.init(
             type: DataTypes.STRING(15),
             allowNull: false,
         },
+        ...fieldTime,
     },
     {
         sequelize: sequelizeInstance,

@@ -1,7 +1,10 @@
-import RuanganModel from "../models/ruangan-model.js";
+
+import {
+    RuanganModel,
+    KategoriRuanganModel
+} from "@adameds/model-sdk/datamaster";
 import NotfoundException from "../exception/notfound-exception.js";
 import {Op} from "sequelize";
-import KategoriRuanganModel from "../models/kategori-ruangan-model.js";
 
 export default class RuanganRepository {
     static async getById(uuid){

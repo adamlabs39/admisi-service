@@ -1,4 +1,6 @@
-import PractitionerModel from "../models/practitioner-model.js";
+import {
+    PractitionerModel
+} from "@adameds/model-sdk/datamaster";
 import NotfoundException from "../exception/notfound-exception.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
@@ -9,7 +11,7 @@ export default class PractitionerRepository {
         const data = await PractitionerModel.findOne({
             where: {
                 [col]: val,
-                faskesUuid
+                faskes_uuid: faskesUuid
             }
         });
         if (!data) throw new NotfoundException(`Practitioner not found`);

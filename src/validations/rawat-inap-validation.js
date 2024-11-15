@@ -1,5 +1,6 @@
 import {z} from 'zod';
 import PatientValidation from "./patient-validation.js";
+import AsuransiValidator from "./asuransi-validator.js";
 
 export default class RawatInapValidation {
     static CREATE = z.object({
@@ -14,7 +15,15 @@ export default class RawatInapValidation {
         monitoring_room_uuid: z.string().max(255),
         multiple_birth: z.boolean().default(false),
         practitioner_uuid: z.string().max(255),
-        assurance_account_id: z.string().max(255).optional()
+        insurance: AsuransiValidator.ASURANSI_VALIDATOR.optional(),
+    }).refine((data) => {
+        if (data.payment_method === "ASURANSI" && !data.insurance) {
+            return false;
+        }
+        return true;
+    }, {
+        message: "Insurance information is required when payment method is ASURANSI",
+        path: ["insurance"]
     });
 
 
@@ -30,8 +39,16 @@ export default class RawatInapValidation {
         monitoring_room_uuid: z.string().max(255),
         multiple_birth: z.boolean().default(false),
         practitioner_uuid: z.string().max(255),
-        assurance_account_id: z.string().max(255).optional(),
-    })
+        insurance: AsuransiValidator.ASURANSI_VALIDATOR.optional(),
+    }).refine((data) => {
+        if (data.payment_method === "ASURANSI" && !data.insurance) {
+            return false;
+        }
+        return true;
+    }, {
+        message: "Insurance information is required when payment method is ASURANSI",
+        path: ["insurance"],
+    });
 
     static UPDATE_PATIENT = z.object({
         is_newborn: z.boolean().default(false).optional(),
@@ -51,8 +68,16 @@ export default class RawatInapValidation {
         monitoring_room_uuid: z.string().max(255),
         multiple_birth: z.boolean().default(false),
         practitioner_uuid: z.string().max(255),
-        assurance_account_id: z.string().max(255).optional(),
-    })
+        insurance: AsuransiValidator.ASURANSI_VALIDATOR.optional(),
+    }).refine((data) => {
+        if (data.payment_method === "ASURANSI" && !data.insurance) {
+            return false;
+        }
+        return true;
+    }, {
+        message: "Insurance information is required when payment method is ASURANSI",
+        path: ["insurance"],
+    });
 
 
     static CANCELVISIT = z.object({

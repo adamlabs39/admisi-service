@@ -1,16 +1,20 @@
-import NewBornModel from "../models/new-born-model.js";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {convertSnakeToCamel} from "../helper/utility.js";
 import {Op} from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
-import AddressModel from "../models/address-model.js";
+import {
+    NewBornModel,
+    BirthDetailModel
+} from "@adameds/model-sdk/admisi";
+import {
+    AddressModel
+} from "@adameds/model-sdk/setting";
 import Pagination from "../helper/pagination.js";
-import BirthDetailModel from "../models/birth-detail-model.js";
 
 export default class newBornRepository {
-    static async upsertNewBorn(data, transaction) {
+    static async upsertNewBorn(data, transaction = null) {
         const trx = transaction || await sequelizeInstace.transaction();
         const user = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
@@ -19,9 +23,9 @@ export default class newBornRepository {
             let newBorn = noRmBaby ? await this.findByNoRm(noRmBaby, trx) : null;
             data.faskesUuid = user.faskesUuid;
             if (newBorn) {
-                await newBorn.update(data, { transaction: trx });
+                await newBorn.update(data, {transaction: trx});
             } else {
-                newBorn = await NewBornModel.create(data, { transaction: trx });
+                newBorn = await NewBornModel.create(data, {transaction: trx});
             }
 
             if (!transaction) await trx.commit();
@@ -43,9 +47,9 @@ export default class newBornRepository {
     }
 
 
-    static async getReportNewBorn(args){
+    static async getReportNewBorn(args) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
-        try{
+        try {
             const filter = {
                 faskesUuid,
                 deletedAt: null,
@@ -72,7 +76,7 @@ export default class newBornRepository {
                         attributes: ["birth_place", "birth_date"]
                     }
                 ],
-                attributes:[
+                attributes: [
                     "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"
                 ]
             }
@@ -83,7 +87,7 @@ export default class newBornRepository {
                 filter,
                 options,
             )
-        }catch (e){
+        } catch (e) {
             console.log("Error on getReportNewBorn");
             console.log(e);
             throw e;

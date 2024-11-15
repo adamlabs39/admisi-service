@@ -1,4 +1,6 @@
-import FaskesModel from "../models/faskes-model.js";
+import {
+    FaskesModel
+} from "@adameds/model-sdk/datamaster";
 import {Op} from "sequelize";
 
 export default class FaskesRepository {

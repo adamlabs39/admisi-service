@@ -29,7 +29,7 @@ InsuranceAccountModel.init(
             allowNull: true,
         },
         classEntitle: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.STRING,
             allowNull: true,
         },
         membershipStatus: {

@@ -7,9 +7,16 @@ import GeneralConsentController from "../controllers/general-consent-controller.
 import RawatInapController from "../controllers/rawat-inap-controller.js";
 import InstalasiGawatDaruratController from "../controllers/instalasi-gawat-darurat-controller.js";
 import ReportController from "../controllers/report-controller.js";
+import authorizationSdk from "@adameds/authorization-sdk";
+import {Context} from "../middlewares/context.js";
+import {CTX_AUTHOR} from "../constant/context-constant.js";
+
 const routes = express.Router();
 
-routes.use(AuthorizationMiddleware);
+routes.use(AuthorizationMiddleware)
+// routes.use(async (req, res, next) => {
+//     Context.set(CTX_AUTHOR, req.author);
+// });
 
 
 // Rawat Jalan
@@ -41,6 +48,7 @@ routes.get("/patient/:uuid", PatientController.findByUuid);
 routes.post("/patient", PatientController.create);
 routes.put("/patient/:uuid", PatientController.update);
 routes.delete("/patient/:uuid", PatientController.delete);
+routes.get("/patient/history/:uuid", PatientController.getHistoryPatient);
 
 // Monitoring Room
 routes.get("/monitoring-rooms", MonitoringRoomController.getAllRoom);
@@ -51,11 +59,12 @@ routes.patch("/monitoring-rooms/:uuid", MonitoringRoomController.updateBed);
 routes.post("/general-consent/:uuid", GeneralConsentController.create);
 routes.get("/general-consent/:uuid", GeneralConsentController.getAll);
 routes.get("/general-consent/detail/:uuid", GeneralConsentController.getDetail);
+routes.delete("/general-consent/:uuid", GeneralConsentController.delete);
 
 
 // Report
 routes.get("/report/kunjungan", ReportController.getReport);
-routes.get("/report/penunjang", ReportController.getReportPenjamin);
+routes.get("/report/penjamin", ReportController.getReportPenjamin);
 routes.get("/report/cancel-visit", ReportController.getCancelVisitReport);
 routes.get("/report/room", ReportController.getReportRoom);
 routes.get("/report/rawat-inap", ReportController.getReportRawatInap);

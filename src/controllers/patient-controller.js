@@ -48,4 +48,14 @@ export default class PatientController {
             next(error);
         }
     }
+
+
+    static async getHistoryPatient(req, res, next) {
+        try {
+            const patient = await PatientService.getHistoryPatient(req.params.uuid, req.query);
+            return res.status(200).json(successResponse("Berhasil Menampilkan Riwayat Pasien", patient.data, patient.pagination));
+        }catch (error) {
+            next(error);
+        }
+    }
 }

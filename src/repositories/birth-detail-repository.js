@@ -1,5 +1,7 @@
 import SequelizeInstance from "../configurations/sequelize-instance.js";
-import BirthDetailModel from "../models/birth-detail-model.js";
+import {
+    BirthDetailModel
+} from "@adameds/model-sdk/admisi";
 import {Op} from "sequelize";
 export default class BirthDetailRepository {
     static async create(data){

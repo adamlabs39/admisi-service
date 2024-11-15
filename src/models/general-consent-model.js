@@ -39,6 +39,7 @@ GeneralConsentModel.init(
         modelName: "GeneralConsent",
         tableName: "general_consents",
         underscored: true,
+        timestamps: false,
         hooks: hookModel,
     }
 )

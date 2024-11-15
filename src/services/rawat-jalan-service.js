@@ -8,6 +8,7 @@ import {Context as Ctx} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 import RawatJalanModel from "../models/rawat-jalan-model.js";
+import AsuransiValidator from "../validations/asuransi-validator.js";
 
 export class RawatJalanService {
     static async getALl(args) {
@@ -20,7 +21,7 @@ export class RawatJalanService {
     static async registRawatJalan(data) {
         const user = Ctx.get(CTX_AUTHOR);
         const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
-        if(validData.payment_method === "ASURANSI" && !validData.assurance_account_id) throw new BadRequestException("Assurance account id is required");
+        if(validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Insurance data is required");
 
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
@@ -36,7 +37,7 @@ export class RawatJalanService {
         if(!checkExist) throw new NotfoundException('Data tidak ditemukan');
 
         const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
-        if(validData.payment_method === "ASURANSI" && !validData.assurance_account_id) throw new BadRequestException("Assurance account id is required");
+        if(validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Insurance data is required");
 
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');

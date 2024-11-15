@@ -1,4 +1,6 @@
-import PatientFamilyModel from "../models/patient-family-model.js";
+import {
+    PatientFamilyModel
+} from "@adameds/model-sdk/admisi";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";

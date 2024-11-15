@@ -1,11 +1,13 @@
-import LokasiModel from "../models/lokasi-model.js";
+import {
+    LokasiModel
+} from "@adameds/model-sdk/datamaster";
 
 export default class LokasiSeeder {
     static async seed(transaction) {
         const data = [
             {
                 uuid: '0191a18a-22e4-773b-8229-a023f420d0bb',
-                faskesUuid: "9d403ufjh43ufh3uf8430ihf",
+                faskes_uuid: "019328c1-1931-793e-83d0-488bbe962dd4",
                 code: 'FAC001',
                 name: 'Faskes Example',
                 description: 'Deskripsi Faskes Example',
@@ -14,7 +16,7 @@ export default class LokasiSeeder {
                 url: 'https://faskesexample.com',
                 statusOperasional: 'Aktif',
                 satuSehatId: 'SEHAT001',
-                locationType: 'Rumah Sakit',
+                location_type: 'Rumah Sakit',
                 classCode: 'A',
                 className: 'Kelas A',
                 partOfName: 'Faskes Induk',
@@ -23,7 +25,7 @@ export default class LokasiSeeder {
             },
             {
                 uuid: "0191a18a-22e4-73d6-ab3b-dc6683607aa9",
-                faskesUuid: "9d403ufjh43ufh3uf8430ihf",
+                faskes_uuid: "019328c1-1931-793e-83d0-488bbe962dd4",
                 code: 'FAC002',
                 name: 'Faskes Lainnya',
                 description: 'Deskripsi Faskes Lainnya',
@@ -32,7 +34,7 @@ export default class LokasiSeeder {
                 url: 'https://faskeslainnya.com',
                 statusOperasional: 'Aktif',
                 satuSehatId: 'SEHAT002',
-                locationType: 'Puskesmas',
+                location_type: 'Puskesmas',
                 classCode: 'B',
                 className: 'Kelas B',
                 partOfName: 'Faskes Induk Lain',

@@ -1,28 +1,42 @@
-import BpjsModel from "./bpjs-model.js";
-import GeneralConsentModel from "./general-consent-model.js";
-import InsuranceAccountModel from "./insurance-account-model.js";
-import NewBornModel from "./new-born-model.js";
-import PatientModel from "./patient-model.js";
-import PatientFamilyModel from "./patient-family-model.js";
-import RoomMonitoringModel from "./room-monitoring-model.js";
-import sequelizeInstance from "../configurations/sequelize-instance.js";
-import AddressModel from "./address-model.js";
-import FaskesModel from "./faskes-model.js";
-import InstalasiGawatDaruratModel from "./instalasi-gawat-darurat-model.js";
-import PaymentMethodModel from "./payment-method-model.js";
-import RawatInapModel from "./rawat-inap-model.js";
-import RawatJalanModel from "./rawat-jalan-model.js";
-import InsuranceAdmissionModel from "./insurance-admission-model.js";
-import KategoriRuanganModel from "./kategori-ruangan-model.js";
-import RuanganModel from "./ruangan-model.js";
-import LokasiModel from "./lokasi-model.js";
-import PractitionerModel from "./practitioner-model.js";
-import AntrianPoliModel from "./antrian-poli-model.js";
-import JadwalDokterModel from "./jadwal-dokter-model.js";
-import LogPelayananModel from "./log-pelayanan-model.js";
+import {
+    BPJSModel,
+    GeneralConsentModel,
+    InsuranceAccountModel,
+    NewBornModel,
+    PatientModel,
+    PatientFamilyModel,
+    RoomMonitoringModel,
+} from "@adameds/model-sdk/admisi";
+
+import {
+    AddressModel,
+} from "@adameds/model-sdk/setting";
+import {
+    InstalasiGawatDaruratModel,
+    RawatInapModel,
+    RawatJalanModel,
+    InsuranceAdmissionModel,
+    LogPelayananModel
+} from "@adameds/model-sdk/pelayanan";
+
+import {
+    FaskesModel,
+    KategoriRuanganModel,
+    RuanganModel,
+    LokasiModel,
+    PractitionerModel,
+    PegawaiModel,
+    PenjaminModel
+} from "@adameds/model-sdk/datamaster";
+
+import {
+    JadwalDokterModel
+} from "@adameds/model-sdk/antrian";
+import sequelizeInstance from "@adameds/model-sdk/instance";
 
 const MODELMERGE = [
-    BpjsModel,
+    PegawaiModel,
+    BPJSModel,
     GeneralConsentModel,
     InsuranceAccountModel,
     NewBornModel,
@@ -32,7 +46,6 @@ const MODELMERGE = [
     AddressModel,
     FaskesModel,
     InstalasiGawatDaruratModel,
-    PaymentMethodModel,
     RawatInapModel,
     RawatJalanModel,
     InsuranceAdmissionModel,
@@ -42,7 +55,8 @@ const MODELMERGE = [
     PractitionerModel,
     JadwalDokterModel,
     LogPelayananModel,
-    sequelizeInstance
+    PenjaminModel,
+    sequelizeInstance,
 ]
 
 export default MODELMERGE;

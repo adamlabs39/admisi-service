@@ -7,6 +7,7 @@ import BadRequestException from "../exception/bad-request-exception.js";
 import FaskesRepository from "../repositories/faskes-repository.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {Context as Ctx} from "../middlewares/context.js";
+import LogPelayananRepository from "../repositories/log-pelayanan-repository.js";
 
 export default class PatientService{
     static async create(data){
@@ -48,5 +49,9 @@ export default class PatientService{
 
     static async findAll(args){
         return PatientRepository.getAllPatient(args);
+    }
+
+    static getHistoryPatient(uuid, args){
+        return LogPelayananRepository.GetHistoryPemeriksaan(uuid, args);
     }
 }

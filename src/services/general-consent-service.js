@@ -24,4 +24,12 @@ export default class GeneralConsentService{
         if(!result) throw new NotfoundException("General Consent not found");
         return result;
     }
+
+
+    static async delete(uuid){
+        if(!uuid) throw new NotfoundException("General Consent not found");
+        const result  = await GeneralConsentRepository.delete(uuid);
+        if(!result) throw new Error("Failed to delete general consent");
+        return result;
+    }
 }
