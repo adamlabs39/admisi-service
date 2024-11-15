@@ -5,7 +5,7 @@ build-deploy:
   before_script:
     - docker compose --env-file /home/admin/adameds/.env-admisi down --rmi all
     - @adameds:registry=https://gitlab.com/api/v4/groups/93029767/-/packages/npm/
-    - //gitlab.com/api/v4/groups/93029767/-/packages/npm/:_authToken=glpat-PZH6gt_EUpND2jTCdj85
+    - //gitlab.com/api/v4/groups/93029767/-/packages/npm/:_authToken=$AUTH_TOKEN
   script:
     - docker compose --env-file /home/admin/adameds/.env-admisi up -d
   only:
