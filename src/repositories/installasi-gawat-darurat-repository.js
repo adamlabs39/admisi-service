@@ -9,7 +9,7 @@ import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import PractitionerRepository from "./practitioner-repository.js";
 import NotfoundException from "../exception/notfound-exception.js";
 import {eventEmitter} from "../helper/event.js";
-import {LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
+import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
 import {Op} from "sequelize";
 import BadRequestException from "../exception/bad-request-exception.js";
 import {
@@ -395,13 +395,13 @@ export default class InstallasiGawatDaruratRepository {
                             as: "pegawai",
                             required: true,
                             where: {deletedAt: {[Op.is]: null}},
-                            attributes: ["title", "nama", "gender"]
+                            attributes: ["title", ["name","nama"], "gender"]
                         }
                     ]
                 },
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity",  "payment_method", "status_igd"
+                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity",  "payment_method", "status_igd", "kondisi_pasien_pulang"
             ]
         }
 
@@ -433,9 +433,9 @@ export default class InstallasiGawatDaruratRepository {
                         statusIgd: {[Op.not]: 0}
                     }
                 })
-                const isDischarged = igd.filter(item => item.statusIgd !== 2);
-                if (isDischarged.length > 0) throw new BadRequestException("IGD Has been discharged can't cancel visit");
-                if (rawatInap.length === 0) throw new NotfoundException("IGD not found");
+                const isDischarged = igd.filter(item => item.statusIgd !== 1);
+                if (isDischarged.length > 0) throw new BadRequestException("IGD Tidak bisa di cancel karena sudah di pulangkan");
+                if (igd.length !== data.listUuid.length) throw new BadRequestException("IGD tidak ditemukan");
                 await InstalasiGawatDaruratModel.update({statusIgd: 0}, {
                     where: {
                         uuid: data.listUuid,
@@ -445,11 +445,11 @@ export default class InstallasiGawatDaruratRepository {
                     transaction: t
                 });
 
-                eventEmitter.emit(LOG_PELAYANAN_CHANNEL,{
+                eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL,{
                     list_no_pelayanan: igd.map(item => item.noPelayanan),
                     cancel_reason: data.cancelReason
                 })
-                return rawatInap;
+                return igd;
             });
         } catch (e) {
             console.log("Error cancel IGD", e);

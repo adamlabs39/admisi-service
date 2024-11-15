@@ -121,7 +121,7 @@ export default class RawatInapRepository {
                             as: "pegawai",
                             required: true,
                             where: {deletedAt: {[Op.is]: null}},
-                            attributes: ["title", "nama", "gender"]
+                            attributes: ["title", ["name", "nama"], "gender"]
                         }
                     ]
                 },
@@ -155,8 +155,7 @@ export default class RawatInapRepository {
     }
 
     static async registBaby(data) {
-        const transaction = await sequelizeInstance.transaction();
-        try {
+        const RI =  await sequelizeInstance.transaction(async (transaction) => {
             const user = Context.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
 
@@ -166,11 +165,12 @@ export default class RawatInapRepository {
             const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
             if (!practitioner) throw new NotfoundException("Practitioner not found");
 
-            const patient = await PatientRepository.registPatient({...data.patientData, isNewBorn: true}, transaction);
+            const patient = await PatientRepository.registPatient({ ...data.patientData, isNewBorn: true }, transaction);
             if (!patient) throw new Error("Failed to create patient");
 
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
+
             const registRI = await RawatInapModel.create({
                 faskesUuid: user.faskesUuid,
                 patientUuid: patient.uuid,
@@ -206,17 +206,8 @@ export default class RawatInapRepository {
                     classEntitle: data.insurance.class_entitle,
                     noReg: registRI.noReg,
                     admissionType: 3,
-                }, transaction)
+                }, transaction);
             }
-
-            await transaction.commit();
-
-            eventEmitter.emit(HISTORY_BED_CHANNEL, {
-                faskesUuid: user.faskesUuid,
-                admissionUuid: registRI.uuid,
-                monitoringRuanganUuid: monitoring.uuid,
-            });
-
 
             await newBornRepository.upsertNewBorn({
                 identifier_mom: patient.identity,
@@ -232,6 +223,12 @@ export default class RawatInapRepository {
                 status: true,
             }, transaction);
 
+            eventEmitter.emit(HISTORY_BED_CHANNEL, {
+                faskesUuid: user.faskesUuid,
+                admissionUuid: registRI.uuid,
+                monitoringRuanganUuid: monitoring.uuid,
+            });
+
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: registRI.tanggalDaftar,
                 noreg: registRI.noReg,
@@ -240,15 +237,14 @@ export default class RawatInapRepository {
                 jenis_kunjungan: "RI",
                 patient_uuid: patient.uuid,
                 payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2,
-            })
+            });
 
-            return await this.getDetail(registRI.uuid);
-        } catch (error) {
-            console.error("Error during Rawat Inap registration:", error);
-            await transaction.rollback();
-            throw error;
-        }
+            return registRI;
+        });
+
+        return this.getDetail(RI.uuid);
     }
+
 
     static async updateRawatInap(uuid, data) {
         const transaction = await sequelizeInstance.transaction();
@@ -341,6 +337,7 @@ export default class RawatInapRepository {
     }
 
     static async getDetail(uuid) {
+        console.log("Get Detail Rawat Inap", uuid);
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         try {
             const rawatInap = await RawatInapModel.findOne({
@@ -382,7 +379,7 @@ export default class RawatInapRepository {
                     }
                 ],
                 attributes: [
-                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", 'status_ri', 'multiple_birth', 'entrusted_patient', 'upgrade_class', 'join_bill', 'previous_bill', 'family_bill', 'spare_bed', 'box_baby', 'monitoring_room_uuid', 'no_spri', 'no_pelayanan'
+                    "uuid","no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", 'status_ri', 'multiple_birth', 'entrusted_patient', 'upgrade_class', 'join_bill', 'previous_bill', 'family_bill', 'spare_bed', 'box_baby', 'monitoring_room_uuid', 'no_spri', 'no_pelayanan'
                 ]
             });
 
@@ -403,12 +400,15 @@ export default class RawatInapRepository {
 
             if (rawatInap.monitoring_room) {
                 const detailRuangan = await RuanganModel.findOne({
-                    where: { uuid: rawatInap.monitoring_room.room_uuid },
+                    where: { uuid: rawatInap.monitoring_room.dataValues.room_uuid },
                     attributes: ["kategori_ruangan_uuid"]
                 });
+
                 if (detailRuangan) {
                     rawatInap.monitoring_room.dataValues.kategori_ruangan_uuid = detailRuangan.kategori_ruangan_uuid;
+                console.log("Monitoring Room Data:", rawatInap.monitoring_room);
                 }
+
             }
 
             if (rawatInap.dataValues.payment_method === 2) {

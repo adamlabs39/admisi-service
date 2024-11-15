@@ -11,7 +11,7 @@ export default class PractitionerRepository {
         const data = await PractitionerModel.findOne({
             where: {
                 [col]: val,
-                faskesUuid
+                faskes_uuid: faskesUuid
             }
         });
         if (!data) throw new NotfoundException(`Practitioner not found`);

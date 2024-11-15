@@ -82,6 +82,14 @@ export default class RawatJalanRepository {
             filter.paymentMethod = {[Op.in]: paymentMethodArray};
         }
 
+        if(args.status){
+            if(parseInt(args.status) === 1){
+                filter.statusRj = {[Op.in]: [1, 2, 3, 4]};
+            }else{
+                filter.statusRj = {[Op.in]: [5]};
+            }
+        }
+
         if (args.dpjp) filter.practitionerUuid = args.dpjp;
 
         const options = {
@@ -131,7 +139,7 @@ export default class RawatJalanRepository {
                             as: "pegawai",
                             required: true,
                             where: {deletedAt: {[Op.is]: null}},
-                            attributes: ["title", "nama", "gender"]
+                            attributes: ["title", ["name", "nama"], "nik"]
                         }
                     ]
                 },
@@ -313,7 +321,7 @@ export default class RawatJalanRepository {
                     classEntitle: data.insurance.class_entitle,
                     noReg: regist.noReg,
                     admissionType: 1,
-                })
+                }, t)
             }
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {

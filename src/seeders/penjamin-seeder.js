@@ -1,11 +1,13 @@
-import PenjaminModel from "../models/penjamin-model.js";
+import {
+    PenjaminModel
+} from "@adameds/model-sdk/datamaster";
 
 export default class PenjaminSeeder {
     static async seed(transaction) {
         const penjaminSeeder = [
             {
                 "uuid": "019304bc-39d4-7e9f-86ab-0c55c786af1f",
-                "faskesUuid": "9d403ufjh43ufh3uf8430ihf",
+                "faskes_uuid": "019328c1-1931-793e-83d0-488bbe962dd4",
                 "code": "BPJS",
                 "name": "BPJS Kesehatan",
                 "phone": "1234567890",
@@ -14,7 +16,7 @@ export default class PenjaminSeeder {
             },
             {
                 "uuid": "019304bc-39d4-7ebc-9a12-30ab50d1408f",
-                "faskesUuid": "9d403ufjh43ufh3uf8430ihf",
+                "faskes_uuid": "019328c1-1931-793e-83d0-488bbe962dd4",
                 "code": "BOBYKERTANEGARA",
                 "name": "Jaminan Kesehatan Kucing",
                 "phone": "1234567891",

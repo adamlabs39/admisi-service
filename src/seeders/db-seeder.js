@@ -4,7 +4,6 @@ import InsuranceAccountSeeder from "./insurance-account-seeder.js";
 import RoomsSeeder from "./rooms-seeder.js";
 import LokasiSeeder from "./lokasi-seeder.js";
 import PractitionerSeeder from "./practitioner-seeder.js";
-import AntrianPoliSeeder from "./antrian-poli-seeder.js";
 import JadwalDokterSeeder from "./jadwal-dokter-seeder.js";
 import PegawaiSeeder from "./pegawai-seeder.js";
 import PenjaminSeeder from "./penjamin-seeder.js";

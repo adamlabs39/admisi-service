@@ -2,15 +2,21 @@ import dotenv from 'dotenv';
 import moment from "moment";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
-import PatientModel from "../models/patient-model.js";
-import RawatJalanModel from "../models/rawat-jalan-model.js";
+import {
+    PatientModel,
+    InsuranceAccountModel
+} from "@adameds/model-sdk/admisi";
 import {Op} from "sequelize";
-import JadwalDokterModel from "../models/jadwal-dokter-model.js";
+import {
+    JadwalDokterModel
+} from "@adameds/model-sdk/antrian";
 import BadRequestException from "../exception/bad-request-exception.js";
-import InstalasiGawatDaruratModel from "../models/instalasi-gawat-darurat-model.js";
-import RawatInapModel from "../models/rawat-inap-model.js";
-import InsuranceAdmissionModel from "../models/insurance-admission-model.js";
-import InsuranceAccountModel from "../models/insurance-account-model.js";
+import {
+    InstalasiGawatDaruratModel,
+    RawatInapModel,
+    RawatJalanModel,
+    InsuranceAdmissionModel
+} from "@adameds/model-sdk/pelayanan";
 
 dotenv.config();
 
@@ -238,10 +244,10 @@ const getInfoInsurance = async (pelayanan, noReg) => {
         include: {
             model: InsuranceAccountModel,
             as: 'insurance',
-            attributes: ['code', 'account_number', 'name']
+            attributes: ['code', 'account_number', 'name', 'class_entitle']
         },
         attributes: ['uuid']
-    });
+    }) || {};
 };
 
 

@@ -216,7 +216,7 @@ export default class LogPelayananRepository {
                                 as: "pegawai",
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["title", "nama", "gender"]
+                                attributes: ["title", ["name","nama"], "gender"]
                             }
                         ]
                     },
@@ -282,7 +282,8 @@ export default class LogPelayananRepository {
                 }
             }
             if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
-
+            if(args.dpjp) filter.practitionerUuid = args.dpjp;
+            if(args.lokasi) filter.lokasiUuid = args.lokasi;
             const options = {
                 include: [
                     {
@@ -330,7 +331,7 @@ export default class LogPelayananRepository {
                                 as: "pegawai",
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["title", "nama", "gender"]
+                                attributes: ["title", ["name","nama"], "gender"]
                             }
                         ]
                     },
@@ -453,7 +454,7 @@ export default class LogPelayananRepository {
                                 as: "pegawai",
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["title", "nama", "gender"]
+                                attributes: ["title", ["name", "nama"], "gender"]
                             }
                         ]
                     },
