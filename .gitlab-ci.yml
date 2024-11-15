@@ -1,0 +1,10 @@
+stages:
+  - build-deploy
+build-deploy:
+  stage: build-deploy
+  before_script:
+    - docker compose --env-file /home/admin/adameds/.env-admisi down --rmi all
+  script:
+    - docker compose --env-file /home/admin/adameds/.env-admisi up -d
+  only:
+    - main

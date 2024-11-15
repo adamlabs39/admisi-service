@@ -169,6 +169,7 @@ export default class RawatInapRepository {
             if (!patient) throw new Error("Failed to create patient");
 
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
+            console.log("Bed Data:", bedData);
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
 
             const registRI = await RawatInapModel.create({

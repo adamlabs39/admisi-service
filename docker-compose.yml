@@ -1,34 +1,28 @@
-version: '3.8'
-
 services:
-  app:
-    build: .
-    ports:
-      - "${APP_PORT}:8001"
+  adameds-admisi:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      no_cache: true
+    container_name: admisi-service
+    image: admisi-service:dev
     environment:
-      - APP_MODE=${APP_MODE}
-      - APP_NAME=${APP_NAME}
-      - APP_PORT=${APP_PORT}
-      - DB_USERNAME=${DB_USERNAME}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DB_NAME=${DB_NAME}
-      - DB_HOST=${DB_HOST}
-      - DB_PORT=${DB_PORT}
-      - SYNC_DB=${SYNC_DB}
-    env_file:
-      - .env
-
-  db:
-    image: postgres:latest
-    restart: always
-    environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "54322:5432"
+      DOTENV_KEY: ${DOTENV_KEY}
+      SYNC_DB: ${SYNC_DB}
     volumes:
-      - pg_data:/var/lib/postgresql/data
-
-volumes:
-  pg_data:
+      - type: bind
+        source: /home/admin/adameds/public.key
+        target: /adameds-admisi/public.key
+      - type: bind
+        source: /home/admin/adameds/private.key
+        target: /adameds-admisi/private.key
+      - type: bind
+        source: /home/admin/adameds/.env.vault
+        target: /adameds-admisi/.env.vault
+    networks:
+      - admisi
+    ports:
+      - 8083:8083
+networks:
+  admisi:
+    driver: bridge
