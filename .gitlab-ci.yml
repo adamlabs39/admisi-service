@@ -4,8 +4,8 @@ build-deploy:
   stage: build-deploy
   before_script:
     - docker compose --env-file /home/admin/adameds/.env-admisi down --rmi all
-    - @adameds:registry=https://gitlab.com/api/v4/groups/93029767/-/packages/npm/ >> .npmrc
-    - //gitlab.com/api/v4/groups/93029767/-/packages/npm/:_authToken=$AUTH_TOKEN >> .npmrc
+    - echo @adameds:registry=https://gitlab.com/api/v4/groups/93029767/-/packages/npm/ >> .npmrc
+    - echo //gitlab.com/api/v4/groups/93029767/-/packages/npm/:_authToken=$AUTH_TOKEN >> .npmrc
   script:
     - docker compose --env-file /home/admin/adameds/.env-admisi up -d
   only:
