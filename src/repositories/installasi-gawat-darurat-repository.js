@@ -232,7 +232,8 @@ export default class InstallasiGawatDaruratRepository {
         } catch (e) {
             console.error("Error updating IGD", e);
             throw e;
-        });
+
+        }
     }
 
 
