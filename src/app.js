@@ -9,7 +9,7 @@ import MODELMERGE from "./models/modelMerge.js";
 import routes from "./routes/routes.js";
 import {dbSeeder} from "./seeders/db-seeder.js";
 import EventListener from "./listeners/event-listener.js";
-
+import efp from "express-fileupload";
 const app = express();
 const port = process.env.APP_PORT || 8080;
 const host = process.env.APP_HOST || 'localhost';
@@ -33,6 +33,7 @@ app.use(cors(corsConfig));
 //     message: "Too many requests from this IP, please try again after 5 minutes"
 // });
 // app.use(limiter);
+app.use(efp());
 app.use("/api", routes);
 app.use(errorMiddleware);
 

@@ -111,6 +111,54 @@ export default class PatientRepository{
             throw error;
         }
     }
+    
+    
+    static async importData(data){
+        const {faskesUuid} = Context.get(CTX_AUTHOR);
+        try{
+            return await sequelizeInstace.transaction(async (t) => {
+                let currentInsert = 1;
+                for (let item of data){
+                    item = convertSnakeToCamel(item);
+                    const address = await AddressModel.create({
+                        faskesUuid: faskesUuid,
+                        ...item.address,
+                    }, {transaction: t});
+                    const infoAge = getInfoAge(item.birthDetail.birth_date);
+                    const birthDetail = await BirthDetailModel.create({
+                        birthPlace: item.birthDetail.birth_place,
+                        birthDate: item.birthDetail.birth_date,
+                        ...infoAge,
+                        faskesUuid: faskesUuid
+                    }, {transaction: t});
+
+                    // check identity and no_rm
+                    const checkPatient =
+                        await PatientModel.findOne({
+                            where: {
+                                [Op.or]: [
+                                    { identity: item.identity },
+                                    { noRm: item.noRm }
+                                ]
+                            }
+                        });
+
+                    if(checkPatient) throw new DuplicateException("Data pada baris ke " + (currentInsert) + " sudah ada");
+                    await PatientModel.create({
+                        ...item,
+                        addressUuid: address.uuid,
+                        birthDetailUuid: birthDetail.uuid,
+                        faskesUuid: faskesUuid,
+                    }, {transaction: t});
+                    currentInsert++;
+                }
+                return {message: `Berhasil import : ${data.length} data pasien`};
+            });
+        }catch (error){
+            console.log(error);
+            throw error;
+        }
+    }
 
 
     static async checkExistPatient(uuid){

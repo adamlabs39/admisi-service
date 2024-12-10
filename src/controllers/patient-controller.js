@@ -1,7 +1,7 @@
 import PatientService from "../services/patient-service.js";
-import {response} from "express";
 import successResponse from "../responses/success-response.js";
-
+import BadRequestException from "../exception/bad-request-exception.js";
+import XLSX from "xlsx";
 export default class PatientController {
     static async create(req, res, next) {
         try {
@@ -54,6 +54,23 @@ export default class PatientController {
         try {
             const patient = await PatientService.getHistoryPatient(req.params.uuid, req.query);
             return res.status(200).json(successResponse("Berhasil Menampilkan Riwayat Pasien", patient.data, patient.pagination));
+        }catch (error) {
+            next(error);
+        }
+    }
+
+    static async import(req,res,next) {
+        try{
+            const file = req.files?.file || null;
+            const availableMimeTypes = ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
+            if(!availableMimeTypes.includes(file.mimetype)) throw new BadRequestException("File yang diupload bukan file excel");
+            if(!file) throw new BadRequestException("Tidak ada file yang diupload");
+            const wb = XLSX.read(file.data, {type: 'buffer'});
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            const data = XLSX.utils.sheet_to_json(sheet, {raw: true, defval: null});
+            const result = await PatientService.import(data);
+
+            return res.status(200).json(successResponse(result.message));
         }catch (error) {
             next(error);
         }
