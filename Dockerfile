@@ -1,7 +1,8 @@
-FROM node:al
-WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm install
+FROM node:19.5.0-alpine
+WORKDIR /adameds-admisi
 COPY . .
-EXPOSE 8001
-CMD ["npm", "start"]
+ENV APP_PORT=8083
+ENV APP_HOST=0.0.0.0
+RUN npm install
+EXPOSE ${APP_PORT}/tcp
+CMD ["npm", "run", "start"]
