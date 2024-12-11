@@ -9,6 +9,7 @@ const authorizationMiddleware = async (request, response, nextFunction) => {
         const isValid = await JwtHelper.verify(token);
         if (!isValid) return response.status(401).json({message: `token tidak valid!`});
         response.locals.jwtData = isValid;
+        console.log("isValid", isValid);
         Ctx.set(CTX_AUTHOR, isValid);
         nextFunction();
     }catch (error) {

@@ -121,7 +121,7 @@ export default class RawatInapRepository {
                             as: "pegawai",
                             required: true,
                             where: {deletedAt: {[Op.is]: null}},
-                            attributes: ["title", ["name", "nama"], "gender"]
+                            attributes: ["first_title", "last_title", ["name", "nama"], "gender"]
                         }
                     ]
                 },
@@ -134,7 +134,7 @@ export default class RawatInapRepository {
                 }
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method", "status_ri"
+                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method", "status_ri", "rekam_medis_uuid"
             ]
         }
 

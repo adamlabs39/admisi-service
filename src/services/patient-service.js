@@ -8,6 +8,7 @@ import FaskesRepository from "../repositories/faskes-repository.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {Context as Ctx} from "../middlewares/context.js";
 import LogPelayananRepository from "../repositories/log-pelayanan-repository.js";
+import moment from "moment";
 
 export default class PatientService{
     static async create(data){
@@ -53,5 +54,52 @@ export default class PatientService{
 
     static getHistoryPatient(uuid, args){
         return LogPelayananRepository.GetHistoryPemeriksaan(uuid, args);
+    }
+
+    static async import(data) {
+        const result = [];
+        data.map((item, index) => {
+            const patientData = this.mapPatientData(item);
+            console.log(patientData);
+            const validData = ZodValidator.validate(PatientValidation.PATIENT_IMPORT_VALIDATOR, patientData);
+            if (!validData) throw new BadRequestException("Error on row " + (index + 1));
+            result.push(validData);
+        });
+
+        return await PatientRepository.importData(result);
+
+    }
+
+
+
+    static mapPatientData(rawData) {
+        return {
+            no_rm: rawData["No_RM*"]?.toString() || "",
+            title: rawData["Awalan_atau_Gelar*"] || "",
+            name: rawData["Nama_Lengkap*"] || "",
+            identity: rawData["Identitas*"] || "",
+            no_identity: rawData["No_Identitas*"]?.toString() || "",
+            birth_detail: {
+                birth_place: rawData["Tempat_Lahir*"] || "",
+                birth_date: rawData["Tanggal_Lahir*"] ? moment(rawData["Tanggal_Lahir*"]).format("YYYY-MM-DD") : ""
+            },
+            gender: rawData["Jenis_Kelamin*"] === "Perempuan" ? "Female" : "Male",
+            phone: rawData["No_HP*"]?.toString() || "",
+            religion: rawData["Agama"] || "",
+            language: rawData["Bahasa_yang_Dikuasai"] || "",
+            maritial_status: rawData["Status_Pernikahan*"] || "",
+            mother_name: rawData["Nama_Ibu_Kandung"] || "",
+            address: {
+                prov: rawData["Provinsi*"] || "",
+                city: rawData["Kabupaten_atau_Kota*"] || "",
+                district: rawData["Kecamatan*"] || "",
+                village: rawData["Kelurahan_atau_Desa*"] || "",
+                rt: rawData["RT*"]?.toString() || "",
+                rw: rawData["RW*"]?.toString() || "",
+                postal_code: rawData["Kode_Pos*"]?.toString() || "",
+                full_address: rawData["Alamat *"] || "",
+                country: rawData["Negara*"] || "Indonesia"
+            }
+        };
     }
 }

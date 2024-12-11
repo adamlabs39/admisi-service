@@ -139,7 +139,7 @@ export default class RawatJalanRepository {
                             as: "pegawai",
                             required: true,
                             where: {deletedAt: {[Op.is]: null}},
-                            attributes: ["title", ["name", "nama"], "nik"]
+                            attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
                         }
                     ]
                 },
@@ -161,7 +161,7 @@ export default class RawatJalanRepository {
                 }
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj"
+                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid"
             ],
         };
 

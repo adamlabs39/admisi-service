@@ -11,6 +11,8 @@ import authorizationSdk from "@adameds/authorization-sdk";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 
+import upload from "../configurations/multer-config.js";
+
 const routes = express.Router();
 
 routes.use(AuthorizationMiddleware)
@@ -41,11 +43,11 @@ routes.get("/rawat-inap/:uuid", RawatInapController.getDetail);
 routes.get("/rawat-inap", RawatInapController.getAll);
 routes.delete("/rawat-inap/cancel", RawatInapController.cancelVisitRawatInap);
 
-
 // Master Pasien
 routes.get("/patient", PatientController.findAll);
 routes.get("/patient/:uuid", PatientController.findByUuid);
 routes.post("/patient", PatientController.create);
+routes.post("/patient/import", PatientController.import);
 routes.put("/patient/:uuid", PatientController.update);
 routes.delete("/patient/:uuid", PatientController.delete);
 routes.get("/patient/history/:uuid", PatientController.getHistoryPatient);
