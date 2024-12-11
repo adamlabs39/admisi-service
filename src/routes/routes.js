@@ -24,10 +24,10 @@ routes.use(AuthorizationMiddleware)
 // Rawat Jalan
 routes.get("/rawat-jalan", RawatJalanController.getAll);
 routes.post("/rawat-jalan", RawatJalanController.registRawatJalan);
+routes.get("/rawat-jalan/jadwal-dokter", RawatJalanController.getAllJadwalDokter);
 routes.get("/rawat-jalan/:uuid", RawatJalanController.getDetail);
 routes.put("/rawat-jalan/:uuid", RawatJalanController.updateRawatJalan);
 routes.delete("/rawat-jalan/cancel", RawatJalanController.cancelVisitRawatJalan);
-
 
 // Instalasi Gawat Darurat
 routes.post("/igd", InstalasiGawatDaruratController.registIgd);
