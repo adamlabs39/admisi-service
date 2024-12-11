@@ -478,7 +478,7 @@ export default class RawatJalanRepository {
                     {
                         model: PractitionerModel,
                         as: "practitioner",
-                        required: true,
+                        required: false,
                         where: {deletedAt: null},
                         include: [
                             {
@@ -494,7 +494,7 @@ export default class RawatJalanRepository {
                     {
                         model: LokasiModel,
                         as: "lokasi",
-                        required: true,
+                        required: false,
                         where: {deletedAt: null},
                         attributes: ["uuid", "name", "code"]
                     }
