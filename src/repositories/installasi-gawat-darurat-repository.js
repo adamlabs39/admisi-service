@@ -396,13 +396,13 @@ export default class InstallasiGawatDaruratRepository {
                             as: "pegawai",
                             required: true,
                             where: {deletedAt: {[Op.is]: null}},
-                            attributes: ["title", ["name","nama"], "gender"]
+                            attributes: ["first_title", "last_title", ["name","nama"], "gender"]
                         }
                     ]
                 },
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity",  "payment_method", "status_igd", "kondisi_pasien_pulang"
+                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity",  "payment_method", "status_igd", "kondisi_pasien_pulang", "rekam_medis_uuid"
             ]
         }
 
