@@ -65,4 +65,8 @@ export class RawatJalanService {
     }
 
 
+    static async getAllJadwalDokter(){
+        return await RawatJalanRepository.getAllJadwalDokter();
+    }
+
 }

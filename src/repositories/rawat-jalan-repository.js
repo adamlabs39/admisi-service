@@ -7,7 +7,8 @@ import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {
     convertSnakeToCamel,
     generateAntrianPoli,
-    generateBookingCode, generateNoPelayanan,
+    generateBookingCode,
+    generateNoPelayanan,
     generateNoReg,
 } from "../helper/utility.js";
 import PatientRepository from "./patient-repository.js";
@@ -15,26 +16,11 @@ import moment from "moment";
 import NotfoundException from "../exception/notfound-exception.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 import JadwalDokterRepository from "./jadwal-dokter-repository.js";
-import {
-    PractitionerModel,
-    PegawaiModel,
-    LokasiModel
-} from "@adameds/model-sdk/datamaster";
-import {
-    BirthDetailModel,
-    PatientModel,
-    InsuranceAccountModel
-} from "@adameds/model-sdk/admisi";
-import {
-    AddressModel
-} from "@adameds/model-sdk/setting";
-import {
-    JadwalDokterModel
-} from "@adameds/model-sdk/antrian";
-import {
-    RawatJalanModel,
-    InsuranceAdmissionModel
-} from "@adameds/model-sdk/pelayanan";
+import {LokasiModel, PegawaiModel, PractitionerModel} from "@adameds/model-sdk/datamaster";
+import {BirthDetailModel, InsuranceAccountModel, PatientModel} from "@adameds/model-sdk/admisi";
+import {AddressModel} from "@adameds/model-sdk/setting";
+import {JadwalDokterModel} from "@adameds/model-sdk/antrian";
+import {InsuranceAdmissionModel, RawatJalanModel} from "@adameds/model-sdk/pelayanan";
 
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
@@ -473,6 +459,49 @@ export default class RawatJalanRepository {
                 return rawatJalan;
             });
         } catch (e) {
+            console.error(e);
+            throw e;
+        }
+    }
+
+
+    static async getAllJadwalDokter() {
+        try{
+            const user = Context.get(CTX_AUTHOR);
+
+            return await JadwalDokterModel.findAll({
+                where: {
+                    faskesUuid: user.faskesUuid,
+                    deletedAt: null
+                },
+                include: [
+                    {
+                        model: PractitionerModel,
+                        as: "practitioner",
+                        required: true,
+                        where: {deletedAt: null},
+                        include: [
+                            {
+                                model: PegawaiModel,
+                                as: "pegawai",
+                                required: true,
+                                where: {deletedAt: null},
+                                attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
+                            }
+                        ],
+                        attributes: ["uuid"]
+                    },
+                    {
+                        model: LokasiModel,
+                        as: "lokasi",
+                        required: true,
+                        where: {deletedAt: null},
+                        attributes: ["uuid", "name", "code"]
+                    }
+                ],
+                attributes: ["uuid", "start_time", "end_time", "day", "kuota", "kuota_non_jkn", "kuota_jkn", "durasi_pelayanan"]
+            });
+        }catch (e) {
             console.error(e);
             throw e;
         }

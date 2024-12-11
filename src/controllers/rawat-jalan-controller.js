@@ -51,4 +51,14 @@ export default class RawatJalanController {
             next(error);
         }
     }
+
+
+    static async getAllJadwalDokter(req,res,next){
+        try{
+            const data = await RawatJalanService.getAllJadwalDokter();
+            return res.status(200).json(successResponse("Data Jadwal Dokter Berhasil Ditampilkan", data));
+        }catch (error){
+            next(error);
+        }
+    }
 }
