@@ -147,7 +147,7 @@ export default class RawatJalanRepository {
                 }
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid"
+                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
             ],
         };
 
