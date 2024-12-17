@@ -5,10 +5,14 @@ services:
       dockerfile: Dockerfile
       no_cache: true
     container_name: admisi-service
-    image: admisi-service:dev
+    image: adameds/admisi-service:dev
     environment:
       DOTENV_KEY: ${DOTENV_KEY}
       SYNC_DB: ${SYNC_DB}
+      APP_MODE: ${APP_MODE}
+      APP_NAME: ${APP_NAME}
+      WITH_SYNC_DB: ${WITH_SYNC_DB}
+      DATAMASTER_SERVICE_URL: ${DATAMASTER_SERVICE_URL}
     volumes:
       - type: bind
         source: /home/admin/adameds/.env.vault
