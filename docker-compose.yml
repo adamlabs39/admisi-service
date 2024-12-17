@@ -11,12 +11,6 @@ services:
       SYNC_DB: ${SYNC_DB}
     volumes:
       - type: bind
-        source: /home/admin/adameds/public.key
-        target: /adameds-admisi/public.key
-      - type: bind
-        source: /home/admin/adameds/private.key
-        target: /adameds-admisi/private.key
-      - type: bind
         source: /home/admin/adameds/.env.vault
         target: /adameds-admisi/.env.vault
     networks:
