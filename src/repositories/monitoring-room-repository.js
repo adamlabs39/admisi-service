@@ -46,7 +46,7 @@ export default class MonitoringRoomRepository {
                 include: [
                     {
                         model: RoomMonitoringModel,
-                        required: true,
+                        required: false,
                         as: "room_monitorings",
                         where: {
                             deletedAt: {[Op.is]: null}
@@ -58,7 +58,7 @@ export default class MonitoringRoomRepository {
                     },
                     {
                         model: KategoriRuanganModel,
-                        required: true,
+                        required: false,
                         as: "kategori_ruangan",
                         attributes: [
                             "uuid",
