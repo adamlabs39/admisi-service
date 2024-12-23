@@ -1,16 +1,14 @@
-import {
-    FaskesModel
-} from "@adameds/model-sdk/datamaster";
-import {Op} from "sequelize";
+import {FaskesModel} from "@adameds/model-sdk/datamaster";
 
 export default class FaskesRepository {
     static async getFaskesByUuid(uuid) {
         return await FaskesModel.findOne({
             where: {
-                [Op.and]: [
-                    { uuid },
-                ]
-            }
+                uuid: uuid,
+            },
+            attributes: [
+                "id", "uuid", "code", "name", "status",
+            ],
         });
     }
 }
