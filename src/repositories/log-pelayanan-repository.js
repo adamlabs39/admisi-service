@@ -103,7 +103,7 @@ export default class LogPelayananRepository {
                                 as: "pegawai",
                                 required: true,
                                 where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["first_title", "last_title", "nama"]
+                                attributes: ["first_title", "last_title", ["name", "nama"]]
                             }
                         ]
                     },
