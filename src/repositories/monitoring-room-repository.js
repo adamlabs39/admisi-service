@@ -30,7 +30,7 @@ export default class MonitoringRoomRepository {
                     }
                 ],
                 [Op.and]: [
-                    {faskesUuid: user.faskesUuid},
+                    {faskes_uuid: user.faskesUuid},
                     {deletedAt: {[Op.is]: null}},
                 ]
             };
