@@ -8,6 +8,6 @@ export default class JwtHelper {
     }
 
     static async #getPublicKey() {
-        return await fs.readFile(`${process.cwd()}//public.key`, 'utf-8');
+        return await fs.readFile(`${process.cwd()}/public.key`, 'utf-8');
     }
 }
