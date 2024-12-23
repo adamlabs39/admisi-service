@@ -260,7 +260,7 @@ export default class MonitoringRoomRepository {
                             {
                                 roomUuid: uuid,
                                 roomCategory: dataRuangan.dataValues.kategori_ruangan.dataValues.name,
-                                roomClass: dataRuangan.dataValues.kelasRuangan,
+                                roomClass: dataRuangan.dataValues.kelas_ruangan,
                                 room: dataRuangan.dataValues.name,
                                 faskesUuid: user.faskesUuid,
                                 bedName: bedData.bed_name,
