@@ -37,7 +37,7 @@ export default class MonitoringRoomRepository {
 
             if(args.filter_kategori) {
                 const kategoriArr = args.filter_kategori.split(",");
-                filter.kategoriRuanganUuid = {
+                filter.kategori_ruangan_uuid = {
                     [Op.in]: kategoriArr
                 };
             }
