@@ -34,7 +34,7 @@ app.use(cors(corsConfig));
 // });
 // app.use(limiter);
 app.use(efp());
-app.use("/api", routes);
+app.use("/api/v3/admisi", routes);
 app.use(errorMiddleware);
 
 
