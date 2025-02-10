@@ -15,7 +15,7 @@ services:
       DATAMASTER_SERVICE_URL: ${DATAMASTER_SERVICE_URL}
     volumes:
       - type: bind
-        source: /home/admin/adameds/.env.vault
+        source: /home/engineer/adameds/.env.vault
         target: /adameds-admisi/.env.vault
     networks:
       - admisi
