@@ -21,6 +21,7 @@ services:
       - admisi
     ports:
       - 8083:8083
+    restart: always
 networks:
   admisi:
     driver: bridge
