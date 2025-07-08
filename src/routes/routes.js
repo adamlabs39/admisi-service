@@ -8,26 +8,31 @@ import RawatInapController from "../controllers/rawat-inap-controller.js";
 import InstalasiGawatDaruratController from "../controllers/instalasi-gawat-darurat-controller.js";
 import ReportController from "../controllers/report-controller.js";
 import authorizationSdk from "@adameds/authorization-sdk";
-import {Context} from "../middlewares/context.js";
-import {CTX_AUTHOR} from "../constant/context-constant.js";
+import { Context } from "../middlewares/context.js";
+import { CTX_AUTHOR } from "../constant/context-constant.js";
 
 import upload from "../configurations/multer-config.js";
 
 const routes = express.Router();
 
-routes.use(AuthorizationMiddleware)
+routes.use(AuthorizationMiddleware);
 // routes.use(async (req, res, next) => {
 //     Context.set(CTX_AUTHOR, req.author);
 // });
 
-
 // Rawat Jalan
 routes.get("/rawat-jalan", RawatJalanController.getAll);
 routes.post("/rawat-jalan", RawatJalanController.registRawatJalan);
-routes.get("/rawat-jalan/jadwal-dokter", RawatJalanController.getAllJadwalDokter);
+routes.get(
+  "/rawat-jalan/jadwal-dokter",
+  RawatJalanController.getAllJadwalDokter
+);
 routes.get("/rawat-jalan/:uuid", RawatJalanController.getDetail);
 routes.put("/rawat-jalan/:uuid", RawatJalanController.updateRawatJalan);
-routes.delete("/rawat-jalan/cancel", RawatJalanController.cancelVisitRawatJalan);
+routes.delete(
+  "/rawat-jalan/cancel",
+  RawatJalanController.cancelVisitRawatJalan
+);
 
 // Instalasi Gawat Darurat
 routes.post("/igd", InstalasiGawatDaruratController.registIgd);
@@ -62,7 +67,6 @@ routes.post("/general-consent/:uuid", GeneralConsentController.create);
 routes.get("/general-consent/:uuid", GeneralConsentController.getAll);
 routes.get("/general-consent/detail/:uuid", GeneralConsentController.getDetail);
 routes.delete("/general-consent/:uuid", GeneralConsentController.delete);
-
 
 // Report
 routes.get("/report/kunjungan", ReportController.getReport);
