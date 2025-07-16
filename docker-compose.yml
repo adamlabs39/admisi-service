@@ -13,10 +13,10 @@ services:
       WITH_SYNC_DB: ${WITH_SYNC_DB}
       DATAMASTER_SERVICE_URL: ${DATAMASTER_SERVICE_URL}
       INFISICAL_TOKEN: ${INFISICAL_TOKEN}
-    volumes:
-      - type: bind
-        source: /home/engineer/adameds/.env.vault
-        target: /adameds-admisi/.env.vault
+    # volumes:
+    #   - type: bind
+    #     source: /home/engineer/adameds/.env.vault
+    #     target: /adameds-admisi/.env.vault
     networks:
       - admisi
     ports:

@@ -6,13 +6,13 @@ build-deploy:
   tags:
     - dev-runner
   before_script:
-    - docker compose --env-file /home/engineer/adameds/.env.admisi down --rmi all
+    - docker compose --env-file /home/env/.env.admisi down --rmi all
     - echo @adameds:registry=https://gitlab.com/api/v4/groups/93029767/-/packages/npm/ >> .npmrc
     - echo //gitlab.com/api/v4/groups/93029767/-/packages/npm/:_authToken=$AUTH_TOKEN >> .npmrc
   only:
     - dev
   script:
-    - docker compose --env-file /home/engineer/adameds/.env.admisi up -d
+    - docker compose --env-file /home/env/.env.admisi up -d
 
 build-prod:
   stage: build-deploy
