@@ -5,4 +5,5 @@ ENV APP_PORT=8083
 ENV APP_HOST=0.0.0.0
 RUN npm install
 EXPOSE ${APP_PORT}/tcp
-CMD ["npm", "run", "start"]
+CMD ["sh", "-c", "infisical run --env=development -- npm run start"]
+# CMD ["npm", "run", "start"]

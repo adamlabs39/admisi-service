@@ -13,6 +13,7 @@ services:
       APP_NAME: ${APP_NAME}
       WITH_SYNC_DB: ${WITH_SYNC_DB}
       DATAMASTER_SERVICE_URL: ${DATAMASTER_SERVICE_URL}
+      INFISICAL_TOKEN: ${INFISICAL_TOKEN}
     volumes:
       - type: bind
         source: /home/engineer/adameds/.env.vault
