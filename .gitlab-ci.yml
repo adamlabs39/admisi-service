@@ -4,7 +4,7 @@ stages:
 build-deploy:
   stage: build-deploy
   tags:
-    - dev-runner
+    - development
   before_script:
     - docker compose --env-file /home/env/.env.admisi down --rmi all
     - echo @adameds:registry=https://gitlab.com/api/v4/groups/93029767/-/packages/npm/ >> .npmrc
@@ -17,7 +17,7 @@ build-deploy:
 build-prod:
   stage: build-deploy
   tags:
-    - prod-runner
+    - production
   before_script:
     - echo "@adameds:registry=https://gitlab.com/api/v4/groups/93029767/-/packages/npm/" >> .npmrc
     - echo "//gitlab.com/api/v4/groups/93029767/-/packages/npm/:_authToken=$AUTH_TOKEN" >> .npmrc
