@@ -7,7 +7,6 @@ services:
     container_name: admisi-service
     image: adameds/admisi-service:dev
     environment:
-      DOTENV_KEY: ${DOTENV_KEY}
       SYNC_DB: ${SYNC_DB}
       APP_MODE: ${APP_MODE}
       APP_NAME: ${APP_NAME}
