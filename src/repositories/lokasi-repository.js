@@ -9,7 +9,7 @@ import { CTX_AUTHOR } from "../constant/context-constant.js";
 
 LokasiModel.belongsTo(KategoriRuanganModel, {
   as: "kategori_ruangan",
-  foreignKey: "kategori_ruangan_uuid", // FK ada di tabel lokasi
+  foreignKey: "kategori_ruangan_uuid",
 });
 
 const pelayanan = ["RJ", "RI", "IGD"];
@@ -72,8 +72,8 @@ export default class LokasiRepository {
           {
             model: KategoriRuanganModel,
             as: "kategori_ruangan",
-            required: false,
-            attributes: ["code", "name"],
+            required: true,
+            attributes: ["uuid","code", "name"],
           },
         ],
         order: [["created_at", "DESC"]],
@@ -87,6 +87,22 @@ export default class LokasiRepository {
             [Op.like]: `%${args.name.trim()}%`,
           },
         });
+      }
+
+      //* FILTER BERDASARKAN KATEGORI RUANGAN
+      if (args.filter_kategori && args.filter_kategori.trim() !== "") {
+        const kategoriRuangan = options.include.find((tabelKr) => tabelKr.as === "kategori_ruangan");
+        if (kategoriRuangan) {
+          const kategoriUuids = args.filter_kategori
+            .split(",")
+            .map((uuid) => uuid.trim())
+            .filter((uuid) => uuid !== "");
+          kategoriRuangan.where = {
+            uuid: {
+              [Op.in]: kategoriUuids,
+            },
+          };
+        }
       }
 
       const data = await LokasiModel.findAll(options);

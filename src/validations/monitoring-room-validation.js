@@ -8,12 +8,14 @@ export default class MonitoringRoomValidation {
       lokasi_uuid: z.string().max(255),
     })
   );
-  static UPDATE_ROOM = z.array(
-    z.object({
-      uuid: z.string().max(255).nullable(),
-      type: z.string().max(255),
-      no_bed: z.string().max(255),
-      lokasi_uuid: z.string().max(255),
-    })
-  );
+  static UPDATE_ROOM = z.object({
+    beds: z.array(
+      z.object({
+        uuid: z.string().max(255).nullable(),
+        type: z.string().max(255),
+        no_bed: z.string().max(255),
+        lokasi_uuid: z.string().max(255),
+      })
+    ),
+  });
 }

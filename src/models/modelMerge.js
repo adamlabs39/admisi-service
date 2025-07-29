@@ -56,7 +56,7 @@ const MODELMERGE = [
     // JadwalDokterModel,
     // LogPelayananModel,
     // PenjaminModel,
-    RuanganModel,
+    // RuanganModel,
 ]
 
 export default MODELMERGE;
