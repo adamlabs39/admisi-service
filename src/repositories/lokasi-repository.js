@@ -6,10 +6,11 @@ import { Op, where } from "sequelize";
 import NotfoundException from "../exception/notfound-exception.js";
 import { Context } from "../middlewares/context.js";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
+import { RoomMonitoringModel } from "@adameds/model-sdk/admisi";
 
 LokasiModel.belongsTo(KategoriRuanganModel, {
   as: "kategori_ruangan",
-  foreignKey: "kategori_ruangan_uuid", // FK ada di tabel lokasi
+  foreignKey: "kategori_ruangan_uuid",
 });
 
 const pelayanan = ["RJ", "RI", "IGD"];
@@ -72,8 +73,8 @@ export default class LokasiRepository {
           {
             model: KategoriRuanganModel,
             as: "kategori_ruangan",
-            required: false,
-            attributes: ["code", "name"],
+            required: true,
+            attributes: ["uuid","code", "name"],
           },
         ],
         order: [["created_at", "DESC"]],
@@ -89,10 +90,60 @@ export default class LokasiRepository {
         });
       }
 
+      //* FILTER BERDASARKAN KATEGORI RUANGAN
+      if (args.filter_kategori && args.filter_kategori.trim() !== "") {
+        const kategoriRuangan = options.include.find((tabelKr) => tabelKr.as === "kategori_ruangan");
+        if (kategoriRuangan) {
+          const kategoriUuids = args.filter_kategori
+            .split(",")
+            .map((uuid) => uuid.trim())
+            .filter((uuid) => uuid !== "");
+          kategoriRuangan.where = {
+            uuid: {
+              [Op.in]: kategoriUuids,
+            },
+          };
+        }
+      }
+
       const data = await LokasiModel.findAll(options);
+      
+      const roomData = await Promise.all(
+        data.map(async (room) => {
+          const rooms = room.get({ plain: true });
+
+          const totalBed = await RoomMonitoringModel.count({
+            where: {
+              room_uuid: rooms.uuid,
+              faskes_uuid: user.faskesUuid,
+              deleted_at: { [Op.is]: null },
+            },
+          });
+
+          const usedBed = await RoomMonitoringModel.count({
+            where: {
+              room_uuid: rooms.uuid,
+              faskes_uuid: user.faskesUuid,
+              status_operasional: "Penuh",
+              deleted_at: { [Op.is]: null },
+            },
+          });
+
+          let statusOperasional = "Tersedia";
+
+          if (totalBed > 0 && usedBed === totalBed) {
+            statusOperasional = "Penuh";
+          }
+          
+          return {
+            ...rooms,
+            status_operasional_ruangan: statusOperasional,
+          };
+        })
+      );
 
       // Konversi ke plain object
-      return data.map((item) => item.get({ plain: true }));
+      return roomData
     } catch (error) {
       console.log(error);
       throw error;

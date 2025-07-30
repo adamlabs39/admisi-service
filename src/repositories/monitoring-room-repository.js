@@ -28,10 +28,7 @@ export default class MonitoringRoomRepository {
             },
           },
         ],
-        [Op.and]: [
-          { faskes_uuid: user.faskesUuid },
-          { deletedAt: { [Op.is]: null } },
-        ],
+        [Op.and]: [{ faskes_uuid: user.faskesUuid }, { deletedAt: { [Op.is]: null } }],
       };
 
       if (args.filter_kategori) {
@@ -59,14 +56,7 @@ export default class MonitoringRoomRepository {
             attributes: ["uuid", "code", "name"],
           },
         ],
-        attributes: [
-          "uuid",
-          "code",
-          "name",
-          "no_room",
-          "kelas_ruangan",
-          "status",
-        ],
+        attributes: ["uuid", "code", "name", "no_room", "kelas_ruangan", "status"],
       };
 
       const result = await Pagination.init(RuanganModel, args, filter, option);
@@ -76,9 +66,7 @@ export default class MonitoringRoomRepository {
 
       const processedData = plainData.map((room) => {
         const total_bed = room.room_monitorings.length;
-        const available = room.room_monitorings.filter(
-          (monitoring) => monitoring.patient_uuid === null
-        ).length;
+        const available = room.room_monitorings.filter((monitoring) => monitoring.patient_uuid === null).length;
 
         return {
           ...room,
@@ -102,11 +90,7 @@ export default class MonitoringRoomRepository {
     try {
       const data = await RoomMonitoringModel.findAll({
         where: {
-          [Op.and]: [
-            { lokasi_uuid: uuids },
-            { faskes_uuid: user.faskesUuid },
-            { deletedAt: { [Op.is]: null } },
-          ],
+          [Op.and]: [{ lokasi_uuid: uuids }, { faskes_uuid: user.faskesUuid }, { deletedAt: { [Op.is]: null } }],
         },
         include: [
           {
@@ -115,15 +99,15 @@ export default class MonitoringRoomRepository {
             as: "patient",
             attributes: ["no_rm", "name", "gender"],
           },
+          {
+            model: LokasiModel,
+            required: false,
+            as: "bed_lokasi",
+            attributes: ["class_code", "class_name"],
+          }
         ],
         order: [["no_bed", "ASC"]],
-        attributes: [
-          "uuid",
-          "no_bed",
-          "type",
-          "status_operasional",
-          "lokasi_uuid",
-        ],
+        attributes: ["uuid", "no_bed", "type", "status_operasional", "lokasi_uuid"],
       });
 
       return data;
@@ -138,11 +122,7 @@ export default class MonitoringRoomRepository {
     try {
       const data = await RoomMonitoringModel.findAll({
         where: {
-          [Op.and]: [
-            { room_uuid: uuid },
-            { faskesUuid: user.faskesUuid },
-            { deletedAt: { [Op.is]: null } },
-          ],
+          [Op.and]: [{ room_uuid: uuid }, { faskesUuid: user.faskesUuid }, { deletedAt: { [Op.is]: null } }],
         },
         include: [
           {
@@ -153,15 +133,7 @@ export default class MonitoringRoomRepository {
           },
         ],
         order: [["no_bed", "ASC"]],
-        attributes: [
-          "uuid",
-          "patient_uuid",
-          "room_category",
-          "room_class",
-          "room",
-          "bed_name",
-          "no_bed",
-        ],
+        attributes: ["uuid", "patient_uuid", "room_category", "room_class", "room", "bed_name", "no_bed"],
       });
 
       return {
@@ -184,10 +156,7 @@ export default class MonitoringRoomRepository {
     try {
       const data = await RoomMonitoringModel.findAll({
         where: {
-          [Op.and]: [
-            { faskesUuid: user.faskesUuid },
-            { deletedAt: { [Op.is]: null } },
-          ],
+          [Op.and]: [{ faskesUuid: user.faskesUuid }, { deletedAt: { [Op.is]: null } }],
         },
         include: [
           {
@@ -200,13 +169,7 @@ export default class MonitoringRoomRepository {
             model: LokasiModel,
             required: false,
             as: "lokasi",
-            attributes: [
-              "uuid",
-              "code",
-              "name",
-              "location_type",
-              "satu_sehat_id",
-            ],
+            attributes: ["uuid", "code", "name", "location_type", "satu_sehat_id"],
           },
         ],
         attributes: ["uuid", "no_bed", "status_operasional", "type"],
@@ -224,11 +187,7 @@ export default class MonitoringRoomRepository {
     try {
       const result = await RoomMonitoringModel.findOne({
         where: {
-          [Op.and]: [
-            { uuid },
-            { faskesUuid: user.faskesUuid },
-            { deletedAt: { [Op.is]: null } },
-          ],
+          [Op.and]: [{ uuid }, { faskesUuid: user.faskesUuid }, { deletedAt: { [Op.is]: null } }],
         },
       });
       if (!result) throw new NotfoundException("Bed not found");
@@ -244,11 +203,7 @@ export default class MonitoringRoomRepository {
       const user = Context.get(CTX_AUTHOR);
       const result = await RoomMonitoringModel.findOne({
         where: {
-          [Op.and]: [
-            { uuid },
-            { faskesUuid: user.faskesUuid },
-            { deletedAt: { [Op.is]: null } },
-          ],
+          [Op.and]: [{ uuid }, { faskesUuid: user.faskesUuid }, { deletedAt: { [Op.is]: null } }],
         },
         transaction: trx,
       });
@@ -256,13 +211,13 @@ export default class MonitoringRoomRepository {
       // if not found
       if (!result) throw new NotfoundException("Bed not found");
 
-      if (result.patientUuid)
-        throw new BadRequestException("Bed is already occupied");
+      if (result.patientUuid) throw new BadRequestException("Bed is already occupied");
 
       // update bed
       await result.update(
         {
           patientUuid,
+          status_operasional: "Penuh",
         },
         { transaction: trx, returning: true }
       );
@@ -275,9 +230,16 @@ export default class MonitoringRoomRepository {
     }
   }
 
-  static async updateBed(uuid, data) {
+  static async updateBed(uuid, requestData) {
     try {
       const user = Context.get(CTX_AUTHOR);
+
+      const data = Array.isArray(requestData) ? requestData : requestData.beds;
+
+      if (!data || !Array.isArray(data)) {
+        throw new BadRequestException("Beds data must be an array");
+      }
+      
       return await sequelizeInstance.transaction(async (t) => {
         // Get room data
         const dataRuangan = await LokasiRepository.getLokasiBy(uuid);
@@ -294,33 +256,26 @@ export default class MonitoringRoomRepository {
         });
 
         // Collect UUIDs from incoming data
-        const incomingUuids = data
-          .map((bed) => bed.uuid)
-          .filter((uuid) => uuid !== null);
+        const incomingUuids = data.map((bed) => bed.uuid).filter((uuid) => uuid !== null);
 
         // Delete beds that are not in the incoming data
         for (const bed of existingBeds) {
           if (!incomingUuids.includes(bed.uuid)) {
-            if (bed.patientUuid)
-              throw new BadRequestException("Bed is occupied");
-            await bed.update(
-              { deletedAt: moment().unix() },
-              { transaction: t }
-            );
+            if (bed.patientUuid){
+              console.log(`Bed No: ${bed.noBed}, Monitoring Room:(${bed.uuid}), Bed Lokasi UUID:(${bed.lokasi_uuid}), bed type:(${bed.type}) is occupied by patient and cannot be deleted`);
+              throw new BadRequestException(`Bed is occupied`);
+            }
+            await bed.update({ deletedAt: moment().unix() }, { transaction: t });
           }
         }
 
         // Update existing beds or create new ones
         for (const bedData of data) {
           // check no bed is duplicated
-          const checkDuplicate = data.filter(
-            (bed) => bed.no_bed === bedData.no_bed
-          );
+          const checkDuplicate = data.filter((bed) => bed.no_bed === bedData.no_bed);
 
           if (checkDuplicate.length > 1) {
-            throw new DuplicateException(
-              `No bed is duplicated: ${bedData.no_bed}`
-            );
+            throw new DuplicateException(`No bed is duplicated: ${bedData.no_bed}`);
           }
 
           if (bedData.uuid) {
@@ -349,7 +304,7 @@ export default class MonitoringRoomRepository {
                 lokasi_uuid: bedData.lokasi_uuid,
                 noBed: bedData.no_bed,
                 type: bedData.type,
-                status_operasional: "Unoccupied",
+                status_operasional: "Tersedia",
               },
               { transaction: t }
             );
@@ -386,26 +341,11 @@ export default class MonitoringRoomRepository {
       if (args.room) filter.room = args.room;
 
       const options = {
-        attributes: [
-          "room_class",
-          "room",
-          [
-            sequelizeInstance.fn(
-              "COUNT",
-              sequelizeInstance.col("patient_uuid")
-            ),
-            "totalPatients",
-          ],
-        ],
+        attributes: ["room_class", "room", [sequelizeInstance.fn("COUNT", sequelizeInstance.col("patient_uuid")), "totalPatients"]],
         group: ["room_class", "room"],
       };
 
-      return await Pagination.initWithGroup(
-        RoomMonitoringModel,
-        args,
-        filter,
-        options
-      );
+      return await Pagination.initWithGroup(RoomMonitoringModel, args, filter, options);
     } catch (error) {
       throw error;
     }

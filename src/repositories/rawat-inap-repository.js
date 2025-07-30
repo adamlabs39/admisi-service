@@ -33,7 +33,9 @@ import {
 import {
     PractitionerModel,
     PegawaiModel,
-    RuanganModel
+    RuanganModel,
+    LokasiModel,
+    KategoriRuanganModel
 } from "@adameds/model-sdk/datamaster";
 import Pagination from "../helper/pagination.js";
 import newBornRepository from "./newborn-repository.js";
@@ -68,75 +70,92 @@ export default class RawatInapRepository {
             filter[Op.and] = {
                 [Op.or]: roomArray.map(room =>
                     sequelizeInstance.where(
-                        sequelizeInstance.col('monitoring_room.room'),
+                        sequelizeInstance.col('monitoring_room.room.name'),
                         { [Op.iLike]: `%${room}%` }
                     )
                 )
             };
         }
         const options = {
-            include: [
+          include: [
+            {
+              model: PatientModel,
+              as: "patient",
+              required: true,
+              where: {
+                deletedAt: { [Op.is]: null },
+              },
+              include: [
                 {
-                    model: PatientModel,
-                    as: "patient",
-                    required: true,
-                    where: {
-                        deletedAt: {[Op.is]: null}
+                  model: AddressModel,
+                  as: "address",
+                  required: true,
+                  where: {
+                    deletedAt: { [Op.is]: null },
+                  },
+                  attributes: ["prov", "city", "district", "rt", "rw", "full_address", "country", "village"],
+                },
+              ],
+              attributes: ["uuid", "title", "name", "identity", "no_identity", "phone", "gender", "is_new_born"],
+            },
+            {
+              model: BirthDetailModel,
+              as: "birth_detail",
+              required: true,
+              where: { deletedAt: { [Op.is]: null } },
+              attributes: ["age_year", "age_month", "age_day"],
+            },
+            {
+              model: PractitionerModel,
+              as: "practitioner",
+              required: true,
+              where: { deletedAt: { [Op.is]: null } },
+              attributes: ["uuid"],
+              include: [
+                {
+                  model: PegawaiModel,
+                  as: "pegawai",
+                  required: true,
+                  where: { deletedAt: { [Op.is]: null } },
+                  attributes: ["first_title", "last_title", ["name", "nama"], "gender"],
+                },
+              ],
+            },
+            {
+              model: RoomMonitoringModel,
+              as: "monitoring_room",
+              required: true,
+              where: { deletedAt: { [Op.is]: null } },
+              attributes: ["uuid", "room_uuid", "no_bed"],
+              include: [
+                {
+                  model: LokasiModel,
+                  as: "bed_lokasi",
+                  required: true,
+                  where: { deletedAt: { [Op.is]: null } },
+                  attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                },
+                {
+                  model: LokasiModel,
+                  as: "room",
+                  required: true,
+                  where: { deletedAt: { [Op.is]: null } },
+                  attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                  include: [
+                    {
+                      model: KategoriRuanganModel,
+                      as: "kategori_ruangan",
+                      required: true,
+                      where: { deletedAt: { [Op.is]: null } },
+                      attributes: ["uuid", "code", "name"],
                     },
-                    include: [
-                        {
-                            model: AddressModel,
-                            as: "address",
-                            required: true,
-                            where: {
-                                deletedAt: {[Op.is]: null}
-                            },
-                            attributes: [
-                                "prov", "city", "district", "rt", "rw", "full_address", "country", "village"
-                            ],
-                        },
-                    ],
-                    attributes: [
-                        "uuid", "title", "name", "identity", "no_identity", "phone", "gender", "is_new_born"
-                    ]
+                  ],
                 },
-                {
-                    model: BirthDetailModel,
-                    as: "birth_detail",
-                    required: true,
-                    where: {deletedAt: {[Op.is]: null}},
-                    attributes: [
-                        'age_year', 'age_month', 'age_day'
-                    ]
-                },
-                {
-                    model: PractitionerModel,
-                    as: "practitioner",
-                    required: true,
-                    where: {deletedAt: {[Op.is]: null}},
-                    attributes: ["uuid"],
-                    include: [
-                        {
-                            model: PegawaiModel,
-                            as: "pegawai",
-                            required: true,
-                            where: {deletedAt: {[Op.is]: null}},
-                            attributes: ["first_title", "last_title", ["name", "nama"], "gender"]
-                        }
-                    ]
-                },
-                {
-                    model: RoomMonitoringModel,
-                    as: "monitoring_room",
-                    required: true,
-                    where: {deletedAt: {[Op.is]: null}},
-                    attributes: ["uuid", "room_uuid", "room_category", "room_class", "room", "bed_name", "no_bed"]
-                }
-            ],
-            attributes: [
-                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method", "status_ri", "rekam_medis_uuid", "no_pelayanan"
-            ]
-        }
+              ],
+            },
+          ],
+          attributes: ["uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method", "status_ri", "rekam_medis_uuid", "no_pelayanan"],
+        };
 
         const transform = {
             practitioner: (row) => ({
@@ -169,6 +188,7 @@ export default class RawatInapRepository {
             if (!patient) throw new Error("Failed to create patient");
 
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
+
             console.log("Bed Data:", bedData);
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
 
@@ -342,46 +362,89 @@ export default class RawatInapRepository {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         try {
             const rawatInap = await RawatInapModel.findOne({
-                where: {
-                    uuid: uuid,
-                    faskesUuid,
-                    deletedAt: null
-                },
-                include: [
+              where: {
+                uuid: uuid,
+                faskesUuid,
+                deletedAt: null,
+              },
+              include: [
+                {
+                  model: PatientModel,
+                  as: "patient",
+                  required: true,
+                  where: { deletedAt: { [Op.is]: null } },
+                  include: [
                     {
-                        model: PatientModel,
-                        as: "patient",
-                        required: true,
-                        where: {deletedAt: {[Op.is]: null}},
-                        include: [
-                            {
-                                model: AddressModel,
-                                as: "address",
-                                required: true,
-                                where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"]
-                            },
-                            {
-                                model: BirthDetailModel,
-                                as: "birth_detail",
-                                required: true,
-                                where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["birth_place", "birth_date", "age_year", "age_month", "age_day"]
-                            }
-                        ],
-                        attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status", 'is_new_born'],
+                      model: AddressModel,
+                      as: "address",
+                      required: true,
+                      where: { deletedAt: { [Op.is]: null } },
+                      attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"],
                     },
                     {
-                        model: RoomMonitoringModel,
-                        as: "monitoring_room",
-                        required: true,
-                        where: {deletedAt: {[Op.is]: null}},
-                        attributes: ["room_uuid", "room_category", "room_class", "room", "bed_name", "no_bed"]
-                    }
-                ],
-                attributes: [
-                    "uuid","no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", 'status_ri', 'multiple_birth', 'entrusted_patient', 'upgrade_class', 'join_bill', 'previous_bill', 'family_bill', 'spare_bed', 'box_baby', 'monitoring_room_uuid', 'no_spri', 'no_pelayanan'
-                ]
+                      model: BirthDetailModel,
+                      as: "birth_detail",
+                      required: true,
+                      where: { deletedAt: { [Op.is]: null } },
+                      attributes: ["birth_place", "birth_date", "age_year", "age_month", "age_day"],
+                    },
+                  ],
+                  attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status", "is_new_born"],
+                },
+                {
+                  model: RoomMonitoringModel,
+                  as: "monitoring_room",
+                  required: true,
+                  where: { deletedAt: { [Op.is]: null } },
+                  attributes: ["uuid", "room_uuid", "no_bed"],
+                  include: [
+                    {
+                      model: LokasiModel,
+                      as: "bed_lokasi",
+                      required: true,
+                      where: { deletedAt: { [Op.is]: null } },
+                      attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                    },
+                    {
+                      model: LokasiModel,
+                      as: "room",
+                      required: true,
+                      where: { deletedAt: { [Op.is]: null } },
+                      attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                      include: [
+                        {
+                          model: KategoriRuanganModel,
+                          as: "kategori_ruangan",
+                          required: true,
+                          where: { deletedAt: { [Op.is]: null } },
+                          attributes: ["uuid", "code", "name"],
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+              attributes: [
+                "uuid",
+                "no_reg",
+                "payment_method",
+                "maternity",
+                "note",
+                "complaint",
+                "practitioner_uuid",
+                "status_ri",
+                "multiple_birth",
+                "entrusted_patient",
+                "upgrade_class",
+                "join_bill",
+                "previous_bill",
+                "family_bill",
+                "spare_bed",
+                "box_baby",
+                "monitoring_room_uuid",
+                "no_spri",
+                "no_pelayanan",
+              ],
             });
 
             if (!rawatInap) throw new NotfoundException("Rawat Inap not found");
@@ -481,6 +544,25 @@ export default class RawatInapRepository {
                     transaction: t
                 });
 
+                //* MENGHAPUS PASIEN DARI ROOM MONITORING
+                for (const riModel of rawatInap) {
+                  if (riModel.monitoringRoomUuid) {
+                    await RoomMonitoringModel.update(
+                      {
+                        patientUuid: null,
+                        status_operasional: "Tersedia"
+                      },
+                      {
+                        where: {
+                          uuid: riModel.monitoringRoomUuid,
+                          faskesUuid
+                        },
+                        transaction: t
+                      }
+                    );
+                  }
+                }
+                
                 eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
                     list_no_pelayanan: rawatInap.map((ri) => ri.noPelayanan),
                     cancel_reason: data.cancelReason
@@ -520,36 +602,43 @@ export default class RawatInapRepository {
 
 
             const options = {
-                include: [
+              include: [
+                {
+                  model: PatientModel,
+                  as: "patient",
+                  required: true,
+                  where: { deletedAt: { [Op.is]: null } },
+                  include: [
                     {
-                        model: PatientModel,
-                        as: "patient",
-                        required: true,
-                        where: { deletedAt: { [Op.is]: null } },
-                        include: [
-                            {
-                                model: AddressModel,
-                                as: "address",
-                                required: true,
-                                where: {
-                                    deletedAt: {[Op.is]: null}
-                                },
-                                attributes: [],
-                            },
-                        ],
-                        attributes: [],
+                      model: AddressModel,
+                      as: "address",
+                      required: true,
+                      where: {
+                        deletedAt: { [Op.is]: null },
+                      },
+                      attributes: [],
                     },
+                  ],
+                  attributes: [],
+                },
+                {
+                  model: RoomMonitoringModel,
+                  as: "monitoring_room",
+                  required: true,
+                  where: { deletedAt: { [Op.is]: null } },
+                  attributes: ["uuid", "room_uuid", "no_bed"],
+                  include: [
                     {
-                        model: RoomMonitoringModel,
-                        as: "monitoring_room",
-                        required: true,
-                        where: { deletedAt: { [Op.is]: null } },
-                        attributes: ["uuid", "room_uuid", "room_category", "room_class", "room", "bed_name", "no_bed"]
+                      model: LokasiModel,
+                      as: "bed_lokasi",
+                      required: true,
+                      where: { deletedAt: { [Op.is]: null } },
+                      attributes: ["uuid", "code", "name", "class_code", "class_name"],
                     },
-                ],
-                attributes: [
-                    "no_rm", "tanggal_daftar", "tanggal_dirawat", "discharge_date",
-                ]
+                  ],
+                },
+              ],
+              attributes: ["no_rm", "tanggal_daftar", "tanggal_dirawat", "discharge_date"],
             };
 
             return await Pagination.init(
