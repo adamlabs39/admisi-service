@@ -4,7 +4,7 @@ services:
       context: ./
       dockerfile: Dockerfile
       no_cache: true
-    container_name: admisi-service
+    container_name: api-adameds-admisi
     image: adameds/admisi-service:dev
     environment:
       SYNC_DB: ${SYNC_DB}
