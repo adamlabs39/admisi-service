@@ -263,7 +263,7 @@ export default class MonitoringRoomRepository {
           if (!incomingUuids.includes(bed.uuid)) {
             if (bed.patientUuid){
               console.log(`Bed No: ${bed.noBed}, Monitoring Room:(${bed.uuid}), Bed Lokasi UUID:(${bed.lokasi_uuid}), bed type:(${bed.type}) is occupied by patient and cannot be deleted`);
-              throw new BadRequestException(`Bed is occupied`);
+              throw new BadRequestException(`Bed: ${bed.noBed} is occupied`);
             }
             await bed.update({ deletedAt: moment().unix() }, { transaction: t });
           }
@@ -271,6 +271,16 @@ export default class MonitoringRoomRepository {
 
         // Update existing beds or create new ones
         for (const bedData of data) {
+
+          if (bedData.lokasi_uuid) {
+            const bedLocation = await LokasiRepository.getLokasiBy(bedData.lokasi_uuid);
+            if (!bedLocation || bedLocation.location_type !== "Bed") {
+              throw new BadRequestException(`Bed location not found or not type Bed`);
+            }
+            if (bedLocation.part_of_uuid !== uuid) {
+              throw new BadRequestException(`Bed location does not belong to the room`);
+            }
+          }
           // check no bed is duplicated
           const checkDuplicate = data.filter((bed) => bed.no_bed === bedData.no_bed);
 
