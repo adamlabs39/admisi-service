@@ -107,7 +107,8 @@ export default class LokasiRepository {
       }
 
       const data = await LokasiModel.findAll(options);
-      
+
+      //*STATUS OPERASIONAL RUANGAN
       const roomData = await Promise.all(
         data.map(async (room) => {
           const rooms = room.get({ plain: true });
