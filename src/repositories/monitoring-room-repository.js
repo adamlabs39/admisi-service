@@ -2,11 +2,7 @@ import { Context } from "../middlewares/context.js";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
 import { Op, where } from "sequelize";
 import Pagination from "../helper/pagination.js";
-import {
-  RuanganModel,
-  KategoriRuanganModel,
-  LokasiModel,
-} from "@adameds/model-sdk/datamaster";
+import { RuanganModel, KategoriRuanganModel, LokasiModel } from "@adameds/model-sdk/datamaster";
 import { RoomMonitoringModel, PatientModel } from "@adameds/model-sdk/admisi";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import RuanganRepository from "./ruangan-repository.js";
@@ -104,7 +100,7 @@ export default class MonitoringRoomRepository {
             required: false,
             as: "bed_lokasi",
             attributes: ["class_code", "class_name"],
-          }
+          },
         ],
         order: [["no_bed", "ASC"]],
         attributes: ["uuid", "no_bed", "type", "status_operasional", "lokasi_uuid"],
@@ -209,9 +205,9 @@ export default class MonitoringRoomRepository {
       });
 
       // if not found
-      if (!result) throw new NotfoundException("Bed not found");
+      if (!result) throw new NotfoundException("Bed tidak ditemukan");
 
-      if (result.patientUuid) throw new BadRequestException("Bed is already occupied");
+      if (result.patientUuid) throw new BadRequestException("Bed terpakai oleh pasien");
 
       // update bed
       await result.update(
@@ -237,13 +233,13 @@ export default class MonitoringRoomRepository {
       const data = Array.isArray(requestData) ? requestData : requestData.beds;
 
       if (!data || !Array.isArray(data)) {
-        throw new BadRequestException("Beds data must be an array");
+        throw new BadRequestException("Data tidak ditemukan");
       }
-      
+
       return await sequelizeInstance.transaction(async (t) => {
         // Get room data
         const dataRuangan = await LokasiRepository.getLokasiBy(uuid);
-        if (!dataRuangan) throw new Error("Room not found");
+        if (!dataRuangan) throw new Error("Room tidak ditemukan");
 
         // Find existing beds
         const existingBeds = await RoomMonitoringModel.findAll({
@@ -261,9 +257,9 @@ export default class MonitoringRoomRepository {
         // Delete beds that are not in the incoming data
         for (const bed of existingBeds) {
           if (!incomingUuids.includes(bed.uuid)) {
-            if (bed.patientUuid){
-              console.log(`Bed No: ${bed.noBed}, Monitoring Room:(${bed.uuid}), Bed Lokasi UUID:(${bed.lokasi_uuid}), bed type:(${bed.type}) is occupied by patient and cannot be deleted`);
-              throw new BadRequestException(`Bed: ${bed.noBed} is occupied`);
+            if (bed.patientUuid) {
+              // console.log(`Bed No: ${bed.noBed}, Monitoring Room:(${bed.uuid}), Bed Lokasi UUID:(${bed.lokasi_uuid}), bed type:(${bed.type}) is occupied by patient and cannot be deleted`);
+              throw new BadRequestException(`Bed: ${bed.noBed} terpakai oleh pasien`);
             }
             await bed.update({ deletedAt: moment().unix() }, { transaction: t });
           }
@@ -271,14 +267,24 @@ export default class MonitoringRoomRepository {
 
         // Update existing beds or create new ones
         for (const bedData of data) {
-
           if (bedData.lokasi_uuid) {
             const bedLocation = await LokasiRepository.getLokasiBy(bedData.lokasi_uuid);
+
+            //* CHECK JIKA BED LOCATION ADA atau TIPE BED
             if (!bedLocation || bedLocation.location_type !== "Bed") {
-              throw new BadRequestException(`Bed location not found or not type Bed`);
+              throw new BadRequestException(`Bed tidak tertemui atau bukan lokasi tipe Bed`);
             }
+
+            //* CHECK JIKA BED MERUPAKAN BAGIAN DARI RUANGAN
             if (bedLocation.part_of_uuid !== uuid) {
-              throw new BadRequestException(`Bed location does not belong to the room`);
+              throw new BadRequestException(`Bed tidak termasuk dalam ruang ini`);
+            }
+
+            //* CHECK JIKA BED TERPAKAI
+            for (const bedExist of existingBeds) {
+              if (bedExist.lokasi_uuid === bedData.lokasi_uuid && bedExist.uuid !== bedData.uuid) {
+                throw new BadRequestException(`Bed sedang digunakan`);
+              }
             }
           }
           // check no bed is duplicated
