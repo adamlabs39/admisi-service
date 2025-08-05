@@ -179,13 +179,13 @@ export default class RawatInapRepository {
             data = convertSnakeToCamel(data);
 
             const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
-            if (!mom) throw new NotfoundException("Identity Mom not found! please regist the mother first");
+            if (!mom) throw new NotfoundException("Identitas Ibu tidak ditemukan! Pastikan Ibu sudah terdaftar sebagai pasien");
 
             const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
-            if (!practitioner) throw new NotfoundException("Practitioner not found");
+            if (!practitioner) throw new NotfoundException("Dokter tidak ditemukan");
 
             const patient = await PatientRepository.registPatient({ ...data.patientData, isNewBorn: true }, transaction);
-            if (!patient) throw new Error("Failed to create patient");
+            if (!patient) throw new Error("Gagal mendaftarkan pasien baru");
 
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
 
@@ -281,16 +281,16 @@ export default class RawatInapRepository {
                 },
                 transaction
             });
-            if (!rawatInap) throw new NotfoundException("Rawat Inap not found");
+            if (!rawatInap) throw new NotfoundException("Rawat Inap tidak ditemukan");
             const patient = await PatientRepository.getOnePatientBy('uuid', rawatInap.patientUuid);
-            if (!patient) throw new NotfoundException("Patient not found");
+            if (!patient) throw new NotfoundException("Patient tidak ditemukan");
 
             const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
-            if (!practitioner) throw new NotfoundException("Practitioner not found");
+            if (!practitioner) throw new NotfoundException("Dokter tidak ditemukan");
             data.patientData.patient_uuid = rawatInap.dataValues.patientUuid;
             data.patientData.is_new_born = patient.isNewBorn || false;
             const updatedPatient = await PatientRepository.registPatient(data.patientData, transaction);
-            if (!updatedPatient) throw new Error("Failed to update patient");
+            if (!updatedPatient) throw new Error("Gagal memperbarui pasien");
             if (data.monitoringRoomUuid && rawatInap.statusRi === 1) {
                 const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
                 await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, updatedPatient.uuid, transaction);
@@ -300,7 +300,7 @@ export default class RawatInapRepository {
                     monitoringRuanganUuid: rawatInap.monitoringRoomUuid,
                 });
             } else if (data.monitoringRoomUuid !== rawatInap.monitoringRoomUuid && rawatInap.statusRi !== 1) {
-                throw new DuplicateException("Cannot update bed, Rawat Inap status is being processed");
+                throw new DuplicateException("Tidak dapat memperbarui tempat tidur, status Rawat Inap sedang diproses");
             }
 
             const updatedRawatInap = await rawatInap.update({
@@ -447,7 +447,7 @@ export default class RawatInapRepository {
               ],
             });
 
-            if (!rawatInap) throw new NotfoundException("Rawat Inap not found");
+            if (!rawatInap) throw new NotfoundException("Rawat Inap tidak ditemukan");
 
             if (rawatInap.patient.dataValues.is_new_born) {
                 const newBorn = await NewBornModel.findOne({
@@ -530,9 +530,9 @@ export default class RawatInapRepository {
                 })
 
                 const isProcessed = rawatInap.filter((ri) => ri.statusRi >= 2);
-                if (isProcessed.length > 0) throw new Error("Cannot cancel processed Rawat Inap");
+                if (isProcessed.length > 0) throw new Error("Tidak dapat membatalkan Rawat Inap yang sedang diproses");
 
-                if (rawatInap.length === 0) throw new NotfoundException("Rawat Inap not found");
+                if (rawatInap.length === 0) throw new NotfoundException("Rawat Inap tidak ditemukan");
 
                 await RawatInapModel.update({
                     statusRi: 0
