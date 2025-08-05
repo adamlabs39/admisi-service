@@ -8,7 +8,8 @@ import {
 } from "@adameds/model-sdk/pelayanan";
 import {
     PatientModel,
-    BirthDetailModel
+    BirthDetailModel,
+    InsuranceAccountModel
 } from "@adameds/model-sdk/admisi";
 import {
     AddressModel
@@ -22,6 +23,16 @@ import {
 
 import Pagination from "../helper/pagination.js";
 import moment from "moment";
+
+// InsuranceAccountModel.belongsTo(PatientModel, {
+//   as: "patient",
+//   foreignKey: "patient_uuid",
+// });
+
+// PatientModel.hasMany(InsuranceAccountModel, {
+//   as: "insurance",
+//   foreignKey: "patient_uuid",
+// });
 
 export default class LogPelayananRepository {
 
@@ -199,6 +210,13 @@ export default class LogPelayananRepository {
                                     "age_year", "age_month", "age_day", "birth_date"
                                 ]
                             },
+                            {
+                                model: InsuranceAccountModel,
+                                as: "insurance",
+                                required: false,
+                                where: {deletedAt: {[Op.is]: null}},
+                                attributes: ["name", "account_number"]
+                            }
                         ],
                         attributes: [
                             "uuid", "title", "name", "identity", "no_identity", "phone", "gender", "no_rm"
