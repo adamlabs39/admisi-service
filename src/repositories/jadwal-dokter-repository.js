@@ -4,6 +4,7 @@ import {
 import NotfoundException from "../exception/notfound-exception.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {Context} from "../middlewares/context.js";
+import { Op } from "sequelize";
 
 export default class JadwalDokterRepository{
     static async getJadwalBy(col = 'uuid', val) {
@@ -11,10 +12,11 @@ export default class JadwalDokterRepository{
         const data = await JadwalDokterModel.findOne({
             where: {
                 [col]: val,
+                deletedAt: { [Op.is]: null },
                 faskesUuid
             }
         });
-        if (!data) throw new NotfoundException(`Jadwal Dokter not found`);
+        if (!data) throw new NotfoundException(`Jadwal Dokter tidak ditemukan`);
         return data;
     }
 }

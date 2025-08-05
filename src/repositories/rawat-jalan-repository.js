@@ -216,7 +216,7 @@ export default class RawatJalanRepository {
                 ]
             });
 
-            if (!result) throw new NotfoundException("Data not found");
+            if (!result) throw new NotfoundException("Data tidak ditemukan");
             if (result.dataValues.payment_method === 2) {
                 const insuranceData = await InsuranceAdmissionModel.findOne({
                     where: { noReg: result.dataValues.no_reg },
@@ -268,7 +268,7 @@ export default class RawatJalanRepository {
             data = convertSnakeToCamel(data);
 
             const jadwalDokter = (await JadwalDokterRepository.getJadwalBy('uuid', data.jadwalDokterUuid)).dataValues;
-            if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter not found");
+            // if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter tidak ditemukan");
 
             const dataRJ = {
                 faskesUuid,
@@ -340,14 +340,14 @@ export default class RawatJalanRepository {
                 },
                 transaction: t
             });
-            if (!existingRegist) throw new NotfoundException("Data not found");
+            if (!existingRegist) throw new NotfoundException("ID tidak ditemukan");
 
             const jadwalDokter = (await JadwalDokterRepository.getJadwalBy('uuid', data.jadwalDokterUuid)).dataValues;
-            if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter not found");
+            if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter tidak ditemukan");
 
             data.patientData.patient_uuid = existingRegist.dataValues.patientUuid;
             const patient = await PatientRepository.registPatient(data.patientData, t);
-            if (!patient) throw new Error("Failed to create patient");
+            if (!patient) throw new Error("Gagal membuat pasien");
 
             const dataRJ = {
                 patientUuid: patient.uuid,

@@ -354,11 +354,22 @@ export default class MonitoringRoomRepository {
         faskesUuid,
         deletedAt: { [Op.is]: null },
       };
-      if (args.room) filter.room = args.room;
+      // if (args.room) filter.room = args.room;
 
       const options = {
-        attributes: ["room_class", "room", [sequelizeInstance.fn("COUNT", sequelizeInstance.col("patient_uuid")), "totalPatients"]],
-        group: ["room_class", "room"],
+        include: [
+          {
+            model: LokasiModel,
+            as: "room",
+            required: true,
+            where: { deletedAt: { [Op.is]: null } },
+            attributes: ["uuid", "name", "class_name"],
+          },
+        ],
+        attributes: [
+          "uuid",
+          // [sequelizeInstance.fn("COUNT", sequelizeInstance.col("patient_uuid")), "totalPatients"],
+        ],
       };
 
       return await Pagination.initWithGroup(RoomMonitoringModel, args, filter, options);
