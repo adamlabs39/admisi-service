@@ -291,6 +291,7 @@ export default class PatientRepository{
                 }],
                 attributes: [
                     "uuid",
+                    "no_identity",
                     "no_rm",
                     "name",
                     "gender",

@@ -36,7 +36,7 @@ export default class ReportService{
             throw new BadRequestException("Start date and end date is required");
         }
 
-        return await MonitoringRoomRepository.getReportStatusKamar(args);
+        return await LogPelayananRepository.getReportStatusKamar(args);
     }
 
 

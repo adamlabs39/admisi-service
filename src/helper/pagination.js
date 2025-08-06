@@ -49,6 +49,7 @@ export default class Pagination {
 
         const totalGroups = await model.findAll({
             where: filter,
+            include: options.include,
             attributes: options.attributes,
             group: options.group,
             raw: true
