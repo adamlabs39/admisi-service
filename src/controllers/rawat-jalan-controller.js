@@ -4,7 +4,7 @@ import successResponse from "../responses/success-response.js";
 export default class RawatJalanController {
     static async getAll(request, response, nextFunction) {
         try {
-            const data = await RawatJalanService.getALl(request.query);
+            const data = await RawatJalanService.getAll(request.query);
             return response.status(200).json(successResponse(
                 "Data Rawat Jalan Berhasil Ditampilkan",
                 data.data,
