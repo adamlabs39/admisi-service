@@ -402,7 +402,7 @@ export default class LogPelayananRepository {
             faskesUuid,
             deletedAt: { [Op.is]: null },
         };
-        // if (args.room) filter.room = args.room;
+        if (args.room) filter.room_uuid = args.room;
 
         const options = {
         include: [
@@ -422,8 +422,18 @@ export default class LogPelayananRepository {
             ],
         },
         ],
-        attributes: ["room_uuid", [sequelizeInstance.fn("COUNT", sequelizeInstance.col("RoomMonitoring.patient_uuid")), "jumlahPasien"]],
-        group: ["room_uuid", "room.kategori_ruangan.uuid", "room.kategori_ruangan.name", "room.uuid", "room.name", "room.class_name"],
+        attributes: [
+            "room_uuid", 
+            [sequelizeInstance.fn("COUNT", sequelizeInstance.col("RoomMonitoring.patient_uuid")), "jumlahPasien"]
+        ],
+        group: [
+            "room_uuid", 
+            "room.kategori_ruangan.uuid", 
+            "room.kategori_ruangan.name", 
+            "room.uuid", 
+            "room.name", 
+            "room.class_name"
+        ],
         };
 
         return await Pagination.initWithGroup(RoomMonitoringModel, args, filter, options);
