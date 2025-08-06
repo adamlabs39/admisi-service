@@ -33,9 +33,9 @@ export default class RawatJalanRepository {
      * @returns {Promise<{pagination: {next_page: null, total_page: number, total_data: *, page: number, prev_page: null, page_size: number}, data: *}>}
      */
     static async getAll(args) {
-        const ctx = Ctx.get(CTX_AUTHOR);
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
         const filter = {
-            faskesUuid: ctx.faskesUuid,
+            faskesUuid,
             [Op.or]: [
                 {no_rm: {[Op.iLike]: `%${args.q || ''}%`}}, // Find by no_rm
                 sequelizeInstance.where(
@@ -143,7 +143,7 @@ export default class RawatJalanRepository {
                     as: "jadwal_dokter",
                     required: true,
                     where: {deletedAt: {[Op.is]: null}},
-                    attributes: ["start_time", "end_time"],
+                    attributes: ["uuid","start_time", "end_time"],
                 }
             ],
             attributes: [
@@ -183,37 +183,41 @@ export default class RawatJalanRepository {
      */
     static async getOne(uuid) {
         try {
-            const result = await RawatJalanModel.findOne({
-                where: {[Op.and]: [{uuid}, {deletedAt: {[Op.is]: null}}]},
+        const result = await RawatJalanModel.findOne({
+            where: { [Op.and]: [{ uuid }, { deletedAt: { [Op.is]: null } }] },
+            include: [
+            {
+                model: PatientModel,
+                as: "patient",
+                required: true,
+                where: { deletedAt: { [Op.is]: null } },
                 include: [
-                    {
-                        model: PatientModel,
-                        as: "patient",
-                        required: true,
-                        where: {deletedAt: {[Op.is]: null}},
-                        include: [
-                            {
-                                model: AddressModel,
-                                as: "address",
-                                required: true,
-                                where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"]
-                            },
-                            {
-                                model: BirthDetailModel,
-                                as: "birth_detail",
-                                required: true,
-                                where: {deletedAt: {[Op.is]: null}},
-                                attributes: ["birth_place", "birth_date", "age_year", "age_day", "age_month"]
-                            }
-                        ],
-                        attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status"],
-
-                    }
+                {
+                    model: AddressModel,
+                    as: "address",
+                    required: true,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"],
+                },
+                {
+                    model: BirthDetailModel,
+                    as: "birth_detail",
+                    required: true,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["birth_place", "birth_date", "age_year", "age_day", "age_month"],
+                },
                 ],
-                attributes: [
-                    "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan"
-                ]
+                attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status"],
+            },
+            {
+                model: JadwalDokterModel,
+                as: "jadwal_dokter",
+                required: true,
+                where: { deletedAt: { [Op.is]: null } },
+                attributes: ["start_time", "end_time"],
+            },
+            ],
+            attributes: ["no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan"],
             });
 
             if (!result) throw new NotfoundException("Data tidak ditemukan");
@@ -287,13 +291,13 @@ export default class RawatJalanRepository {
                 tanggalDaftar: moment().unix(),
             };
 
-            const antrianPoli = await generateAntrianPoli(data.jadwalDokterUuid);
+            // const antrianPoli = await generateAntrianPoli(data.jadwalDokterUuid);
             dataRJ.tanggalDaftar = moment().unix();
             dataRJ.statusRj = 2;
-            dataRJ.noAntrianPoli = antrianPoli.code_antrian_poli;
-            dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
+            // dataRJ.noAntrianPoli = antrianPoli.code_antrian_poli;
+            // dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
             dataRJ.jadwalDokterUuid = jadwalDokter.uuid;
-            dataRJ.kodeBooking = generateBookingCode();
+            // dataRJ.kodeBooking = generateBookingCode();
             dataRJ.noReg = await generateNoReg();
             dataRJ.noPelayanan = await generateNoPelayanan('RJ');
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
@@ -368,8 +372,6 @@ export default class RawatJalanRepository {
                 statusRj,
                 lokasiUuid,
                 practitionerUuid,
-                noAntrianPoli,
-                jadwalPeriksa,
                 jadwalDokterUuid
             } = existingRegist;
 
@@ -380,9 +382,9 @@ export default class RawatJalanRepository {
                 throw new BadRequestException("Tidak bisa mengubah poli atau dokter");
             }
 
-            const antrianPoli = await generateAntrianPoli(data.jadwalDokterUuid);
-            if (!noAntrianPoli) dataRJ.noAntrianPoli = antrianPoli.code_antrian_poli;
-            if (!jadwalPeriksa) dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
+            // const antrianPoli = await generateAntrianPoli(data.jadwalDokterUuid);
+            // if (!noAntrianPoli) dataRJ.noAntrianPoli = antrianPoli.code_antrian_poli;
+            // if (!jadwalPeriksa) dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
             if (!jadwalDokterUuid) dataRJ.jadwalDokterUuid = jadwalDokter.uuid;
 
             if (statusRj === 1) dataRJ.statusRj = 2;

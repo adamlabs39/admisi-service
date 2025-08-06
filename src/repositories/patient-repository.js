@@ -256,8 +256,10 @@ export default class PatientRepository{
     }
 
     static async getAllPatient(args) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
         try {
             const filter = {
+                faskesUuid,
                 [Op.or]: [
                     {
                         name: {
