@@ -11,11 +11,6 @@ import { PractitionerModel, PegawaiModel, LokasiModel, KategoriRuanganModel } fr
 import Pagination from "../helper/pagination.js";
 import moment from "moment";
 
-LokasiModel.hasMany(RoomMonitoringModel, {
-  as: "roomMonitorings",
-  foreignKey: "room_uuid",
-});
-
 export default class LogPelayananRepository {
   /**
    * Function to create or update Log Pelay
@@ -400,38 +395,50 @@ export default class LogPelayananRepository {
     }
   }
 
-  static async getReportStatusKamar(args) {
-    const { faskesUuid } = Context.get(CTX_AUTHOR);
-    try {
-      const filter = {
-        faskesUuid,
-        deletedAt: { [Op.is]: null },
-      };
+    static async getReportStatusKamar(args) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        try {
+        const filter = {
+            faskesUuid,
+            deletedAt: { [Op.is]: null },
+        };
+        if (args.room) filter.room_uuid = args.room;
 
-      const options = {
+        const options = {
         include: [
-          {
-            model: RoomMonitoringModel,
-            as: "roomMonitorings",
-            attributes: [],
+        {
+            model: LokasiModel,
+            as: "room",
             required: true,
-          },
+            where: { deletedAt: { [Op.is]: null } },
+            attributes: ["uuid", "name", "class_name"],
+            include: [
+            {
+                model: KategoriRuanganModel,
+                as: "kategori_ruangan",
+                required: false,
+                attributes: ["uuid", "name"],
+            },
+            ],
+        },
         ],
         attributes: [
-          "uuid",
-          "name", // Sesuaikan nama kolom Anda
-          [sequelizeInstance.fn("COUNT", sequelizeInstance.col("roomMonitorings.uuid")), "totalPatients"],
+            "room_uuid", 
+            [sequelizeInstance.fn("COUNT", sequelizeInstance.col("RoomMonitoring.patient_uuid")), "jumlahPasien"]
         ],
-        group: ["LokasiModel.uuid", "LokasiModel.name"],
-        order: [["nama_lokasi", "ASC"]],
-      };
+        group: [
+            "room_uuid", 
+            "room.kategori_ruangan.uuid", 
+            "room.kategori_ruangan.name", 
+            "room.uuid", 
+            "room.name", 
+            "room.class_name"
+        ],
+        };
 
-      // Panggil helper yang sudah diperbaiki dengan model yang tepat.
-      // Kode ini sekarang akan berjalan tanpa error.
-      return await Pagination.initWithGroup(LokasiModel, args, filter, options);
-    } catch (error) {
-      console.error("Error in getReportStatusKamar:", error);
-      throw error;
+        return await Pagination.initWithGroup(RoomMonitoringModel, args, filter, options);
+        } catch (error) {
+        throw error;
+        }
     }
-  }
 }
