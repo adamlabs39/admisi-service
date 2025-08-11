@@ -107,5 +107,9 @@ export default class PatientValidation{
         phone: z.nullable(z.string().max(15)),
     });
 
+    static CHECK_IDENTITY_VALIDATOR = z.object({
+        no_identity: z.string().max(255),
+    });
+
 }
 

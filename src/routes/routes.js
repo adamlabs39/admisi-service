@@ -56,6 +56,7 @@ routes.post("/patient/import", PatientController.import);
 routes.put("/patient/:uuid", PatientController.update);
 routes.delete("/patient/:uuid", PatientController.delete);
 routes.get("/patient/history/:uuid", PatientController.getHistoryPatient);
+routes.post("/patient/check-patient", PatientController.checkPatientExist);
 
 // Monitoring Room
 routes.get("/monitoring-rooms", MonitoringRoomController.getAllRoom);

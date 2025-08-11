@@ -56,6 +56,13 @@ export default class PatientService{
         return LogPelayananRepository.GetHistoryPemeriksaan(uuid, args);
     }
 
+    static async checkPatientExist(data){
+        const validData = ZodValidator.validate(PatientValidation.CHECK_IDENTITY_VALIDATOR, data);
+        if (!validData) throw new BadRequestException("Bad Request");
+        const result = await PatientRepository.checkExistPatient(validData);
+        return result;
+    }
+
     static async import(data) {
         const result = [];
         data.map((item, index) => {

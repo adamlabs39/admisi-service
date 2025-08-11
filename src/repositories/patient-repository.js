@@ -161,19 +161,15 @@ export default class PatientRepository{
     }
 
 
-    static async checkExistPatient(uuid){
+    static async checkExistPatient(data){
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
         try {
             return await PatientModel.findOne({
-                where: {
-                    [Op.and]: [
-                        {uuid},
-                        {
-                            deletedAt: {
-                                [Op.is]: null
-                            }
-                        }
-                    ]
-                }
+              where: {
+                faskesUuid,
+                [Op.or]: [{ noIdentity: data.no_identity }],
+                [Op.and]: [{ deletedAt: { [Op.is]: null } }],
+              },
             });
         } catch (error) {
             console.log(error);

@@ -25,6 +25,7 @@ import {InsuranceAdmissionModel, RawatJalanModel} from "@adameds/model-sdk/pelay
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
+import { jadwalDokterAntrian } from "../configurations/axios-instance.js";
 
 export default class RawatJalanRepository {
     /**
@@ -147,7 +148,7 @@ export default class RawatJalanRepository {
                 }
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
+                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "no_antrian_farmasi", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
             ],
         };
 
@@ -217,7 +218,7 @@ export default class RawatJalanRepository {
                 attributes: ["start_time", "end_time"],
             },
             ],
-            attributes: ["no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan"],
+            attributes: ["no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi"],
             });
 
             if (!result) throw new NotfoundException("Data tidak ditemukan");
@@ -271,8 +272,8 @@ export default class RawatJalanRepository {
             console.log("data patient", patient);
             data = convertSnakeToCamel(data);
 
-            const jadwalDokter = (await JadwalDokterRepository.getJadwalBy('uuid', data.jadwalDokterUuid)).dataValues;
-            // if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter tidak ditemukan");
+            //* GET JADWAL DOKTER DARI ANTRIAN
+            const jadwalDokter = await this.findJadwalDokterByUuid(data.jadwalDokterUuid);
 
             const dataRJ = {
                 faskesUuid,
@@ -296,7 +297,7 @@ export default class RawatJalanRepository {
             dataRJ.statusRj = 2;
             // dataRJ.noAntrianPoli = antrianPoli.code_antrian_poli;
             // dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
-            dataRJ.jadwalDokterUuid = jadwalDokter.uuid;
+            dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
             // dataRJ.kodeBooking = generateBookingCode();
             dataRJ.noReg = await generateNoReg();
             dataRJ.noPelayanan = await generateNoPelayanan('RJ');
@@ -333,21 +334,21 @@ export default class RawatJalanRepository {
 
     static async update(uuid, data) {
         const update = await sequelizeInstace.transaction(async (t) => {
-            const {faskesUuid} = Ctx.get(CTX_AUTHOR);
+            const { faskesUuid } = Ctx.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
 
             const existingRegist = await RawatJalanModel.findOne({
                 where: {
-                    uuid: uuid,
-                    faskesUuid: faskesUuid,
-                    deletedAt: null
+                uuid: uuid,
+                faskesUuid: faskesUuid,
+                deletedAt: null,
                 },
-                transaction: t
+                transaction: t,
             });
             if (!existingRegist) throw new NotfoundException("ID tidak ditemukan");
 
-            const jadwalDokter = (await JadwalDokterRepository.getJadwalBy('uuid', data.jadwalDokterUuid)).dataValues;
-            if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter tidak ditemukan");
+            //* GET JADWAL DOKTER DARI ANTRIAN
+            const jadwalDokter = await this.findJadwalDokterByUuid(data.jadwalDokterUuid);
 
             data.patientData.patient_uuid = existingRegist.dataValues.patientUuid;
             const patient = await PatientRepository.registPatient(data.patientData, t);
@@ -365,15 +366,14 @@ export default class RawatJalanRepository {
                 lokasiUuid: jadwalDokter.lokasiUuid,
                 complaint: data.complaint,
                 platform: data.platform,
-                paymentMethod: data.paymentMethod === 'TUNAI' ? 1 : 2,
+                noAntrianAdmisi: data.noAntrianAdmisi,
+                noAntrianPoli: data.noAntrianPoli,
+                noAntrianFarmasi: data.noAntrianFarmasi,
+                kodeBooking: data.kodeBooking,
+                paymentMethod: data.paymentMethod === "TUNAI" ? 1 : 2,
             };
 
-            const {
-                statusRj,
-                lokasiUuid,
-                practitionerUuid,
-                jadwalDokterUuid
-            } = existingRegist;
+            const { statusRj, lokasiUuid, practitionerUuid, jadwalDokterUuid } = existingRegist;
 
             if (statusRj === 0) throw new BadRequestException("Data sudah dibatalkan");
             if (statusRj >= 3) throw new BadRequestException("Data telah diproses");
@@ -385,21 +385,24 @@ export default class RawatJalanRepository {
             // const antrianPoli = await generateAntrianPoli(data.jadwalDokterUuid);
             // if (!noAntrianPoli) dataRJ.noAntrianPoli = antrianPoli.code_antrian_poli;
             // if (!jadwalPeriksa) dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
-            if (!jadwalDokterUuid) dataRJ.jadwalDokterUuid = jadwalDokter.uuid;
+            if (!jadwalDokterUuid) dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
 
             if (statusRj === 1) dataRJ.statusRj = 2;
 
-            const updatedRegist = await existingRegist.update(dataRJ, {transaction: t});
+            const updatedRegist = await existingRegist.update(dataRJ, { transaction: t });
 
-            if (data.paymentMethod === 'ASURANSI') {
-                await InsuranceAdmissionRepository.AsuransiPelayanan({
+            if (data.paymentMethod === "ASURANSI") {
+                await InsuranceAdmissionRepository.AsuransiPelayanan(
+                {
                     patientUuid: patient.uuid,
                     penjaminUuid: data.insurance.penjamin_uuid,
                     accountNumber: data.insurance.account_number,
                     classEntitle: data.insurance.class_entitle,
                     noReg: updatedRegist.noReg,
                     admissionType: 1,
-                }, t)
+                },
+                t
+                );
             }
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
@@ -407,10 +410,10 @@ export default class RawatJalanRepository {
                 noreg: updatedRegist.noReg,
                 no_pelayanan: updatedRegist.noPelayanan,
                 practitioner_uuid: updatedRegist.practitionerUuid,
-                jenis_kunjungan: 'RJ',
+                jenis_kunjungan: "RJ",
                 patient_uuid: patient.uuid,
                 lokasi_uuid: updatedRegist.lokasiUuid,
-                payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2
+                payment_method: data.paymentMethod === "TUNAI" ? 1 : 2,
             });
 
             return updatedRegist.dataValues.uuid;
@@ -466,47 +469,46 @@ export default class RawatJalanRepository {
         }
     }
 
-
     static async getAllJadwalDokter() {
-        try{
-            const user = Context.get(CTX_AUTHOR);
+        try {
+            const { data } = await jadwalDokterAntrian.get("/");
+            const jadwalList = data.payload;
 
-            return await JadwalDokterModel.findAll({
-                where: {
-                    faskesUuid: user.faskesUuid,
-                    deletedAt: null
-                },
-                include: [
-                    {
-                        model: PractitionerModel,
-                        as: "practitioner",
-                        required: false,
-                        where: {deletedAt: null},
-                        include: [
-                            {
-                                model: PegawaiModel,
-                                as: "pegawai",
-                                required: true,
-                                where: {deletedAt: null},
-                                attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
-                            }
-                        ],
-                        attributes: ["uuid"]
-                    },
-                    {
-                        model: LokasiModel,
-                        as: "lokasi",
-                        required: false,
-                        where: {deletedAt: null},
-                        attributes: ["uuid", "name", "code"]
-                    }
-                ],
-                attributes: ["uuid", "start_time", "end_time", "day", "kuota", "kuota_non_jkn", "kuota_jkn", "durasi_pelayanan"]
-            });
-        }catch (e) {
-            console.error(e);
-            throw e;
+            return jadwalList
+        } catch (err) {
+            console.error("Error getAllJadwalDokter:", err.message);
+            throw err;
         }
     }
 
+    static async findJadwalDokterByUuid(uuid) {
+        try{
+            const jadwalList = await this.getAllJadwalDokter();
+            let jadwalDokter = null;
+
+            for (const item of jadwalList) {
+            const foundJadwal = item.jadwal_dokter.find((jadwal) => jadwal.jadwal_dokter_uuid === uuid);
+                
+                if (foundJadwal) {
+                    jadwalDokter = {
+                    ...foundJadwal,
+                    practitionerUuid: item.doctor.uuid,
+                    lokasiUuid: item.poli.uuid,
+                    practitionerName: item.doctor.name,
+                    lokasiName: item.poli.name,
+                    practitionerCode: item.doctor.kode_antrian,
+                    lokasiCode: item.poli.kode_antrian,
+                    };
+                    break;
+                }
+            }
+            if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter tidak ditemukan");
+
+            return jadwalDokter;
+
+        } catch (err) {
+            console.error("Error findJadwalDokterByUuid:", err.message);
+            throw err;
+        }
+    }
 }

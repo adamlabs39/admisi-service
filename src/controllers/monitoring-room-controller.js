@@ -29,7 +29,7 @@ export default class MonitoringRoomController {
   static async updateBed(req, res, next) {
     try {
       await MonitoringRoomService.updateBed(req.params.uuid, req.body);
-      return res.status(200).json(successResponse("Success update bed"));
+      return res.status(200).json(successResponse("Data pada bed berhasil disimpan"));
     } catch (error) {
       console.log(error);
       next(error);

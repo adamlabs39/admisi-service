@@ -59,6 +59,18 @@ export default class PatientController {
         }
     }
 
+    static async checkPatientExist(req, res, next) {
+        try {
+            const patient = await PatientService.checkPatientExist(req.body);
+            if (!patient) {
+                return res.status(404).json(successResponse("Pasien belum terdaftar", null));
+            }
+            return res.status(200).json(successResponse("Data berhasil dicek", patient));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     static async import(req,res,next) {
         try{
             const file = req.files?.file || null;
