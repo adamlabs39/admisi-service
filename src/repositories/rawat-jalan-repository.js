@@ -214,7 +214,7 @@ export default class RawatJalanRepository {
                 model: JadwalDokterModel,
                 as: "jadwal_dokter",
                 required: true,
-                where: { deletedAt: { [Op.is]: null } },
+                // where: { deletedAt: { [Op.is]: null } },
                 attributes: ["start_time", "end_time"],
             },
             ],

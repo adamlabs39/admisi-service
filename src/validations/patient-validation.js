@@ -74,7 +74,7 @@ export default class PatientValidation{
             }).transform(value => new Date(value)),
         }),
         multiple_birth: z.boolean().default(false).optional(),
-        birth_time: z.string().max(255),
+        birth_time_baby: z.string().max(255),
         gender: z.string().max(15),
         phone: z.nullable(z.string().max(15)),
         religion: z.nullable(z.string().max(25)),

@@ -186,10 +186,10 @@ export default class MonitoringRoomRepository {
           [Op.and]: [{ uuid }, { faskesUuid: user.faskesUuid }, { deletedAt: { [Op.is]: null } }],
         },
       });
-      if (!result) throw new NotfoundException("Bed not found");
+      if (!result) throw new NotfoundException("Bed tidak ditemukan");
       return result;
     } catch (error) {
-      throw new NotfoundException("Bed not found");
+      throw new NotfoundException("Bed tidak ditemukan");
     }
   }
 
@@ -318,7 +318,7 @@ export default class MonitoringRoomRepository {
             );
           } else {
             console.log("tidak ada uuid");
-             await RoomMonitoringModel.create(
+            await RoomMonitoringModel.create(
               {
                 room_uuid: uuid,
                 faskesUuid: user.faskesUuid,
