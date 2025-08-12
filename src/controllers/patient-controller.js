@@ -74,6 +74,7 @@ export default class PatientController {
     static async import(req,res,next) {
         try{
             const file = req.files?.file || null;
+            if(!file) throw new BadRequestException("Tidak ada file yang diupload");
             const availableMimeTypes = ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
             if(!availableMimeTypes.includes(file.mimetype)) throw new BadRequestException("File yang diupload bukan file excel");
             if(!file) throw new BadRequestException("Tidak ada file yang diupload");

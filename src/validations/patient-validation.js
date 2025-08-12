@@ -32,7 +32,6 @@ export default class PatientValidation{
     })
 
     static PATIENT_IMPORT_VALIDATOR = z.object({
-        no_rm: z.string().max(255),
         title: z.string().max(255),
         name: z.string().max(255),
         identity: z.string().max(255),
