@@ -13,7 +13,7 @@ import {convertSnakeToCamel, generateNoRM, getInfoAge} from "../helper/utility.j
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import DuplicateException from "../exception/duplicate-exception.js";
-
+import PatientService from "../services/patient-service.js";
 
 export default class PatientRepository{
     static async registPatient(data, externalTransaction = null) {
@@ -23,6 +23,8 @@ export default class PatientRepository{
         data.address = convertSnakeToCamel(data.address);
         data.birthDetail = convertSnakeToCamel(data.birthDetail);
 
+        PatientService.patientIdentityFormat(data.identity, data.noIdentity);
+        
         try {
             const uuid = data.patientUuid || null;
             const patient = uuid ? await PatientModel.findOne({
@@ -120,8 +122,11 @@ export default class PatientRepository{
                 let currentInsert = 1;
                 for (let item of data){
                     item = convertSnakeToCamel(item);
+                    console.log("Item :", item);
                     const address = await AddressModel.create({
                         faskesUuid: faskesUuid,
+                        fullAddress: item.address.full_address,
+                        postalCode: item.address.postal_code,
                         ...item.address,
                     }, {transaction: t});
                     const infoAge = getInfoAge(item.birthDetail.birth_date);
@@ -132,20 +137,20 @@ export default class PatientRepository{
                         faskesUuid: faskesUuid
                     }, {transaction: t});
 
-                    // check identity and no_rm
+                    //* CHECK NO IDENTITAS PASIEN
                     const checkPatient =
                         await PatientModel.findOne({
                             where: {
                                 [Op.or]: [
-                                    { identity: item.identity },
-                                    { noRm: item.noRm }
+                                    { no_identity: item.noIdentity },
                                 ]
                             }
                         });
-
-                    if(checkPatient) throw new DuplicateException("Data pada baris ke " + (currentInsert) + " sudah ada");
+                        
+                    if(checkPatient) throw new DuplicateException("Data No Identitas pada baris ke " + (currentInsert) + " sudah ada");
                     await PatientModel.create({
                         ...item,
+                        noRm: await generateNoRM(),
                         addressUuid: address.uuid,
                         birthDetailUuid: birthDetail.uuid,
                         faskesUuid: faskesUuid,
@@ -161,19 +166,15 @@ export default class PatientRepository{
     }
 
 
-    static async checkExistPatient(uuid){
+    static async checkExistPatient(data){
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
         try {
             return await PatientModel.findOne({
-                where: {
-                    [Op.and]: [
-                        {uuid},
-                        {
-                            deletedAt: {
-                                [Op.is]: null
-                            }
-                        }
-                    ]
-                }
+              where: {
+                faskesUuid,
+                [Op.or]: [{ noIdentity: data.no_identity }],
+                [Op.and]: [{ deletedAt: { [Op.is]: null } }],
+              },
             });
         } catch (error) {
             console.log(error);

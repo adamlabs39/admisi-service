@@ -59,9 +59,22 @@ export default class PatientController {
         }
     }
 
+    static async checkPatientExist(req, res, next) {
+        try {
+            const patient = await PatientService.checkPatientExist(req.body);
+            if (!patient) {
+                return res.status(404).json(successResponse("Pasien belum terdaftar", null));
+            }
+            return res.status(200).json(successResponse("Data berhasil dicek", patient));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     static async import(req,res,next) {
         try{
             const file = req.files?.file || null;
+            if(!file) throw new BadRequestException("Tidak ada file yang diupload");
             const availableMimeTypes = ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
             if(!availableMimeTypes.includes(file.mimetype)) throw new BadRequestException("File yang diupload bukan file excel");
             if(!file) throw new BadRequestException("Tidak ada file yang diupload");

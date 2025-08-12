@@ -186,10 +186,10 @@ export default class MonitoringRoomRepository {
           [Op.and]: [{ uuid }, { faskesUuid: user.faskesUuid }, { deletedAt: { [Op.is]: null } }],
         },
       });
-      if (!result) throw new NotfoundException("Bed not found");
+      if (!result) throw new NotfoundException("Bed tidak ditemukan");
       return result;
     } catch (error) {
-      throw new NotfoundException("Bed not found");
+      throw new NotfoundException("Bed tidak ditemukan");
     }
   }
 
@@ -286,12 +286,17 @@ export default class MonitoringRoomRepository {
                 throw new BadRequestException(`Bed sedang digunakan`);
               }
             }
+
+            //* CHECK JIKA NO BED 0
+            if (bedData.no_bed === "0") {
+              throw new BadRequestException(`No bed tidak boleh 0`);
+            }
           }
+
           // check no bed is duplicated
           const checkDuplicate = data.filter((bed) => bed.no_bed === bedData.no_bed);
-
           if (checkDuplicate.length > 1) {
-            throw new DuplicateException(`No bed is duplicated: ${bedData.no_bed}`);
+            throw new DuplicateException(`Terdapat duplikasi no bed: ${bedData.no_bed}`);
           }
 
           if (bedData.uuid) {

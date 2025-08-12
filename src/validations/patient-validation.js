@@ -32,7 +32,6 @@ export default class PatientValidation{
     })
 
     static PATIENT_IMPORT_VALIDATOR = z.object({
-        no_rm: z.string().max(255),
         title: z.string().max(255),
         name: z.string().max(255),
         identity: z.string().max(255),
@@ -74,7 +73,7 @@ export default class PatientValidation{
             }).transform(value => new Date(value)),
         }),
         multiple_birth: z.boolean().default(false).optional(),
-        birth_time: z.string().max(255),
+        birth_time_baby: z.string().max(255),
         gender: z.string().max(15),
         phone: z.nullable(z.string().max(15)),
         religion: z.nullable(z.string().max(25)),
@@ -105,6 +104,10 @@ export default class PatientValidation{
         no_identity: z.string().max(255),
         gender: z.string().max(15),
         phone: z.nullable(z.string().max(15)),
+    });
+
+    static CHECK_IDENTITY_VALIDATOR = z.object({
+        no_identity: z.string().max(255),
     });
 
 }

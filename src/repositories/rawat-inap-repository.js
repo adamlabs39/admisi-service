@@ -214,6 +214,7 @@ export default class RawatInapRepository {
                 statusRi: 3,
                 encounter: "RI",
                 practitionerUuid: practitioner.uuid,
+                tanggalDirawat: moment().unix()
             }, {
                 transaction: transaction,
                 returning: true
@@ -236,7 +237,7 @@ export default class RawatInapRepository {
                 name_baby: patient.name,
                 no_rm_baby: patient.noRm,
                 birth_detail_uuid: patient.birthDetailUuid,
-                birth_time_baby: moment(data.birthtime).format('HH:mm:ss'),
+                birth_time_baby: moment(data.birthTimeBaby).format('HH:mm'),
                 gender_baby: patient.gender,
                 multiple_birth: data.multipleBirth,
                 address_uuid: patient.address.uuid,
@@ -444,6 +445,7 @@ export default class RawatInapRepository {
                 "monitoring_room_uuid",
                 "no_spri",
                 "no_pelayanan",
+                "tanggal_dirawat"
               ],
             });
 

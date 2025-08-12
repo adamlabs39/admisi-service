@@ -132,7 +132,7 @@ export default class LokasiRepository {
 
           let statusOperasional = "Tersedia";
 
-          if (totalBed > 0 && usedBed === totalBed) {
+          if (totalBed >= 0 && usedBed === totalBed) {
             statusOperasional = "Penuh";
           }
           

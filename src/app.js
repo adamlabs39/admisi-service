@@ -12,7 +12,8 @@ import EventListener from "./listeners/event-listener.js";
 import efp from "express-fileupload";
 const app = express();
 const port = process.env.APP_PORT || 8080;
-const host = process.env.APP_HOST || 'localhost';
+//TODO DIGANTI SAAT MERGE
+const host = process.env.APP_HOST || '0.0.0.0';
 const logger = morgan('dev');
 
 app.use(express.json());

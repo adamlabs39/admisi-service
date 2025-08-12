@@ -22,15 +22,15 @@ export default class MonitoringRoomService {
     const uuids = bedLocation.map((loc) => loc.uuid);
 
     console.log("uuids = ", uuids);
-    if (uuids.length === 0)
-      throw new NotfoundException("Lokasi dengan tipe bed tidak ditemukan");
+    // if (uuids.length === 0)
+    //   throw new NotfoundException("Lokasi dengan tipe bed tidak ditemukan");
 
     const bedMonitoring = await MonitoringRoomRepository.getAllBed(uuids);
     const bedMonitoringPlain = bedMonitoring.map((item) => item.toJSON());
 
     // const data = await MonitoringRoomRepository.getDetail(uuid);
-    if (bedMonitoring.length === 0)
-      throw new NotfoundException("not found, bed belum ditambahkan");
+    // if (bedMonitoring.length === 0)
+    //   throw new NotfoundException("not found, bed belum ditambahkan");
 
     const combinedData = bedMonitoringPlain.map((bed) => {
       const location = bedLocation.find((loc) => loc.uuid === bed.lokasi_uuid);
