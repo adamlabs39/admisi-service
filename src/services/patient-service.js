@@ -59,6 +59,14 @@ export default class PatientService {
         return LogPelayananRepository.GetHistoryPemeriksaan(uuid, args);
     }
 
+    static async createPatientFile(uuid, data) {
+        const validData = ZodValidator.validate(PatientValidation.PATIENT_UPLOAD_VALIDATOR, data);
+        if (!validData) throw new BadRequestException("Bad Request"); 
+        const result = await PatientRepository.createPatientFile(uuid, data);
+        if (!result) throw new NotfoundException("Pasien Tidak Ditemukan");
+        return result;
+    }
+
     static async checkPatientExist(data) {
         const validData = ZodValidator.validate(PatientValidation.CHECK_IDENTITY_VALIDATOR, data);
         if (!validData) throw new BadRequestException("Bad Request");

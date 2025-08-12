@@ -14,6 +14,8 @@ import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 import PatientService from "../services/patient-service.js";
+import { ca } from "zod/v4/locales";
+import NotfoundException from "../exception/notfound-exception.js";
 
 export default class PatientRepository{
     static async registPatient(data, externalTransaction = null) {
@@ -315,8 +317,6 @@ export default class PatientRepository{
         }
     }
 
-
-
     static async getOnePatientBy(col, val){
         try {
             return await
@@ -331,4 +331,36 @@ export default class PatientRepository{
             throw error;
         }
     }
+
+    static async createPatientFile(uuid, data){
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
+    try {
+        return await sequelizeInstace.transaction(async (t) => {
+            const patient = await PatientModel.findOne({
+                where: {
+                    uuid,
+                    faskesUuid,
+                    deletedAt: { [Op.is]: null }
+                },
+                transaction: t
+            });
+
+            if (!patient) {
+                throw new NotfoundException("Patient not found");
+            }
+
+            await patient.update({
+                unggahBerkas: JSON.stringify(patient.unggahBerkas)
+            }, { transaction: t });
+
+            return {
+                message: "File berhasil diunggah",
+                files: patient.unggahBerkas
+            };
+        });
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+}
 }

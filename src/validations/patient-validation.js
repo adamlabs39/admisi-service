@@ -29,6 +29,10 @@ export default class PatientValidation{
             village: z.string().max(150),
             postal_code: z.string().max(150),
         })
+    });
+
+    static PATIENT_UPLOAD_VALIDATOR = z.object({
+        unggah_berkas: z.instanceof(File),
     })
 
     static PATIENT_IMPORT_VALIDATOR = z.object({

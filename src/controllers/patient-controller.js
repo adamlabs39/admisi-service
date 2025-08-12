@@ -59,6 +59,15 @@ export default class PatientController {
         }
     }
 
+    static async createPatientFile(req, res, next) {
+        try {
+            const patientFile = await PatientService.createPatientFile(req.params.uuid, req.body);
+            return res.status(201).json(successResponse("Berhasil Menambah File Pasien", patientFile));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     static async checkPatientExist(req, res, next) {
         try {
             const patient = await PatientService.checkPatientExist(req.body);

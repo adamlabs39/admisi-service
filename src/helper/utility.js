@@ -85,24 +85,63 @@ const generateAntrianPoli = async (jadwalUuid) => {
     };
 };
 
+//TODO Dikembalikan
 const generateNoReg = async () => {
-    const today = moment().format('YYMMDD');
-    const { faskesUuid } = Context.get(CTX_AUTHOR);
-    const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
+  const today = moment().format("YYMMDD");
+  const { faskesUuid } = Context.get(CTX_AUTHOR);
+  const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
+  const regPrefix = `REG${today}`;
 
-    const count = (
-        await Promise.all(listModel.map(model =>
-            model.count({
-                where: {
-                    faskesUuid,
-                    createdAt: { [Op.between]: [today, today + 86400] }
-                }
-            })
-        ))
-    ).reduce((total, count) => total + count, 0) + 1;
+  // Find the highest existing registration number for today
+  const existingRegs = await Promise.all(
+    listModel.map((model) =>
+      model.findAll({
+        where: {
+          faskesUuid,
+          noReg: { [Op.like]: `${regPrefix}%` },
+        },
+        attributes: ["noReg"],
+        raw: true,
+      })
+    )
+  );
 
-    return `REG${today}${count.toString().padStart(4, '0')}`;
+  // Flatten the results and extract sequence numbers
+  const allRegs = existingRegs.flat();
+  const sequenceNumbers = allRegs
+    .map((reg) => reg.noReg)
+    .filter((noReg) => noReg && noReg.startsWith(regPrefix))
+    .map((noReg) => parseInt(noReg.substring(regPrefix.length)))
+    .filter((num) => !isNaN(num));
+
+  // Get the next sequence number
+  const nextSequence = sequenceNumbers.length > 0 ? Math.max(...sequenceNumbers) + 1 : 1;
+
+  return `${regPrefix}${nextSequence.toString().padStart(4, "0")}`;
 };
+
+// const generateNoReg = async () => {
+//   const today = moment().format("YYMMDD");
+//   const { faskesUuid } = Context.get(CTX_AUTHOR);
+//   const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
+
+//   const count =
+//     (
+//       await Promise.all(
+//         listModel.map((model) =>
+//           model.count({
+//             where: {
+//               faskesUuid,
+//               createdAt: { [Op.between]: [today, today + 86400] },
+//             },
+//           })
+//         )
+//       )
+//     ).reduce((total, count) => total + count, 0) + 1;
+
+//   return `REG${today}${count.toString().padStart(4, "0")}`;
+// };
+
 
 const generateNoPelayanan = async (service) => {
     const today = moment().format('YYMMDD');
