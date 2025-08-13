@@ -25,7 +25,7 @@ import {InsuranceAdmissionModel, RawatJalanModel} from "@adameds/model-sdk/pelay
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import { jadwalDokterAntrian } from "../configurations/axios-instance.js";
+import { generateNoAntrian, jadwalDokterAntrian } from "../configurations/axios-instance.js";
 
 export default class RawatJalanRepository {
     /**
@@ -220,7 +220,6 @@ export default class RawatJalanRepository {
             ],
             attributes: ["no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi"],
             });
-
             if (!result) throw new NotfoundException("Data tidak ditemukan");
             if (result.dataValues.payment_method === 2) {
                 const insuranceData = await InsuranceAdmissionModel.findOne({
@@ -328,9 +327,13 @@ export default class RawatJalanRepository {
             return regist.dataValues.uuid;
         });
 
+        //*GENERATE NO ANTRIAN
+        await generateNoAntrian.post("/", {
+            rawat_jalan_uuid: create
+        });
+
         return await this.getOne(create);
     }
-
 
     static async update(uuid, data) {
         const update = await sequelizeInstace.transaction(async (t) => {
@@ -415,6 +418,13 @@ export default class RawatJalanRepository {
                 lokasi_uuid: updatedRegist.lokasiUuid,
                 payment_method: data.paymentMethod === "TUNAI" ? 1 : 2,
             });
+
+            //* GENERATE NO ANTRIAN
+            if (!updatedRegist.dataValues.noAntrianPoli) {
+                await generateNoAntrian.post("/", {
+                    rawat_jalan_uuid: updatedRegist.dataValues.uuid,
+                });
+            }
 
             return updatedRegist.dataValues.uuid;
         });

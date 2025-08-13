@@ -85,6 +85,7 @@ export default class PatientRepository{
                 // Check uniqueness for new patients
                 const existingPatient = await PatientModel.findOne({
                     where: {
+                        faskesUuid,
                         noIdentity: data.noIdentity,
                         deletedAt: { [Op.is]: null }
                     },
@@ -351,8 +352,6 @@ export default class PatientRepository{
                     throw new NotfoundException("Patient not found");
                 }
 
-                
-
                 if (!data.unggahBerkas) {
                     throw new BadRequestException("File is required");
                 }
@@ -400,6 +399,33 @@ export default class PatientRepository{
         }catch (error){
             throw error;
         }
+    }
+
+    static async getPatientFile(uuid) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        const patient = await sequelizeInstace.transaction(async (t) => {
+            return await PatientModel.findOne({
+                where: {
+                    uuid,
+                    faskesUuid,
+                    deletedAt: { [Op.is]: null }
+                },
+                attributes: [
+                    "unggahBerkas"
+                ],
+                transaction: t
+            });
+        });
+        if (patient && patient.unggahBerkas) {
+            return {
+                data: patient.unggahBerkas.toString("base64"),
+            };
+        }
+
+        return {
+            hasFile: false,
+            message: "No file uploaded",
+        };
     }
 
 }

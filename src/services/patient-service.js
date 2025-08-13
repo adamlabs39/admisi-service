@@ -74,6 +74,12 @@ export default class PatientService {
         return result;
     }
 
+    static async getPatientFile(uuid) {
+        const result = await PatientRepository.getPatientFile(uuid);
+        if (!result) throw new NotfoundException("File Pasien Tidak Ditemukan");
+        return result;
+    }
+    
     static async checkPatientExist(data) {
         const validData = ZodValidator.validate(PatientValidation.CHECK_IDENTITY_VALIDATOR, data);
         if (!validData) throw new BadRequestException("Bad Request");

@@ -79,6 +79,15 @@ export default class PatientController {
         }
     }
 
+    static async getPatientFile(req, res, next) {
+        try {
+            const patient = await PatientService.getPatientFile(req.params.uuid);
+            return res.status(200).json(successResponse("Berhasil Mendapatkan File Pasien", patient));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     static async checkPatientExist(req, res, next) {
         try {
             const patient = await PatientService.checkPatientExist(req.body);
