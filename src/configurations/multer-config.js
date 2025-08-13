@@ -7,16 +7,12 @@ const upload = multer({
     limits: { fileSize: MAX_UPLOAD * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const allowedMimeTypes = [
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'application/vnd.ms-excel',
-            'application/x-excel',
-            'application/x-msexcel',
-            'application/csv',
+            'application/pdf'
         ];
         if (allowedMimeTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new BadRequestException('Invalid file type, only Excel files are allowed!'), false);
+            cb(new BadRequestException('Type file tidak valid, hanya PDF yang diperbolehkan'), false);
         }
     }
 });

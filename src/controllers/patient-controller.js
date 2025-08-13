@@ -61,7 +61,9 @@ export default class PatientController {
 
     static async createPatientFile(req, res, next) {
         try {
-            const patientFile = await PatientService.createPatientFile(req.params.uuid, req.body);
+            const file = req.files?.unggah_berkas || null;
+            const patientFile = await PatientService.createPatientFile(req.params.uuid, { unggah_berkas: file });
+
             return res.status(201).json(successResponse("Berhasil Menambah File Pasien", patientFile));
         } catch (error) {
             next(error);
