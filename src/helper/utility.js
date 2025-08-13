@@ -86,23 +86,27 @@ const generateAntrianPoli = async (jadwalUuid) => {
 };
 
 const generateNoReg = async () => {
-    const today = moment().format('YYMMDD');
-    const { faskesUuid } = Context.get(CTX_AUTHOR);
-    const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
+const today = moment().format("YYMMDD");
+const { faskesUuid } = Context.get(CTX_AUTHOR);
+const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
 
-    const count = (
-        await Promise.all(listModel.map(model =>
-            model.count({
-                where: {
-                    faskesUuid,
-                    createdAt: { [Op.between]: [today, today + 86400] }
-                }
-            })
-        ))
+const count =
+    (
+    await Promise.all(
+        listModel.map((model) =>
+        model.count({
+            where: {
+            faskesUuid,
+            createdAt: { [Op.between]: [today, today + 86400] },
+            },
+        })
+        )
+    )
     ).reduce((total, count) => total + count, 0) + 1;
 
-    return `REG${today}${count.toString().padStart(4, '0')}`;
+return `REG${today}${count.toString().padStart(4, "0")}`;
 };
+
 
 const generateNoPelayanan = async (service) => {
     const today = moment().format('YYMMDD');

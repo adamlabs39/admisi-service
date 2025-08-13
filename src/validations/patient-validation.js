@@ -29,7 +29,15 @@ export default class PatientValidation{
             village: z.string().max(150),
             postal_code: z.string().max(150),
         })
-    })
+    });
+
+    static PATIENT_UPLOAD_VALIDATOR = z.object({
+        unggah_berkas: z.any().refine(file => file && file.size <= (2 * 1024 * 1024), {
+            message: "Size file harus dibawah 2MB"
+        }).refine(file => file.mimetype === 'application/pdf', {
+            message: "File harus dalam format PDF"
+        }),
+    });
 
     static PATIENT_IMPORT_VALIDATOR = z.object({
         title: z.string().max(255),

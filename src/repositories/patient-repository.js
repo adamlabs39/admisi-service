@@ -14,6 +14,9 @@ import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 import PatientService from "../services/patient-service.js";
+import { ca, fa } from "zod/v4/locales";
+import NotfoundException from "../exception/notfound-exception.js";
+import BadRequestException from "../exception/bad-request-exception.js";
 
 export default class PatientRepository{
     static async registPatient(data, externalTransaction = null) {
@@ -315,8 +318,6 @@ export default class PatientRepository{
         }
     }
 
-
-
     static async getOnePatientBy(col, val){
         try {
             return await
@@ -331,4 +332,74 @@ export default class PatientRepository{
             throw error;
         }
     }
+
+    static async createPatientFile(uuid, data){
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
+        try {
+            return await sequelizeInstace.transaction(async (t) => {
+                data = convertSnakeToCamel(data);
+                const patient = await PatientModel.findOne({
+                    where: {
+                        uuid,
+                        faskesUuid,
+                        deletedAt: { [Op.is]: null }
+                    },
+                    transaction: t
+                });
+
+                if (!patient) {
+                    throw new NotfoundException("Patient not found");
+                }
+
+                
+
+                if (!data.unggahBerkas) {
+                    throw new BadRequestException("File is required");
+                }
+                
+                await patient.update({
+                    unggahBerkas: data.unggahBerkas.data,
+                }, { transaction: t });
+
+                return {
+                    message: "File berhasil diunggah",
+                    name: data.unggahBerkas.name,
+                };
+            });
+        } catch (error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
+    static async deletePatientFIle(uuid){
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        try{
+            return await sequelizeInstace.transaction(async (t) => {
+                return await PatientModel.update(
+                    { 
+                        updatedAt: moment().unix(),
+                        unggahBerkas: null
+                    },
+                    {
+                        where: {
+                            [Op.and]: [
+                                { uuid },
+                                { faskesUuid },
+                                {
+                                    deletedAt: {
+                                        [Op.is]: null
+                                    }
+                                }
+                            ]
+                        },
+                        transaction: t
+                    }
+                );
+            });
+        }catch (error){
+            throw error;
+        }
+    }
+
 }
