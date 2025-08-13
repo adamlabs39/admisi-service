@@ -13,7 +13,7 @@ import efp from "express-fileupload";
 const app = express();
 const port = process.env.APP_PORT || 8080;
 //TODO DIGANTI SAAT MERGE
-const host = process.env.APP_HOST || '0.0.0.0';
+const host = process.env.APP_HOST || 'localhost';
 const logger = morgan('dev');
 
 app.use(express.json());
