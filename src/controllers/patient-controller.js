@@ -70,6 +70,15 @@ export default class PatientController {
         }
     }
 
+    static async deletePatientFile(req, res, next) {
+        try {
+            const patient = await PatientService.deletePatientFile(req.params.uuid);
+            return res.status(200).json(successResponse("Berhasil Menghapus File Pasien", patient));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     static async checkPatientExist(req, res, next) {
         try {
             const patient = await PatientService.checkPatientExist(req.body);

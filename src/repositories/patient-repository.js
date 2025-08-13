@@ -372,7 +372,7 @@ export default class PatientRepository{
         }
     }
 
-    static async deletePatientFIle(uuid){
+    static async deletePatientFile(uuid){
         const { faskesUuid } = Context.get(CTX_AUTHOR);
         try{
             return await sequelizeInstace.transaction(async (t) => {
