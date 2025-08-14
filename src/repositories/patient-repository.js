@@ -207,6 +207,13 @@ export default class PatientRepository{
         try{
             return await sequelizeInstace.transaction(async (t) => {
                 let currentInsert = 1;
+                let i = 0;
+
+                let patientCount = await PatientModel.unscoped().count({
+                where: { faskesUuid },
+                transaction: t,
+                });
+
                 for (let item of data){
                     item = convertSnakeToCamel(item);
                     console.log("Item :", item);
@@ -235,14 +242,21 @@ export default class PatientRepository{
                         });
                         
                     if(checkPatient) throw new DuplicateException("Data No Identitas pada baris ke " + (currentInsert) + " sudah ada");
+
+                    //* Generate NoRM Khusus untuk Import
+                    const currentCount = patientCount + i + 1;
+                    const paddedNumber = currentCount.toString().padStart(6, "0");
+                    const noRm = `${paddedNumber.slice(0, 2)}-${paddedNumber.slice(2, 4)}-${paddedNumber.slice(4, 6)}`;
+
                     await PatientModel.create({
                         ...item,
-                        noRm: await generateNoRM(),
+                        noRm: noRm,
                         addressUuid: address.uuid,
                         birthDetailUuid: birthDetail.uuid,
                         faskesUuid: faskesUuid,
                     }, {transaction: t});
                     currentInsert++;
+                    i++;
                 }
                 return {message: `Berhasil import : ${data.length} data pasien`};
             });
