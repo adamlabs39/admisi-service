@@ -117,7 +117,62 @@ export default class PatientRepository{
             throw error;
         }
     }
-    
+
+    static async registPatientApm(data, externalTransaction = null) {
+        const transaction = externalTransaction || await sequelizeInstace.transaction();
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        data = convertSnakeToCamel(data);
+
+        PatientService.patientIdentityFormat(data.identity, data.noIdentity);
+
+        try {
+            if (data.isNewBorn === undefined || !data.isNewBorn) {
+                data.isNewBorn = false;
+            }
+
+            const uuid = data.patientUuid || null;
+            const patient = uuid ? await PatientModel.findOne({
+                where: { uuid, deletedAt: { [Op.is]: null } },
+                include: [
+                    { model: AddressModel, as: 'address' },
+                    { model: BirthDetailModel, as: 'birth_detail' }
+                ],
+                transaction
+            }) : null;
+
+            if (!uuid && !data.isNewBorn) {
+                // Check uniqueness for new patients
+                const existingPatient = await PatientModel.findOne({
+                    where: {
+                        faskesUuid,
+                        noIdentity: data.noIdentity,
+                        deletedAt: { [Op.is]: null }
+                    },
+                    transaction
+                });
+                if (existingPatient) throw new DuplicateException("No identity already exists");
+            }
+
+            data.faskesUuid = faskesUuid;
+            const patientModel = patient
+                ? await patient.update(data, { transaction })
+                : await PatientModel.create({
+                    ...data,
+                }, { transaction });
+
+            if (!externalTransaction) await transaction.commit();
+
+            return {
+                ...patientModel.get({ plain: true }),
+            };
+
+        }catch (error) {
+            if (!externalTransaction) await transaction.rollback();
+            console.error(error);
+            throw error;
+        }
+
+    }
     
     static async importData(data){
         const {faskesUuid} = Context.get(CTX_AUTHOR);

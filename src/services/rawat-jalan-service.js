@@ -31,6 +31,18 @@ export class RawatJalanService {
         return result;
     }
 
+    static async registRawatJalanApm(data) {
+        const user = Ctx.get(CTX_AUTHOR);
+        const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_APM_VALIDATOR, data);
+        const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
+
+        if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
+        const result = await RawatJalanRepository.createApm(validData);
+        if (!result) throw new Error("Failed to create rawat jalan");
+
+        return result;
+    }
+
     static async updateRawatJalan(uuid, data) {
         const user = Ctx.get(CTX_AUTHOR);
         const checkExist = await checkExistData(RawatJalanModel, uuid);

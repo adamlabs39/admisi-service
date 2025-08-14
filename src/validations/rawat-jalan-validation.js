@@ -29,6 +29,16 @@ export default class RawatJalanValidation {
         path: ["insurance"],
     });
 
+    static RAJAL_APM_VALIDATOR = z.object({
+        patient_data: z.object({
+            patient_uuid: z.optional(z.string().max(255).uuid()),
+            identity: z.string().max(255),
+            no_identity: z.string().max(255),
+        }),
+        platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("ADMISI").optional(),
+        jadwal_dokter_uuid: z.string().max(255).uuid(),
+    })
+
 
     static cancelVisit = z.object({
         list_uuid: z.array(z.string().max(255)),

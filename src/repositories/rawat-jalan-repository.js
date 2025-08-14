@@ -335,6 +335,61 @@ export default class RawatJalanRepository {
         return await this.getOne(create);
     }
 
+    static async createApm(data) {
+        const create = await sequelizeInstace.transaction(async (t) => {
+            const {faskesUuid} = Ctx.get(CTX_AUTHOR);
+            const patient = await PatientRepository.registPatientApm(data.patient_data, t);
+            if (!patient) throw new Error("Failed to create patient");
+            console.log("data patient", patient);
+            data = convertSnakeToCamel(data);
+
+            //* GET JADWAL DOKTER DARI ANTRIAN
+            const jadwalDokter = await this.findJadwalDokterByUuid(data.jadwalDokterUuid);
+
+            const dataRJ = {
+                faskesUuid,
+                patientUuid: patient.uuid,
+                practitionerUuid: jadwalDokter.practitionerUuid,
+                lokasiUuid: jadwalDokter.lokasiUuid,
+                platform: data.platform,
+                tanggalDaftar: moment().unix(),
+            };
+
+            dataRJ.tanggalDaftar = moment().unix();
+            dataRJ.statusRj = 2;
+            dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
+            dataRJ.noReg = await generateNoReg();
+            dataRJ.noPelayanan = await generateNoPelayanan('RJ');
+            const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
+
+
+            // if (data.paymentMethod === 'ASURANSI') {
+            //     await InsuranceAdmissionRepository.AsuransiPelayanan({
+            //         patientUuid: patient.uuid,
+            //         penjaminUuid: data.insurance.penjamin_uuid,
+            //         accountNumber: data.insurance.account_number,
+            //         classEntitle: data.insurance.class_entitle,
+            //         noReg: regist.noReg,
+            //         admissionType: 1,
+            //     }, t)
+            // }
+
+            // eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
+            //     tgl_registrasi: regist.tanggalDaftar,
+            //     noreg: regist.noReg,
+            //     no_pelayanan: regist.noPelayanan,
+            //     jenis_kunjungan: 'RJ',
+            //     practitioner_uuid: regist.practitionerUuid,
+            //     patient_uuid: patient.uuid,
+            //     lokasi_uuid: regist.lokasiUuid,
+            //     payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2
+            // });
+            return regist.dataValues.uuid;
+        });
+
+        return await this.getOne(create);
+    }
+
     static async update(uuid, data) {
         const update = await sequelizeInstace.transaction(async (t) => {
             const { faskesUuid } = Ctx.get(CTX_AUTHOR);
