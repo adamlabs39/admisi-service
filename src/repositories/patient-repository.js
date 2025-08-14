@@ -85,6 +85,7 @@ export default class PatientRepository{
                 // Check uniqueness for new patients
                 const existingPatient = await PatientModel.findOne({
                     where: {
+                        faskesUuid,
                         noIdentity: data.noIdentity,
                         deletedAt: { [Op.is]: null }
                     },
@@ -116,13 +117,103 @@ export default class PatientRepository{
             throw error;
         }
     }
+
+    static async registPatientApm(data, externalTransaction = null) {
+        const transaction = externalTransaction || await sequelizeInstace.transaction();
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        data = convertSnakeToCamel(data);
+
+        PatientService.patientIdentityFormat(data.identity, data.noIdentity);
+
+        try {
+            if (data.isNewBorn === undefined || !data.isNewBorn) {
+                data.isNewBorn = false;
+            }
+
+            const uuid = data.patientUuid || null;
+            const patient = uuid ? await PatientModel.findOne({
+                where: { uuid, deletedAt: { [Op.is]: null } },
+                include: [
+                    { model: AddressModel, as: 'address' },
+                    { model: BirthDetailModel, as: 'birth_detail' }
+                ],
+                transaction
+            }) : null;
+
+            if (!uuid && !data.isNewBorn) {
+                // Check uniqueness for new patients
+                const existingPatient = await PatientModel.findOne({
+                    where: {
+                        faskesUuid,
+                        noIdentity: data.noIdentity,
+                        deletedAt: { [Op.is]: null }
+                    },
+                    transaction
+                });
+                if (existingPatient) throw new DuplicateException("No identity already exists");
+            }
+
+            // Handle address
+            let address = patient ? patient.address : null;
+            if (address) {
+                await address.update(data.address || {}, { transaction });
+            } else if (data.address) {
+                data.address.faskesUuid = faskesUuid;
+                address = await AddressModel.create(data.address, { transaction });
+            }
+            data.addressUuid = address?.uuid || null;
+
     
+
+            if (!data.birthDetailUuid) {
+                const birthDetail = await BirthDetailModel.create({
+                    faskesUuid: faskesUuid,
+                    birthPlace: 'Surabaya',
+                    birthDate: new Date('2000-01-01'),
+                    ageYear: 0,
+                    ageMonth: 0,
+                    ageDay: 0
+                }, { transaction });
+                
+                data.birthDetailUuid = birthDetail.uuid;
+            }
+
+            data.faskesUuid = faskesUuid;
+            const patientModel = patient
+                ? await patient.update(data, { transaction })
+                : await PatientModel.create({
+                    ...data,
+                    noRm: await generateNoRM(),
+                    name: "Nama Pasien",
+                    gender: "Male"
+                }, { transaction });
+
+            if (!externalTransaction) await transaction.commit();
+
+            return {
+                ...patientModel.get({ plain: true }),
+            };
+
+        }catch (error) {
+            if (!externalTransaction) await transaction.rollback();
+            console.error(error);
+            throw error;
+        }
+
+    }
     
     static async importData(data){
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         try{
             return await sequelizeInstace.transaction(async (t) => {
                 let currentInsert = 1;
+                let i = 0;
+
+                let patientCount = await PatientModel.unscoped().count({
+                where: { faskesUuid },
+                transaction: t,
+                });
+
                 for (let item of data){
                     item = convertSnakeToCamel(item);
                     console.log("Item :", item);
@@ -151,14 +242,21 @@ export default class PatientRepository{
                         });
                         
                     if(checkPatient) throw new DuplicateException("Data No Identitas pada baris ke " + (currentInsert) + " sudah ada");
+
+                    //* Generate NoRM Khusus untuk Import
+                    const currentCount = patientCount + i + 1;
+                    const paddedNumber = currentCount.toString().padStart(6, "0");
+                    const noRm = `${paddedNumber.slice(0, 2)}-${paddedNumber.slice(2, 4)}-${paddedNumber.slice(4, 6)}`;
+
                     await PatientModel.create({
                         ...item,
-                        noRm: await generateNoRM(),
+                        noRm: noRm,
                         addressUuid: address.uuid,
                         birthDetailUuid: birthDetail.uuid,
                         faskesUuid: faskesUuid,
                     }, {transaction: t});
                     currentInsert++;
+                    i++;
                 }
                 return {message: `Berhasil import : ${data.length} data pasien`};
             });
@@ -186,11 +284,13 @@ export default class PatientRepository{
     }
 
     static async getPatientByUuid(uuid){
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
         try{
             return await PatientModel.findOne({
                 where: {
                     [Op.and]: [
                         { uuid },
+                        { faskesUuid },
                         {
                             deletedAt: {
                                 [Op.is]: null
@@ -351,8 +451,6 @@ export default class PatientRepository{
                     throw new NotfoundException("Patient not found");
                 }
 
-                
-
                 if (!data.unggahBerkas) {
                     throw new BadRequestException("File is required");
                 }
@@ -372,7 +470,7 @@ export default class PatientRepository{
         }
     }
 
-    static async deletePatientFIle(uuid){
+    static async deletePatientFile(uuid){
         const { faskesUuid } = Context.get(CTX_AUTHOR);
         try{
             return await sequelizeInstace.transaction(async (t) => {
@@ -400,6 +498,33 @@ export default class PatientRepository{
         }catch (error){
             throw error;
         }
+    }
+
+    static async getPatientFile(uuid) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        const patient = await sequelizeInstace.transaction(async (t) => {
+            return await PatientModel.findOne({
+                where: {
+                    uuid,
+                    faskesUuid,
+                    deletedAt: { [Op.is]: null }
+                },
+                attributes: [
+                    "unggahBerkas"
+                ],
+                transaction: t
+            });
+        });
+        if (patient && patient.unggahBerkas) {
+            return {
+                data: patient.unggahBerkas.toString("base64"),
+            };
+        }
+
+        return {
+            hasFile: false,
+            message: "No file uploaded",
+        };
     }
 
 }

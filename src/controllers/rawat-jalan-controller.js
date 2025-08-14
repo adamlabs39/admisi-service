@@ -24,6 +24,15 @@ export default class RawatJalanController {
         }
     }
 
+    static async registRawatJalanApm(request, response, nextFunction) {
+        try {
+            const data = await RawatJalanService.registRawatJalanApm(request.body);
+            return response.status(201).json(successResponse("Rawat Jalan APM Berhasil Dibuat", data));
+        } catch (error) {
+            nextFunction(error);
+        }
+    }
+
     static async updateRawatJalan(request, response, nextFunction) {
         try{
             const data = await RawatJalanService.updateRawatJalan(request.params.uuid, request.body);

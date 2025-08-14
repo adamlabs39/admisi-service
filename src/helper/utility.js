@@ -36,7 +36,7 @@ const paginationHelper = (page, limit, total) => {
 
 const generateNoRM = async () => {
     const { faskesUuid } = Context.get(CTX_AUTHOR);
-    let countPatient = await PatientModel.count({ where: { faskesUuid } });
+    let countPatient = await PatientModel.unscoped().count({ where: { faskesUuid } });
     countPatient += 1;
     const paddedNumber = countPatient.toString().padStart(6, '0');
     return `${paddedNumber.slice(0, 2)}-${paddedNumber.slice(2, 4)}-${paddedNumber.slice(4, 6)}`;

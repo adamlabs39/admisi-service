@@ -25,7 +25,7 @@ import {InsuranceAdmissionModel, RawatJalanModel} from "@adameds/model-sdk/pelay
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import { jadwalDokterAntrian } from "../configurations/axios-instance.js";
+import { generateNoAntrian, jadwalDokterAntrian } from "../configurations/axios-instance.js";
 
 export default class RawatJalanRepository {
     /**
@@ -84,7 +84,7 @@ export default class RawatJalanRepository {
                 {
                     model: PatientModel,
                     as: "patient",
-                    required: true,
+                    required: false,
                     where: {
                         deletedAt: {[Op.is]: null}
                     },
@@ -92,7 +92,7 @@ export default class RawatJalanRepository {
                         {
                             model: AddressModel,
                             as: "address",
-                            required: true,
+                            required: false,
                             where: {
                                 deletedAt: {[Op.is]: null}
                             },
@@ -218,9 +218,8 @@ export default class RawatJalanRepository {
                 attributes: ["start_time", "end_time"],
             },
             ],
-            attributes: ["no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi"],
+            attributes: ["no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj"],
             });
-
             if (!result) throw new NotfoundException("Data tidak ditemukan");
             if (result.dataValues.payment_method === 2) {
                 const insuranceData = await InsuranceAdmissionModel.findOne({
@@ -254,6 +253,48 @@ export default class RawatJalanRepository {
                 };
             }
 
+
+            return {
+                ...result.get(),
+                patient: result.patient.get()
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getOneApm(uuid) {
+        try {
+        const result = await RawatJalanModel.findOne({
+            where: { [Op.and]: [{ uuid }, { deletedAt: { [Op.is]: null } }] },
+            include: [
+            {
+                model: PatientModel,
+                as: "patient",
+                required: false,
+                where: { deletedAt: { [Op.is]: null } },
+                include: [
+                {
+                    model: BirthDetailModel,
+                    as: "birth_detail",
+                    required: false,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["birth_place", "birth_date", "age_year", "age_day", "age_month"],
+                },
+                ],
+                attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status"],
+            },
+            {
+                model: JadwalDokterModel,
+                as: "jadwal_dokter",
+                required: true,
+                where: { deletedAt: { [Op.is]: null } },
+                attributes: ["uuid", "start_time", "end_time"],
+            },
+            ],
+            attributes: ["uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_checkin"],
+            });
+            if (!result) throw new NotfoundException("Data tidak ditemukan");
 
             return {
                 ...result.get(),
@@ -328,9 +369,52 @@ export default class RawatJalanRepository {
             return regist.dataValues.uuid;
         });
 
+        //*GENERATE NO ANTRIAN
+        await generateNoAntrian.post("/", {
+            rawat_jalan_uuid: create
+        });
+
         return await this.getOne(create);
     }
 
+    static async createApm(data) {
+        const create = await sequelizeInstace.transaction(async (t) => {
+            const {faskesUuid} = Ctx.get(CTX_AUTHOR);
+            const patient = await PatientRepository.registPatientApm(data.patient_data, t);
+            if (!patient) throw new Error("Failed to create patient");
+            console.log("data patient", patient);
+            data = convertSnakeToCamel(data);
+
+            //* GET JADWAL DOKTER DARI ANTRIAN
+            const jadwalDokter = await this.findJadwalDokterByUuid(data.jadwalDokterUuid);
+
+            const dataRJ = {
+                faskesUuid,
+                patientUuid: patient.uuid,
+                name: patient.name,
+                noRm: patient.noRm,
+                gender: patient.gender,
+                practitionerUuid: jadwalDokter.practitionerUuid,
+                birthDetailUuid: patient.birthDetailUuid,
+                lokasiUuid: jadwalDokter.lokasiUuid,
+                platform: data.platform,
+                tanggalCheckin: moment().unix(),
+                tanggalDaftar: moment().unix(),
+            };
+
+            dataRJ.tanggalDaftar = moment().unix();
+            dataRJ.tanggalCheckin = moment().unix();
+            dataRJ.statusRj = 2;
+            dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
+            dataRJ.noReg = await generateNoReg();
+            dataRJ.noPelayanan = await generateNoPelayanan('RJ');
+            const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
+
+            return regist.dataValues.uuid;
+        });
+
+        return await this.getOneApm(create);
+    }
 
     static async update(uuid, data) {
         const update = await sequelizeInstace.transaction(async (t) => {
@@ -415,6 +499,13 @@ export default class RawatJalanRepository {
                 lokasi_uuid: updatedRegist.lokasiUuid,
                 payment_method: data.paymentMethod === "TUNAI" ? 1 : 2,
             });
+
+            //* GENERATE NO ANTRIAN
+            if (!updatedRegist.dataValues.noAntrianPoli) {
+                await generateNoAntrian.post("/", {
+                    rawat_jalan_uuid: updatedRegist.dataValues.uuid,
+                });
+            }
 
             return updatedRegist.dataValues.uuid;
         });

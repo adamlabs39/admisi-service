@@ -25,7 +25,7 @@ export default class PatientController {
     static async delete(req, res, next) {
         try {
             const patient = await PatientService.delete(req.params.uuid);
-            return res.status(200).json(patient);
+            return res.status(200).json(successResponse("Berhasil Menghapus Pasien", patient.message));
         } catch (error) {
             next(error);
         }
@@ -65,6 +65,24 @@ export default class PatientController {
             const patientFile = await PatientService.createPatientFile(req.params.uuid, { unggah_berkas: file });
 
             return res.status(201).json(successResponse("Berhasil Menambah File Pasien", patientFile));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async deletePatientFile(req, res, next) {
+        try {
+            const patient = await PatientService.deletePatientFile(req.params.uuid);
+            return res.status(200).json(successResponse("Berhasil Menghapus File Pasien", patient));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    static async getPatientFile(req, res, next) {
+        try {
+            const patient = await PatientService.getPatientFile(req.params.uuid);
+            return res.status(200).json(successResponse("Berhasil Mendapatkan File Pasien", patient));
         } catch (error) {
             next(error);
         }

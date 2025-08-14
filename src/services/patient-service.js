@@ -42,7 +42,9 @@ export default class PatientService {
     }
 
     static async delete(uuid) {
-        return PatientRepository.deletePatient(uuid);
+        const result = await PatientRepository.deletePatient(uuid);
+        if (!result) throw new NotfoundException("Pasien Tidak Ditemukan");
+        return result;
     }
 
     static async findByUuid(uuid) {
@@ -68,6 +70,18 @@ export default class PatientService {
         return result;
     }
 
+    static async deletePatientFile(uuid) {
+        const result = await PatientRepository.deletePatientFile(uuid);
+        if (!result) throw new NotfoundException("Pasien Tidak Ditemukan");
+        return result;
+    }
+
+    static async getPatientFile(uuid) {
+        const result = await PatientRepository.getPatientFile(uuid);
+        if (!result) throw new NotfoundException("File Pasien Tidak Ditemukan");
+        return result;
+    }
+    
     static async checkPatientExist(data) {
         const validData = ZodValidator.validate(PatientValidation.CHECK_IDENTITY_VALIDATOR, data);
         if (!validData) throw new BadRequestException("Bad Request");

@@ -24,6 +24,7 @@ routes.use(AuthorizationMiddleware);
 // Rawat Jalan
 routes.get("/rawat-jalan", RawatJalanController.getAll);
 routes.post("/rawat-jalan", RawatJalanController.registRawatJalan);
+routes.post("/rawat-jalan/apm", RawatJalanController.registRawatJalanApm);
 routes.get(
   "/rawat-jalan/jadwal-dokter",
   RawatJalanController.getAllJadwalDokter
@@ -57,8 +58,11 @@ routes.post("/patient/import", PatientController.import);
 routes.put("/patient/:uuid", PatientController.update);
 routes.delete("/patient/:uuid", PatientController.delete);
 routes.get("/patient/history/:uuid", PatientController.getHistoryPatient);
-routes.put("/patient/upload/:uuid",  PatientController.createPatientFile);
+routes.get("/patient/file/:uuid", PatientController.getPatientFile);
+routes.put("/patient/file/:uuid",  PatientController.createPatientFile);
+routes.delete("/patient/file/:uuid", PatientController.deletePatientFile);
 routes.post("/patient/check-patient", PatientController.checkPatientExist);
+
 
 // Monitoring Room
 routes.get("/monitoring-rooms", MonitoringRoomController.getAllRoom);
