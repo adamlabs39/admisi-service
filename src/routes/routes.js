@@ -17,13 +17,13 @@ import upload from "../configurations/multer-config.js";
 const routes = express.Router();
 
 //TODO DIGANTI SAAT MERGE
+// Api Key
+routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
+
 routes.use(AuthorizationMiddleware);
 // routes.use(async (req, res, next) => {
 //     Context.set(CTX_AUTHOR, req.author);
 // });
-
-// Api Key
-routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
 
 // Rawat Jalan
 routes.get("/rawat-jalan", RawatJalanController.getAll);

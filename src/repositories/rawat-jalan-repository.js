@@ -413,10 +413,10 @@ export default class RawatJalanRepository {
             return regist.dataValues.uuid;
         });
 
-        //*GENERATE NO ANTRIAN
-        await generateNoAntrian.post("/", {
-            rawat_jalan_uuid: create
-        });
+           //*GENERATE NO ANTRIAN
+            await generateNoAntrian.post("/", {
+                rawat_jalan_uuid: create,
+            });
 
         return await this.getOneApm(create);
     }
