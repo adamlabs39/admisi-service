@@ -84,7 +84,7 @@ export default class RawatJalanRepository {
                 {
                     model: PatientModel,
                     as: "patient",
-                    required: true,
+                    required: false,
                     where: {
                         deletedAt: {[Op.is]: null}
                     },
@@ -92,7 +92,7 @@ export default class RawatJalanRepository {
                         {
                             model: AddressModel,
                             as: "address",
-                            required: true,
+                            required: false,
                             where: {
                                 deletedAt: {[Op.is]: null}
                             },
@@ -218,7 +218,7 @@ export default class RawatJalanRepository {
                 attributes: ["start_time", "end_time"],
             },
             ],
-            attributes: ["no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi"],
+            attributes: ["no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj"],
             });
             if (!result) throw new NotfoundException("Data tidak ditemukan");
             if (result.dataValues.payment_method === 2) {
@@ -253,6 +253,48 @@ export default class RawatJalanRepository {
                 };
             }
 
+
+            return {
+                ...result.get(),
+                patient: result.patient.get()
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    static async getOneApm(uuid) {
+        try {
+        const result = await RawatJalanModel.findOne({
+            where: { [Op.and]: [{ uuid }, { deletedAt: { [Op.is]: null } }] },
+            include: [
+            {
+                model: PatientModel,
+                as: "patient",
+                required: false,
+                where: { deletedAt: { [Op.is]: null } },
+                include: [
+                {
+                    model: BirthDetailModel,
+                    as: "birth_detail",
+                    required: false,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["birth_place", "birth_date", "age_year", "age_day", "age_month"],
+                },
+                ],
+                attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status"],
+            },
+            {
+                model: JadwalDokterModel,
+                as: "jadwal_dokter",
+                required: true,
+                where: { deletedAt: { [Op.is]: null } },
+                attributes: ["uuid", "start_time", "end_time"],
+            },
+            ],
+            attributes: ["uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_checkin"],
+            });
+            if (!result) throw new NotfoundException("Data tidak ditemukan");
 
             return {
                 ...result.get(),
@@ -349,45 +391,29 @@ export default class RawatJalanRepository {
             const dataRJ = {
                 faskesUuid,
                 patientUuid: patient.uuid,
+                name: patient.name,
+                noRm: patient.noRm,
+                gender: patient.gender,
                 practitionerUuid: jadwalDokter.practitionerUuid,
+                birthDetailUuid: patient.birthDetailUuid,
                 lokasiUuid: jadwalDokter.lokasiUuid,
                 platform: data.platform,
+                tanggalCheckin: moment().unix(),
                 tanggalDaftar: moment().unix(),
             };
 
             dataRJ.tanggalDaftar = moment().unix();
+            dataRJ.tanggalCheckin = moment().unix();
             dataRJ.statusRj = 2;
             dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
             dataRJ.noReg = await generateNoReg();
             dataRJ.noPelayanan = await generateNoPelayanan('RJ');
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
-
-            // if (data.paymentMethod === 'ASURANSI') {
-            //     await InsuranceAdmissionRepository.AsuransiPelayanan({
-            //         patientUuid: patient.uuid,
-            //         penjaminUuid: data.insurance.penjamin_uuid,
-            //         accountNumber: data.insurance.account_number,
-            //         classEntitle: data.insurance.class_entitle,
-            //         noReg: regist.noReg,
-            //         admissionType: 1,
-            //     }, t)
-            // }
-
-            // eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
-            //     tgl_registrasi: regist.tanggalDaftar,
-            //     noreg: regist.noReg,
-            //     no_pelayanan: regist.noPelayanan,
-            //     jenis_kunjungan: 'RJ',
-            //     practitioner_uuid: regist.practitionerUuid,
-            //     patient_uuid: patient.uuid,
-            //     lokasi_uuid: regist.lokasiUuid,
-            //     payment_method: data.paymentMethod === 'TUNAI' ? 1 : 2
-            // });
             return regist.dataValues.uuid;
         });
 
-        return await this.getOne(create);
+        return await this.getOneApm(create);
     }
 
     static async update(uuid, data) {

@@ -153,11 +153,39 @@ export default class PatientRepository{
                 if (existingPatient) throw new DuplicateException("No identity already exists");
             }
 
+            // Handle address
+            let address = patient ? patient.address : null;
+            if (address) {
+                await address.update(data.address || {}, { transaction });
+            } else if (data.address) {
+                data.address.faskesUuid = faskesUuid;
+                address = await AddressModel.create(data.address, { transaction });
+            }
+            data.addressUuid = address?.uuid || null;
+
+    
+
+            if (!data.birthDetailUuid) {
+                const birthDetail = await BirthDetailModel.create({
+                    faskesUuid: faskesUuid,
+                    birthPlace: 'Surabaya',
+                    birthDate: new Date('2000-01-01'),
+                    ageYear: 0,
+                    ageMonth: 0,
+                    ageDay: 0
+                }, { transaction });
+                
+                data.birthDetailUuid = birthDetail.uuid;
+            }
+
             data.faskesUuid = faskesUuid;
             const patientModel = patient
                 ? await patient.update(data, { transaction })
                 : await PatientModel.create({
                     ...data,
+                    noRm: await generateNoRM(),
+                    name: "Nama Pasien",
+                    gender: "Male"
                 }, { transaction });
 
             if (!externalTransaction) await transaction.commit();

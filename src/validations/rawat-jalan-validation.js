@@ -35,7 +35,7 @@ export default class RawatJalanValidation {
             identity: z.string().max(255),
             no_identity: z.string().max(255),
         }),
-        platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("ADMISI").optional(),
+        platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("APM").optional(),
         jadwal_dokter_uuid: z.string().max(255).uuid(),
     })
 
