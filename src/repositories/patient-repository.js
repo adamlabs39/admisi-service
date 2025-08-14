@@ -187,11 +187,13 @@ export default class PatientRepository{
     }
 
     static async getPatientByUuid(uuid){
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
         try{
             return await PatientModel.findOne({
                 where: {
                     [Op.and]: [
                         { uuid },
+                        { faskesUuid },
                         {
                             deletedAt: {
                                 [Op.is]: null

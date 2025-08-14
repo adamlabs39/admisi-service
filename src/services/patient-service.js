@@ -42,7 +42,9 @@ export default class PatientService {
     }
 
     static async delete(uuid) {
-        return PatientRepository.deletePatient(uuid);
+        const result = await PatientRepository.deletePatient(uuid);
+        if (!result) throw new NotfoundException("Pasien Tidak Ditemukan");
+        return result;
     }
 
     static async findByUuid(uuid) {

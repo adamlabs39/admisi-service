@@ -25,7 +25,7 @@ export default class PatientController {
     static async delete(req, res, next) {
         try {
             const patient = await PatientService.delete(req.params.uuid);
-            return res.status(200).json(patient);
+            return res.status(200).json(successResponse("Berhasil Menghapus Pasien", patient.message));
         } catch (error) {
             next(error);
         }
