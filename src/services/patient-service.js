@@ -92,7 +92,7 @@ export default class PatientService {
     static patientIdentityFormat(identitas, noIdentitas){
         if (identitas === "KTP" && !/^.{16}$/.test(noIdentitas)) {
             throw new BadRequestException("Format No KTP tidak valid");
-        } else if (identitas === "Passport" && !/^.{8}$/.test(noIdentitas)) {
+        } else if (identitas === "Passport" && !/^.{9}$/.test(noIdentitas)) {
             throw new BadRequestException("Format No Passport tidak valid");
         }
     }

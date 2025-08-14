@@ -7,6 +7,7 @@ import GeneralConsentController from "../controllers/general-consent-controller.
 import RawatInapController from "../controllers/rawat-inap-controller.js";
 import InstalasiGawatDaruratController from "../controllers/instalasi-gawat-darurat-controller.js";
 import ReportController from "../controllers/report-controller.js";
+import apiKeyCheckPatient from "../middlewares/apiKey-middleware.js";
 import authorizationSdk from "@adameds/authorization-sdk";
 import { Context } from "../middlewares/context.js";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
@@ -20,6 +21,9 @@ routes.use(AuthorizationMiddleware);
 // routes.use(async (req, res, next) => {
 //     Context.set(CTX_AUTHOR, req.author);
 // });
+
+// Api Key
+routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
 
 // Rawat Jalan
 routes.get("/rawat-jalan", RawatJalanController.getAll);
@@ -62,7 +66,6 @@ routes.get("/patient/file/:uuid", PatientController.getPatientFile);
 routes.put("/patient/file/:uuid",  PatientController.createPatientFile);
 routes.delete("/patient/file/:uuid", PatientController.deletePatientFile);
 routes.post("/patient/check-patient", PatientController.checkPatientExist);
-
 
 // Monitoring Room
 routes.get("/monitoring-rooms", MonitoringRoomController.getAllRoom);
