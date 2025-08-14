@@ -92,7 +92,7 @@ export default class PatientController {
         try {
             const patient = await PatientService.checkPatientExist(req.body);
             if (!patient) {
-                return res.status(404).json(successResponse("Pasien belum terdaftar", null));
+                return res.status(404).json(successResponse("Pasien belum terdaftar", { noRm: null }));
             }
             return res.status(200).json(successResponse("Data berhasil dicek", patient));
         } catch (error) {

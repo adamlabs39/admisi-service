@@ -91,9 +91,9 @@ export default class PatientService {
 
     static patientIdentityFormat(identitas, noIdentitas){
         if (identitas === "KTP" && !/^.{16}$/.test(noIdentitas)) {
-            throw new BadRequestException("Format No KTP tidak valid");
-        } else if (identitas === "Passport" && !/^.{9}$/.test(noIdentitas)) {
-            throw new BadRequestException("Format No Passport tidak valid");
+            throw new BadRequestException("Nomor KTP harus terdiri dari 16 digit angka");
+        } else if (identitas === "Passport" && !/^[A-Za-z].{8}$/.test(noIdentitas)) {
+            throw new BadRequestException("Nomor paspor harus diawali 1 huruf, diikuti 8 digit angka");
         }
     }
 
