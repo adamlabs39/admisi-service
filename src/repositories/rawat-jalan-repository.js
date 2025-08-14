@@ -190,20 +190,20 @@ export default class RawatJalanRepository {
             {
                 model: PatientModel,
                 as: "patient",
-                required: true,
+                required: false,
                 where: { deletedAt: { [Op.is]: null } },
                 include: [
                 {
                     model: AddressModel,
                     as: "address",
-                    required: true,
+                    required: false,
                     where: { deletedAt: { [Op.is]: null } },
                     attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"],
                 },
                 {
                     model: BirthDetailModel,
                     as: "birth_detail",
-                    required: true,
+                    required: false,
                     where: { deletedAt: { [Op.is]: null } },
                     attributes: ["birth_place", "birth_date", "age_year", "age_day", "age_month"],
                 },
@@ -411,6 +411,11 @@ export default class RawatJalanRepository {
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
             return regist.dataValues.uuid;
+        });
+
+        //*GENERATE NO ANTRIAN
+        await generateNoAntrian.post("/", {
+            rawat_jalan_uuid: create
         });
 
         return await this.getOneApm(create);
