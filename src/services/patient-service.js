@@ -72,7 +72,7 @@ export default class PatientService {
 
     static async deletePatientFile(uuid) {
         const result = await PatientRepository.deletePatientFile(uuid);
-        if (!result) throw new NotfoundException("Gagal menghapus data pasien");
+        if (!result) throw new BadRequestException("Gagal menghapus data pasien");
         return result;
     }
 
