@@ -476,11 +476,35 @@ export default class PatientRepository{
     static async deletePatientFile(uuid){
         const { faskesUuid } = Context.get(CTX_AUTHOR);
         try{
-            return await sequelizeInstace.transaction(async (t) => {
+            const result = await sequelizeInstace.transaction(async (t) => {
+                const patient = await PatientModel.findOne({
+                    where: {
+                        [Op.and]: [
+                            { uuid },
+                            { faskesUuid },
+                            {
+                                deletedAt: {
+                                    [Op.is]: null
+                                }
+                            }
+                        ]
+                    },
+                    attributes: ["uuid", "unggahBerkas", "berkasInfo"],
+                    transaction: t
+                });
+
+                if (!patient) {
+                    throw new NotfoundException("Patient tidak ditemukan");
+                }
+                if (!patient.unggahBerkas) {
+                    throw new BadRequestException("Tidak ada file yang diunggah");
+                }
+
                 return await PatientModel.update(
-                    { 
+                    {
                         updatedAt: moment().unix(),
-                        unggahBerkas: null
+                        unggahBerkas: null,
+                        berkasInfo: null
                     },
                     {
                         where: {
@@ -498,7 +522,9 @@ export default class PatientRepository{
                     }
                 );
             });
-        }catch (error){
+            
+            return result;
+        } catch (error) {
             throw error;
         }
     }
