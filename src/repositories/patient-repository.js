@@ -526,6 +526,7 @@ export default class PatientRepository{
         if (patient && patient.unggahBerkas) {
             return {
                 berkasInfo: patient.berkasInfo,
+                tipe: "pdf",
                 data: patient.unggahBerkas.toString("base64"),
             };
         }

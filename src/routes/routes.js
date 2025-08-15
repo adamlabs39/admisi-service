@@ -11,7 +11,6 @@ import apiKeyCheckPatient from "../middlewares/apiKey-middleware.js";
 import authorizationSdk from "@adameds/authorization-sdk";
 import { Context } from "../middlewares/context.js";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
-
 import upload from "../configurations/multer-config.js";
 
 const routes = express.Router();
@@ -68,7 +67,10 @@ routes.get("/patient/file/:uuid", PatientController.getPatientFile);
 routes.put("/patient/file/:uuid",  PatientController.createPatientFile);
 routes.delete("/patient/file/:uuid", PatientController.deletePatientFile);
 routes.post("/patient/check-patient/apm", PatientController.checkPatientExist);
-
+routes.get("/patient/do/download", (req, res) => {
+  const file = `${__dirname}/template/patient-template.xlsx`;
+  res.download(file);
+});
 // Monitoring Room
 routes.get("/monitoring-rooms", MonitoringRoomController.getAllRoom);
 routes.get("/monitoring-rooms/:uuid", MonitoringRoomController.getDetailRoom);
