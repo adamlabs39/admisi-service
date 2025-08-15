@@ -35,8 +35,8 @@ export class RawatJalanService {
         const user = Ctx.get(CTX_AUTHOR);
         const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_APM_VALIDATOR, data);
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
-
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
+
         const result = await RawatJalanRepository.createApm(validData);
         if (!result) throw new Error("Failed to create rawat jalan");
 
@@ -47,6 +47,8 @@ export class RawatJalanService {
         const user = Ctx.get(CTX_AUTHOR);
         const checkExist = await checkExistData(RawatJalanModel, uuid);
         if(!checkExist) throw new NotfoundException('Data tidak ditemukan');
+
+        console.log("data", data);
 
         let validData;
 
@@ -67,7 +69,7 @@ export class RawatJalanService {
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
-        const result = await RawatJalanRepository.update(uuid, data);
+        const result = await RawatJalanRepository.update(uuid, validData);
         if (!result) throw new Error("Failed to create rawat jalan");
 
         return result;
@@ -86,6 +88,7 @@ export class RawatJalanService {
     static async getDetail(uuid){
         const result = await RawatJalanRepository.getOne(uuid);
         if(!result) throw new BadRequestException("Data not found");
+        console.log("Detail Pasien: ", result);
         return result;
     }
 

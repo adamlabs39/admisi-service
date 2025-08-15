@@ -41,6 +41,7 @@ export default class RawatJalanValidation {
         kode_booking: z.string().max(255).optional(),
         platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("APM").optional(),
         jadwal_dokter_uuid: z.string().max(255).uuid(),
+        is_pasien_baru: z.boolean().optional()
     })
 
 
