@@ -455,11 +455,16 @@ export default class PatientRepository{
                 
                 await patient.update({
                     unggahBerkas: data.unggahBerkas.data,
+                    berkasInfo: {
+                        name: data.unggahBerkas.name,
+                        tanggalUnggah: moment().unix()
+                    }
                 }, { transaction: t });
 
                 return {
                     message: "File berhasil diunggah",
                     name: data.unggahBerkas.name,
+                    tanggalUnggah: moment().unix()
                 };
             });
         } catch (error) {
@@ -508,20 +513,26 @@ export default class PatientRepository{
                     deletedAt: { [Op.is]: null }
                 },
                 attributes: [
-                    "unggahBerkas"
+                    "unggahBerkas", "berkasInfo"
                 ],
                 transaction: t
             });
         });
+
+        if (!patient) {
+            throw new NotfoundException("Patient not found");
+        }
+
         if (patient && patient.unggahBerkas) {
             return {
+                berkasInfo: patient.berkasInfo,
+                tipe: "pdf",
                 data: patient.unggahBerkas.toString("base64"),
             };
         }
 
         return {
-            hasFile: false,
-            message: "No file uploaded",
+            message: "Tidak ada file yang diunggah",
         };
     }
 

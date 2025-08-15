@@ -48,13 +48,26 @@ export class RawatJalanService {
         const checkExist = await checkExistData(RawatJalanModel, uuid);
         if(!checkExist) throw new NotfoundException('Data tidak ditemukan');
 
-        const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
-        if(validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Insurance data is required");
+        let validData;
 
+        //* Check platform untuk validasi
+        if (data.platform === "APM") {
+            validData = ZodValidator.validate(RawatJalanValidation.RAJAL_APM_VALIDATOR, data);
+            if (!validData) throw new BadRequestException("Bad Request");
+
+        } else if (data.platform === "ADMISI") {
+            validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
+            if (!validData) throw new BadRequestException("Bad Request");
+            if (validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Insurance data is required");
+
+        } else {
+        throw new BadRequestException("Platform tidak valid");
+        }
+        
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
-        const result = await RawatJalanRepository.update(uuid, validData);
+        const result = await RawatJalanRepository.update(uuid, data);
         if (!result) throw new Error("Failed to create rawat jalan");
 
         return result;

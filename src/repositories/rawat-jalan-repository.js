@@ -218,7 +218,7 @@ export default class RawatJalanRepository {
                 attributes: ["start_time", "end_time"],
             },
             ],
-            attributes: ["no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj"],
+            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj"],
             });
             if (!result) throw new NotfoundException("Data tidak ditemukan");
             if (result.dataValues.payment_method === 2) {
@@ -292,7 +292,7 @@ export default class RawatJalanRepository {
                 attributes: ["uuid", "start_time", "end_time"],
             },
             ],
-            attributes: ["uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_checkin"],
+            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_checkin"],
             });
             if (!result) throw new NotfoundException("Data tidak ditemukan");
 
