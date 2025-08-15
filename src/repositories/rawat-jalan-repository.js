@@ -292,7 +292,7 @@ export default class RawatJalanRepository {
                 attributes: ["uuid", "start_time", "end_time"],
             },
             ],
-            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_checkin"],
+            attributes: ["uuid", "faskes_uuid",  "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_checkin"],
             });
             if (!result) throw new NotfoundException("Data tidak ditemukan");
 
@@ -315,7 +315,6 @@ export default class RawatJalanRepository {
 
             //* GET JADWAL DOKTER DARI ANTRIAN
             const jadwalDokter = await this.findJadwalDokterByUuid(data.jadwalDokterUuid);
-
             const dataRJ = {
                 faskesUuid,
                 patientUuid: patient.uuid,
@@ -416,6 +415,7 @@ export default class RawatJalanRepository {
            //*GENERATE NO ANTRIAN
             await generateNoAntrian.post("/", {
                 rawat_jalan_uuid: create,
+                is_pasien_baru: data.isPasienBaru
             });
 
         return await this.getOneApm(create);
