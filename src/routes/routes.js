@@ -16,10 +16,12 @@ import upload from "../configurations/multer-config.js";
 
 const routes = express.Router();
 
-//TODO DIGANTI SAAT MERGE
-// Api Key
+
+//* Api Key
 routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
 
+
+//TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);
 // routes.use(async (req, res, next) => {
 //     Context.set(CTX_AUTHOR, req.author);
@@ -65,7 +67,7 @@ routes.get("/patient/history/:uuid", PatientController.getHistoryPatient);
 routes.get("/patient/file/:uuid", PatientController.getPatientFile);
 routes.put("/patient/file/:uuid",  PatientController.createPatientFile);
 routes.delete("/patient/file/:uuid", PatientController.deletePatientFile);
-routes.post("/patient/check-patient", PatientController.checkPatientExist);
+routes.post("/patient/check-patient/apm", PatientController.checkPatientExist);
 
 // Monitoring Room
 routes.get("/monitoring-rooms", MonitoringRoomController.getAllRoom);

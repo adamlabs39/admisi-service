@@ -82,6 +82,14 @@ PatientModel.init(
             type: DataTypes.BLOB,
             allowNull: true,
         },
+        berkasInfo: {
+            type: DataTypes.JSONB,
+            allowNull: true,
+        },
+        noKk: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
         ...fieldTime
     },
     {
