@@ -52,20 +52,16 @@ export class RawatJalanService {
 
         let validData;
 
+        console.log(data)
         //* Check platform untuk validasi
         if (data.platform === "APM") {
             validData = ZodValidator.validate(RawatJalanValidation.RAJAL_APM_VALIDATOR, data);
             if (!validData) throw new BadRequestException("Bad Request");
-
-        } else if (data.platform === "ADMISI") {
+        }else {
             validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
             if (!validData) throw new BadRequestException("Bad Request");
             if (validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Insurance data is required");
-
-        } else {
-        throw new BadRequestException("Platform tidak valid");
         }
-        
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 
