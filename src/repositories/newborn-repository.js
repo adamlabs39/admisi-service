@@ -74,10 +74,10 @@ export default class newBornRepository {
                         model: BirthDetailModel,
                         as: 'birth_detail',
                         attributes: ["birth_place", "birth_date"]
-                    }
+                    },
                 ],
                 attributes: [
-                    "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"
+                    "uuid", "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"
                 ]
             }
 
