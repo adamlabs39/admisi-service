@@ -462,6 +462,7 @@ export default class PatientRepository{
                 }, { transaction: t });
 
                 return {
+                    uuid: patient.uuid,
                     message: "File berhasil diunggah",
                     name: data.unggahBerkas.name,
                     tanggalUnggah: moment().unix()
@@ -539,7 +540,7 @@ export default class PatientRepository{
                     deletedAt: { [Op.is]: null }
                 },
                 attributes: [
-                    "unggahBerkas", "berkasInfo"
+                    "uuid", "unggahBerkas", "berkasInfo"
                 ],
                 transaction: t
             });
@@ -551,6 +552,7 @@ export default class PatientRepository{
 
         if (patient && patient.unggahBerkas) {
             return {
+                uuid: patient.uuid,
                 berkasInfo: patient.berkasInfo,
                 tipe: "pdf",
                 data: patient.unggahBerkas.toString("base64"),

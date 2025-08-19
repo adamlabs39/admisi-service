@@ -241,7 +241,7 @@ export default class RawatInapRepository {
                 gender_baby: patient.gender,
                 multiple_birth: data.multipleBirth,
                 address_uuid: patient.address.uuid,
-                tanggal_daftar: moment().unix(),
+                tanggal_daftar: moment().format("YYYY-MM-DD"),
                 status: true,
             }, transaction);
 

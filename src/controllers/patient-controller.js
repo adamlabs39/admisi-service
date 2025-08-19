@@ -2,6 +2,9 @@ import PatientService from "../services/patient-service.js";
 import successResponse from "../responses/success-response.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 import XLSX from "xlsx";
+import path from "path";
+import fs from "fs";
+
 export default class PatientController {
     static async create(req, res, next) {
         try {
@@ -117,4 +120,23 @@ export default class PatientController {
             next(error);
         }
     }
+
+    static downloadImportFile = (req, res) => {
+        const filename = "Format Import Pasien.xlsx";
+        const filePath = path.resolve(process.cwd(), "src", "templates", filename);
+
+        fs.access(filePath, fs.constants.R_OK, (err) => {
+            if (err) {
+                return res.status(404).json({ message: "File tidak ditemukan" });
+            }
+
+            res.download(filePath, filename, (downloadErr) => {
+                if (downloadErr) {
+                    if (!res.headersSent) {
+                        res.status(500).json({ message: "Gagal Download file" });
+                    }
+                }
+            });
+        });
+    };
 }
