@@ -12,6 +12,7 @@ import authorizationSdk from "@adameds/authorization-sdk";
 import { Context } from "../middlewares/context.js";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
 import upload from "../configurations/multer-config.js";
+import ExportReportController from "../controllers/export-report-controller.js";
 
 const routes = express.Router();
 
@@ -25,6 +26,8 @@ routes.use(AuthorizationMiddleware);
 // routes.use(async (req, res, next) => {
 //     Context.set(CTX_AUTHOR, req.author);
 // });
+
+// Rawat jalan
 routes.get("/rawat-jalan", RawatJalanController.getAll);
 routes.post("/rawat-jalan", RawatJalanController.registRawatJalan);
 routes.post("/rawat-jalan/apm", RawatJalanController.registRawatJalanApm);
@@ -81,4 +84,7 @@ routes.get("/report/cancel-visit", ReportController.getCancelVisitReport);
 routes.get("/report/room", ReportController.getReportRoom);
 routes.get("/report/rawat-inap", ReportController.getReportRawatInap);
 routes.get("/report/new-born", ReportController.getReportNewBorn);
+
+// Report Excel
+routes.get("/export/kunjungan", ExportReportController.getExportKunjungan);
 export default routes;

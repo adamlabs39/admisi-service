@@ -148,7 +148,7 @@ export default class RawatJalanRepository {
                 }
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "no_antrian_farmasi", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
+                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "no_antrian_farmasi", "kode_booking", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
             ],
         };
 
@@ -369,9 +369,13 @@ export default class RawatJalanRepository {
         });
 
         //*GENERATE NO ANTRIAN
-        await generateNoAntrian.post("/", {
+        try{
+            await generateNoAntrian.post("/", {
             rawat_jalan_uuid: create
         });
+        } catch (error) {
+            console.error("Error generating no antrian:", error);
+        }
 
         return await this.getOne(create);
     }
@@ -506,10 +510,14 @@ export default class RawatJalanRepository {
             });
 
             //* GENERATE NO ANTRIAN
-            if (!updatedRegist.dataValues.noAntrianPoli) {
-                await generateNoAntrian.post("/", {
-                    rawat_jalan_uuid: updatedRegist.dataValues.uuid,
-                });
+            try {
+                if (!updatedRegist.dataValues.noAntrianPoli) {
+                    await generateNoAntrian.post("/", {
+                        rawat_jalan_uuid: updatedRegist.dataValues.uuid,
+                    });
+                }
+            } catch (error) {
+                console.error("Error generating no antrian:", error);
             }
 
             return updatedRegist.dataValues.uuid;

@@ -641,6 +641,9 @@ export default class RawatInapRepository {
                 },
               ],
               attributes: ["no_rm", "tanggal_daftar", "tanggal_dirawat", "discharge_date"],
+              where: {
+                dischargeDate: { [Op.ne]: null }
+              }
             };
 
             return await Pagination.init(
