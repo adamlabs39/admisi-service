@@ -16,7 +16,7 @@ import upload from "../configurations/multer-config.js";
 const routes = express.Router();
 
 
-//* Api Key
+// Routes Mobile
 routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
 
 
@@ -25,21 +25,12 @@ routes.use(AuthorizationMiddleware);
 // routes.use(async (req, res, next) => {
 //     Context.set(CTX_AUTHOR, req.author);
 // });
-
-// Rawat Jalan
 routes.get("/rawat-jalan", RawatJalanController.getAll);
-routes.post("/rawat-jalan", RawatJalanController.registRawatJalan);
 routes.post("/rawat-jalan/apm", RawatJalanController.registRawatJalanApm);
-routes.get(
-  "/rawat-jalan/jadwal-dokter",
-  RawatJalanController.getAllJadwalDokter
-);
+routes.get("/rawat-jalan/jadwal-dokter", RawatJalanController.getAllJadwalDokter);
 routes.get("/rawat-jalan/:uuid", RawatJalanController.getDetail);
 routes.put("/rawat-jalan/:uuid", RawatJalanController.updateRawatJalan);
-routes.delete(
-  "/rawat-jalan/cancel",
-  RawatJalanController.cancelVisitRawatJalan
-);
+routes.delete("/rawat-jalan/cancel", RawatJalanController.cancelVisitRawatJalan);
 
 // Instalasi Gawat Darurat
 routes.post("/igd", InstalasiGawatDaruratController.registIgd);
@@ -59,18 +50,18 @@ routes.delete("/rawat-inap/cancel", RawatInapController.cancelVisitRawatInap);
 routes.get("/patient", PatientController.findAll);
 routes.get("/patient/:uuid", PatientController.findByUuid);
 routes.post("/patient", PatientController.create);
-routes.post("/patient/import", PatientController.import);
 routes.put("/patient/:uuid", PatientController.update);
 routes.delete("/patient/:uuid", PatientController.delete);
 routes.get("/patient/history/:uuid", PatientController.getHistoryPatient);
-routes.get("/patient/file/:uuid", PatientController.getPatientFile);
-routes.put("/patient/file/:uuid",  PatientController.createPatientFile);
-routes.delete("/patient/file/:uuid", PatientController.deletePatientFile);
 routes.post("/patient/check-patient/apm", PatientController.checkPatientExist);
-routes.get("/patient/do/download", (req, res) => {
-  const file = `${__dirname}/template/patient-template.xlsx`;
-  res.download(file);
-});
+routes.post("/patient/import", PatientController.import);
+routes.get("/download", PatientController.downloadImportFile);
+
+// Unggah Berkas pasien
+routes.get("/file/:uuid", PatientController.getPatientFile);
+routes.put("/file/:uuid", PatientController.createPatientFile);
+routes.delete("/file/:uuid", PatientController.deletePatientFile);
+
 // Monitoring Room
 routes.get("/monitoring-rooms", MonitoringRoomController.getAllRoom);
 routes.get("/monitoring-rooms/:uuid", MonitoringRoomController.getDetailRoom);
