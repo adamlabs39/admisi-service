@@ -37,4 +37,13 @@ export default class ExportReportController {
             next(error);
         }
     }
+
+    static async getExportNewBorn(req,res,next){
+        try{
+            const result = await ExportReportService.getExportNewBorn(req.query);
+            return res.status(200).json(successResponse("Data Export New Born berhasil ditampilkan", result));
+        }catch (error){
+            next(error);
+        }
+    }
 }

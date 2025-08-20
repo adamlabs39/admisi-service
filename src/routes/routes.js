@@ -90,4 +90,6 @@ routes.get("/export/kunjungan", ExportReportController.getExportKunjungan);
 routes.get("/export/batal-kunjungan", ExportReportController.getExportBatalKunjungan);
 routes.get("/export/status-kamar", ExportReportController.getExportStatusKamar);
 routes.get("/export/keperawatan-inap", ExportReportController.getExportKeperawatanInap);
+routes.get("/export/new-born", ExportReportController.getExportNewBorn);
+
 export default routes;
