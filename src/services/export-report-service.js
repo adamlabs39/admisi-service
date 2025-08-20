@@ -12,4 +12,10 @@ export default class ExportReportService {
         if(!result) throw new Error("Gagal mengambil export batal kunjungan");
         return result;
     }
+
+    static async getExportStatusKamar(args){
+        const result = await ExportReportRepository.getExportStatusKamar(args);
+        if(!result) throw new Error("Gagal mengambil export status kamar");
+        return result;
+    }
 }
