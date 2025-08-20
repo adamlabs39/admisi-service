@@ -305,7 +305,7 @@ export default class ExportReportRepository {
 
         const filter = {
             faskesUuid,
-            dischargeDate: { [Op.ne]: null },
+            // dischargeDate: { [Op.ne]: null },
             [Op.or]: [
                    //* Filter No Rm Layanan
             { no_rm: { [Op.iLike]: `%${args.q || ""}%` } },

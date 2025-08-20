@@ -584,7 +584,7 @@ export default class RawatInapRepository {
         try {
             const filter = {
                 faskesUuid,
-                dischargeDate: { [Op.ne]: null },
+                // dischargeDate: { [Op.ne]: null },
                 [Op.or]: [
                     {no_rm: {[Op.iLike]: `%${args.q || ''}%`}}, // Find by no_rm
                     sequelizeInstance.where(
