@@ -16,23 +16,29 @@ export default class ExportReportRepository {
             faskesUuid,
             deletedAt: { [Op.is]: null },
             [Op.or]: [
-            //* Filter No Rm Layanan
+                //* Filter No Rm Layanan
             { noreg: { [Op.iLike]: `%${args.q || ""}%` } },
-            //* Filter Nama dan Title patient
+                //* Filter Nama dan Title patient
             sequelizeInstance.where(sequelizeInstance.fn("concat", sequelizeInstance.col("patient.title"), " ", sequelizeInstance.col("patient.name")), { [Op.iLike]: `%${args.q || ""}%` }),
-            //* Filter Alamat
+                //* Filter Alamat
             sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }),
-            //* Filter No Rm Patient
+                //* Filter No Rm Patient
             sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }),
             ],
-            //* Filter Tanggal Registrasi
+                //* Filter Tanggal Registrasi
             tglRegistrasi: {
                 [Op.between]: [args.start_date, args.end_date],
             },
         }
 
-        //* Filter Jenis Kunjungan
+            //* Filter Jenis Kunjungan
         if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
+
+            //* Filter Dokter
+        if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
+
+            //* Filter Penjamin
+        if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.name"), { [Op.iLike]: `%${args.penjamin}%` });
 
         return await LogPelayananModel.findAll({
             where: {
