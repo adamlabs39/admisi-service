@@ -2,16 +2,23 @@ import sequelizeInstace from "../configurations/sequelize-instance.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {convertSnakeToCamel} from "../helper/utility.js";
-import {Op} from "sequelize";
+import {Op, where} from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import {
     NewBornModel,
-    BirthDetailModel
+    BirthDetailModel,
+    PatientModel
 } from "@adameds/model-sdk/admisi";
 import {
     AddressModel
 } from "@adameds/model-sdk/setting";
 import Pagination from "../helper/pagination.js";
+import { RawatInapModel } from "@adameds/model-sdk/pelayanan";
+
+BirthDetailModel.hasOne(NewBornModel, {
+    foreignKey: "birth_detail_uuid",
+    as: "new_born",
+});
 
 export default class newBornRepository {
     static async upsertNewBorn(data, transaction = null) {
@@ -54,10 +61,18 @@ export default class newBornRepository {
                 faskesUuid,
                 deletedAt: null,
                 [Op.or]: [
-                    {noRmBaby: {[Op.like]: `%${args.q}%`}},
-                    {nameBaby: {[Op.like]: `%${args.q}%`}},
+                    // {noRmBaby: {[Op.like]: `%${args.q}%`}},
+                    // {nameBaby: {[Op.like]: `%${args.q}%`}},
                     sequelizeInstance.where(
-                        sequelizeInstance.col('address.full_address'),
+                        sequelizeInstance.col('patient.address.full_address'),
+                        {[Op.iLike]: `%${args.q || ''}%`}
+                    ),
+                    sequelizeInstance.where(
+                        sequelizeInstance.col('patient.birth_detail.new_born.no_rm_baby'),
+                        {[Op.iLike]: `%${args.q || ''}%`}
+                    ),
+                    sequelizeInstance.where(
+                        sequelizeInstance.col('patient.birth_detail.new_born.name_baby'),
                         {[Op.iLike]: `%${args.q || ''}%`}
                     ),
                 ]
@@ -66,23 +81,47 @@ export default class newBornRepository {
             const options = {
                 include: [
                     {
-                        model: AddressModel,
-                        as: 'address',
-                        attributes: []
-                    },
-                    {
-                        model: BirthDetailModel,
-                        as: 'birth_detail',
-                        attributes: ["birth_place", "birth_date"]
+                        model: PatientModel,
+                        as: 'patient',
+                        attributes: [
+                            "uuid"
+                        ],
+                        where: {
+                            isNewBorn: true
+                        },
+                        include: [
+                            {
+                                model: AddressModel,
+                                as: 'address',
+                                attributes: ["full_address"]
+                            },
+                            {
+                                model: BirthDetailModel,
+                                as: 'birth_detail',
+                                attributes: ["birth_place", "birth_date"],
+                                include: [
+                                    {
+                                        model: NewBornModel,
+                                        as: 'new_born',
+                                        attributes: ["uuid", "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"],
+                                    }
+                                ]
+                            }
+                        ]
                     },
                 ],
                 attributes: [
-                    "uuid", "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"
+                    "uuid", "discharge_date"
+                ],
+                where: [
+                    {   
+                        discharge_date: { [Op.ne]: null }
+                    }
                 ]
             }
 
             return await Pagination.init(
-                NewBornModel,
+                RawatInapModel,
                 args,
                 filter,
                 options,

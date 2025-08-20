@@ -87,4 +87,6 @@ routes.get("/report/new-born", ReportController.getReportNewBorn);
 
 // Report Excel
 routes.get("/export/kunjungan", ExportReportController.getExportKunjungan);
+routes.get("/export/batal-kunjungan", ExportReportController.getExportBatalKunjungan);
+
 export default routes;
