@@ -3,13 +3,19 @@ import { CTX_AUTHOR } from "../constant/context-constant.js";
 import { convertSnakeToCamel, getInfoInsurance } from "../helper/utility.js";
 import { Op } from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
-import { LogPelayananModel } from "@adameds/model-sdk/pelayanan";
+import { LogPelayananModel, RawatInapModel } from "@adameds/model-sdk/pelayanan";
 import { PatientModel, BirthDetailModel, InsuranceAccountModel, RoomMonitoringModel } from "@adameds/model-sdk/admisi";
 import { AddressModel } from "@adameds/model-sdk/setting";
 import { PractitionerModel, PegawaiModel, LokasiModel, KategoriRuanganModel } from "@adameds/model-sdk/datamaster";
 
 import Pagination from "../helper/pagination.js";
 import moment from "moment";
+
+RoomMonitoringModel.hasOne(RawatInapModel, {
+  foreignKey: "monitoring_room_uuid",
+  as: "rawat_inap",
+});
+
 
 export default class LogPelayananRepository {
   /**
@@ -402,8 +408,14 @@ export default class LogPelayananRepository {
         const filter = {
             faskesUuid,
             deletedAt: { [Op.is]: null },
+            [Op.or]: [
+              sequelizeInstance.where(sequelizeInstance.col("rawat_inap.tanggal_daftar"), {
+                [Op.between]: [args.start_date, args.end_date],
+              }),
+            ]
         };
         if (args.room) filter.room_uuid = args.room;
+        
 
         const options = {
         include: [
@@ -414,17 +426,26 @@ export default class LogPelayananRepository {
             where: { deletedAt: { [Op.is]: null } },
             attributes: ["uuid", "name", "class_name"],
             include: [
-            {
-                model: KategoriRuanganModel,
-                as: "kategori_ruangan",
-                required: false,
-                attributes: ["uuid", "name"],
-            },
+              {
+                  model: KategoriRuanganModel,
+                  as: "kategori_ruangan",
+                  required: false,
+                  attributes: ["uuid", "name"],
+              },
             ],
+        },
+        {
+          model: RawatInapModel,
+          as: "rawat_inap",
+          required: false,
+          where: {
+            deletedAt: { [Op.is]: null },
+          },
+          attributes: [],
         },
         ],
         attributes: [
-            "room_uuid", 
+            "room_uuid",
             [sequelizeInstance.fn("COUNT", sequelizeInstance.col("RoomMonitoring.patient_uuid")), "jumlahPasien"]
         ],
         group: [
@@ -433,7 +454,7 @@ export default class LogPelayananRepository {
             "room.kategori_ruangan.name", 
             "room.uuid", 
             "room.name", 
-            "room.class_name"
+            "room.class_name",
         ],
         };
 

@@ -19,4 +19,13 @@ export default class ExportReportController {
             next(error);
         }
     }
+
+    static async getExportStatusKamar(req,res,next){
+        try{
+            const result = await ExportReportService.getExportStatusKamar(req.query);
+            return res.status(200).json(successResponse("Data Export Status Kamar berhasil ditampilkan", result));
+        }catch (error){
+            next(error);
+        }
+    }
 }

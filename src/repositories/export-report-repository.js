@@ -1,12 +1,17 @@
-import { BirthDetailModel, PatientModel } from "@adameds/model-sdk/admisi";
-import { PegawaiModel, PractitionerModel, LokasiModel } from "@adameds/model-sdk/datamaster";
-import { LogPelayananModel } from "@adameds/model-sdk/pelayanan";
+import { BirthDetailModel, PatientModel, RoomMonitoringModel } from "@adameds/model-sdk/admisi";
+import { PegawaiModel, PractitionerModel, LokasiModel, KategoriRuanganModel } from "@adameds/model-sdk/datamaster";
+import { LogPelayananModel, RawatInapModel } from "@adameds/model-sdk/pelayanan";
 import { AddressModel } from "@adameds/model-sdk/setting";
 import { InsuranceAccountModel } from "@adameds/model-sdk/admisi";
 import { Context } from "../middlewares/context.js";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
 import { Op } from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
+
+// RoomMonitoringModel.hasOne(RawatInapModel, {
+//     foreignKey: "monitoring_room_uuid",
+//     as: "rawat_inap",
+// });
 
 export default class ExportReportRepository {
     static async getExportKunjungan(args) {
@@ -235,4 +240,61 @@ export default class ExportReportRepository {
         });
     }
 
+    static async getExportStatusKamar(args) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+
+        const filter = {
+            faskesUuid,
+            deletedAt: { [Op.is]: null },
+            [Op.or]: [
+                //* Filter Tanggal Daftar
+            sequelizeInstance.where(sequelizeInstance.col("rawat_inap.tanggal_daftar"), {
+                [Op.between]: [args.start_date, args.end_date],
+            }),
+            ]
+        };
+
+            //* Filter Jenis Kunjungan
+        if (args.room) filter.room_uuid = args.room;
+
+        return await RoomMonitoringModel.findAll({
+            where: filter,
+            include: [
+                {
+                    model: LokasiModel,
+                    as: "room",
+                    required: true,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["uuid", "name", "class_name"],
+                    include: [
+                        {
+                            model: KategoriRuanganModel,
+                            as: "kategori_ruangan",
+                            required: false,
+                            attributes: ["uuid", "name"],
+                        },
+                    ],
+                },
+                {
+                    model: RawatInapModel,
+                    as: "rawat_inap",
+                    required: false,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: [],
+                },
+            ],
+            attributes: [
+                "room_uuid",
+                [sequelizeInstance.fn("COUNT", sequelizeInstance.col("RoomMonitoring.patient_uuid")), "jumlahPasien"]
+            ],
+            group: [
+                "room_uuid",
+                "room.kategori_ruangan.uuid",
+                "room.kategori_ruangan.name",
+                "room.uuid",
+                "room.name",
+                "room.class_name"
+            ],
+        });
+    }
 }
