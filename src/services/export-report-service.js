@@ -6,9 +6,9 @@ export default class ExportReportService {
         if(!result) throw new Error("Gagal mengambil export kunjungan");
         return result;
     }
-    
-    static async getExportBatalKunjungan(){
-        const result = await ExportReportRepository.getExportBatalKunjungan();
+
+    static async getExportBatalKunjungan(args){
+        const result = await ExportReportRepository.getExportBatalKunjungan(args);
         if(!result) throw new Error("Gagal mengambil export batal kunjungan");
         return result;
     }

@@ -10,4 +10,13 @@ export default class ExportReportController {
             next(error);
         }
     }
+
+    static async getExportBatalKunjungan(req,res,next){
+        try{
+            const result = await ExportReportService.getExportBatalKunjungan(req.query);
+            return res.status(200).json(successResponse("Data Export Batal Kunjungan berhasil ditampilkan", result));
+        }catch (error){
+            next(error);
+        }
+    }
 }

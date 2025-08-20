@@ -14,7 +14,7 @@ export default class ExportReportRepository {
 
         const filter = {
             faskesUuid,
-            deletedAt: { [Op.is]: null },
+            status: true,
             [Op.or]: [
                 //* Filter No Rm Layanan
             { noreg: { [Op.iLike]: `%${args.q || ""}%` } },
@@ -123,14 +123,38 @@ export default class ExportReportRepository {
         });
     }
 
-    static async getExportBatalKunjungan() {
+    static async getExportBatalKunjungan(args) {
         const { faskesUuid } = Context.get(CTX_AUTHOR);
+
+        const filter = {
+            faskesUuid,
+            status: false,
+            deletedAt: { [Op.is]: null },
+            [Op.or]: [
+                //* Filter No Rm Layanan
+            { noreg: { [Op.iLike]: `%${args.q || ""}%` } },
+                //* Filter Nama dan Title patient
+            sequelizeInstance.where(sequelizeInstance.fn("concat", sequelizeInstance.col("patient.title"), " ", sequelizeInstance.col("patient.name")), { [Op.iLike]: `%${args.q || ""}%` }),
+                //* Filter Alamat
+            sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }),
+                //* Filter No Rm Patient
+            sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }),
+            ],
+                //* Filter Tanggal Registrasi
+            tglRegistrasi: {
+                [Op.between]: [args.start_date, args.end_date],
+            },
+        }
+
+            //* Filter Jenis Kunjungan
+        if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
+
+            //* Filter Penjamin
+        if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.name"), { [Op.iLike]: `%${args.penjamin}%` });
+
         return await LogPelayananModel.findAll({
             where: {
-                faskesUuid,
-                deletedAt: {
-                    [Op.is]: null
-                }
+                ...filter
             },
             include: [
                 {
@@ -164,6 +188,13 @@ export default class ExportReportRepository {
                                 }
                             },
                             attributes: ["age_year", "age_month", "age_day", "birth_date"],
+                        },
+                        {
+                            model: InsuranceAccountModel,
+                            as: "insurance",
+                            required: false,
+                            where: { deletedAt: { [Op.is]: null } },
+                            attributes: ["name", "account_number"],
                         },
                     ],
                     attributes: ["uuid", "title", "name", "identity", "no_identity", "phone", "gender", "no_rm"],
@@ -201,9 +232,6 @@ export default class ExportReportRepository {
                 },
             ],
             attributes: ["tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "lokasi_uuid", "cancel_reason", "cancel_date", "cancel_by"],
-            where: {
-                status: false
-            }
         });
     }
 
