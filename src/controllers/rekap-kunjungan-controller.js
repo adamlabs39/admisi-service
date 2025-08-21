@@ -10,4 +10,13 @@ export default class RekapKunjunganController {
         next(error);
         }
     }
+
+    static async getRekapDokter(req, res, next) {
+        try {
+            const result = await RekapKunjunganService.getRekapDokter(req.query);
+            return res.status(200).json(successResponse("Data Rekap Dokter berhasil ditampilkan", result));
+        } catch (error) {
+            next(error);
+        }
+    }
 }

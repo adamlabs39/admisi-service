@@ -85,58 +85,58 @@ const generateAntrianPoli = async (jadwalUuid) => {
     };
 };
 
-// const generateNoReg = async () => {
-// const today = moment().format("YYMMDD");
-// const { faskesUuid } = Context.get(CTX_AUTHOR);
-// const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
-
-// const count =
-//     (
-//     await Promise.all(
-//         listModel.map((model) =>
-//         model.count({
-//             where: {
-//             faskesUuid,
-//             createdAt: { [Op.between]: [today, today + 86400] },
-//             },
-//         })
-//         )
-//     )
-//     ).reduce((total, count) => total + count, 0) + 1;
-
-// return `REG${today}${count.toString().padStart(4, "0")}`;
-// };
-
-//TODO ini mengambil no registrasi terbesar
 const generateNoReg = async () => {
-    const today = moment().format("YYMMDD");
-    const { faskesUuid } = Context.get(CTX_AUTHOR);
+const today = moment().format("YYMMDD");
+const { faskesUuid } = Context.get(CTX_AUTHOR);
+const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
 
-    const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
-
-    const results = await Promise.all(
+const count =
+    (
+    await Promise.all(
         listModel.map((model) =>
-        model.max("no_reg", {
+        model.count({
             where: {
             faskesUuid,
-            no_reg: { [Op.like]: `REG${today}%` },
+            createdAt: { [Op.between]: [today, today + 86400] },
             },
         })
         )
-    );
+    )
+    ).reduce((total, count) => total + count, 0) + 1;
 
-    let maxNumber = 0;
-    results.forEach((val) => {
-        if (val) {
-        const num = parseInt(val.slice(-4), 10);
-        if (num > maxNumber) maxNumber = num;
-        }
-    });
-
-    const nextNumber = (maxNumber || 0) + 1;
-
-    return `REG${today}${nextNumber.toString().padStart(4, "0")}`;
+return `REG${today}${count.toString().padStart(4, "0")}`;
 };
+
+//TODO ini mengambil no registrasi terbesar
+// const generateNoReg = async () => {
+//     const today = moment().format("YYMMDD");
+//     const { faskesUuid } = Context.get(CTX_AUTHOR);
+
+//     const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
+
+//     const results = await Promise.all(
+//         listModel.map((model) =>
+//         model.max("no_reg", {
+//             where: {
+//             faskesUuid,
+//             no_reg: { [Op.like]: `REG${today}%` },
+//             },
+//         })
+//         )
+//     );
+
+//     let maxNumber = 0;
+//     results.forEach((val) => {
+//         if (val) {
+//         const num = parseInt(val.slice(-4), 10);
+//         if (num > maxNumber) maxNumber = num;
+//         }
+//     });
+
+//     const nextNumber = (maxNumber || 0) + 1;
+
+//     return `REG${today}${nextNumber.toString().padStart(4, "0")}`;
+// };
 
 
 const generateNoPelayanan = async (service) => {

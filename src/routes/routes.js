@@ -96,5 +96,5 @@ routes.get("/export/new-born", ExportReportController.getExportNewBorn);
 
 // Rekap Kunjungan
 routes.get("/rekap/jenis-kunjungan", RekapKunjunganController.getRekapKunjungan);
-
+routes.get("/rekap/dokter", RekapKunjunganController.getRekapDokter);
 export default routes;

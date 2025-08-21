@@ -1,8 +1,9 @@
 import { LogPelayananModel } from "@adameds/model-sdk/pelayanan";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
 import { Context } from "../middlewares/context.js";
-import { Op, Sequelize } from "sequelize";
+import { Op } from "sequelize";
 import { PegawaiModel, PractitionerModel } from "@adameds/model-sdk/datamaster";
+import sequelizeInstace from "../configurations/sequelize-instance.js";
 
 export default class RekapKunjunganRepository{
     static async getRekapJenisKunjungan(args) {
@@ -25,11 +26,11 @@ export default class RekapKunjunganRepository{
             },
             attributes: [
             "jenis_kunjungan",
-            [Sequelize.fn("TO_CHAR", Sequelize.fn("TO_TIMESTAMP", Sequelize.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
-            [Sequelize.fn("COUNT", Sequelize.col("uuid")), "total_harian"],
+            [sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
+            [sequelizeInstace.fn("COUNT", sequelizeInstace.col("uuid")), "total_harian"],
             ],
             group: ["jenis_kunjungan", 
-                Sequelize.fn("TO_CHAR", Sequelize.fn("TO_TIMESTAMP", Sequelize.col("tgl_registrasi")), "YYYY-MM-DD")],
+                sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")],
             order: [["jenis_kunjungan", "ASC"]],
             raw: true,
         });
@@ -82,9 +83,9 @@ export default class RekapKunjunganRepository{
             },
         }
 
-        if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
+        // if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
 
-        const kunjungan = await LogPelayananModel.findAll({
+        const dokter = await LogPelayananModel.findAll({
             where: {
             ...filter,
             },
@@ -92,9 +93,10 @@ export default class RekapKunjunganRepository{
                 model: PractitionerModel,
                 as: "practitioner",
                 required: true,
-                where: {
-
-                },
+                    where: {
+                        is_doctor: { [Op.is]: true }
+                    },
+                attributes: ["uuid"],
                 include: {
                     model: PegawaiModel,
                     as: "pegawai",
@@ -102,11 +104,20 @@ export default class RekapKunjunganRepository{
                     attributes: ["name"]
                 }
             },
-            // [Sequelize.fn("TO_CHAR", Sequelize.fn("TO_TIMESTAMP", Sequelize.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
-            // [Sequelize.fn("COUNT", Sequelize.col("uuid")), "total_harian"],
-            group: [],
-            order: [],
+            attributes: [
+                [sequelizeInstace.col("practitioner.uuid"), "practitioner_uuid"],
+                [sequelizeInstace.col("practitioner.pegawai.name"), "pegawai_name"],
+                // [sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
+                // [sequelizeInstace.fn("COUNT", sequelizeInstace.col(`log_pelayanans.uuid`)), "total_harian"],
+            ],
+            group: [
+                sequelizeInstace.col("practitioner.uuid"),
+                sequelizeInstace.col("practitioner.pegawai.uuid"),
+                // sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")
+            ],
             raw: true,
         });
+
+        return dokter;
     }
 }
