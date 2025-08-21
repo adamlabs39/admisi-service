@@ -345,7 +345,7 @@ export default class ExportReportRepository {
                         attributes: [],
                     },
                 ],
-                attributes: [],
+                attributes: ["name"],
             },
             {
                 model: RoomMonitoringModel,
@@ -389,6 +389,9 @@ export default class ExportReportRepository {
                     { [Op.iLike]: `%${args.q || ""}%` }
                 )
             ],
+            tglDaftar: {
+                [Op.between]: [args.start_date, args.end_date],
+            },
         };
 
         if (args.jenis_kunjungan) filter.jenis_kunjungan = sequelizeInstance.where(
