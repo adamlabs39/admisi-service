@@ -13,6 +13,7 @@ import { Context } from "../middlewares/context.js";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
 import upload from "../configurations/multer-config.js";
 import ExportReportController from "../controllers/export-report-controller.js";
+import RekapKunjunganController from "../controllers/rekap-kunjungan-controller.js";
 
 const routes = express.Router();
 
@@ -23,6 +24,7 @@ routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.chec
 
 //TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);
+
 // routes.use(async (req, res, next) => {
 //     Context.set(CTX_AUTHOR, req.author);
 // });
@@ -91,5 +93,8 @@ routes.get("/export/batal-kunjungan", ExportReportController.getExportBatalKunju
 routes.get("/export/status-kamar", ExportReportController.getExportStatusKamar);
 routes.get("/export/keperawatan-inap", ExportReportController.getExportKeperawatanInap);
 routes.get("/export/new-born", ExportReportController.getExportNewBorn);
+
+// Rekap Kunjungan
+routes.get("/rekap/jenis-kunjungan", RekapKunjunganController.getRekapKunjungan);
 
 export default routes;
