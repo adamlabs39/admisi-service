@@ -584,7 +584,6 @@ export default class RawatInapRepository {
         try {
             const filter = {
                 faskesUuid,
-                // dischargeDate: { [Op.ne]: null },
                 [Op.or]: [
                     {no_rm: {[Op.iLike]: `%${args.q || ''}%`}}, // Find by no_rm
                     sequelizeInstance.where(
@@ -597,7 +596,8 @@ export default class RawatInapRepository {
                     ) // Find by address
                 ],
                 status_ri: { [Op.not]: 0 },
-                tanggalDaftar: {
+                dischargeDate: {
+                    [Op.not]: null,
                     [Op.between]: [args.start_date, args.end_date]
                 }
             };
@@ -619,10 +619,10 @@ export default class RawatInapRepository {
                       where: {
                         deletedAt: { [Op.is]: null },
                       },
-                      attributes: [],
+                      attributes: ["full_address"],
                     },
                   ],
-                  attributes: [],
+                  attributes: ["name"],
                 },
                 {
                   model: RoomMonitoringModel,

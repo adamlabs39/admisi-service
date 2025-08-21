@@ -65,6 +65,13 @@ export default class newBornRepository {
             const filter = {
                 faskesUuid,
                 deletedAt: null,
+                [Op.and]: [
+                    sequelizeInstance.where(
+                        sequelizeInstance.col("birth_detail.patient.log_pelayanan.discharge_date"), 
+                        { [Op.not]: null },
+                        { [Op.between]: [args.start_date, args.end_date] }
+                    ),
+                ],
                 [Op.or]: [
                     {noRmBaby: {[Op.iLike]: `%${args.q}%`}},
                     {nameBaby: {[Op.iLike]: `%${args.q}%`}},
@@ -105,11 +112,6 @@ export default class newBornRepository {
                                         required: true,
                                         as: 'log_pelayanan',
                                         attributes: ["uuid", "jenis_kunjungan", "discharge_date"],
-                                        // where: {
-                                        //     discharge_date: {
-                                        //         [Op.ne]: null
-                                        //     }
-                                        // }
                                     }
                                 ]
                             }
