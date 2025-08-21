@@ -6,4 +6,10 @@ export default class RekapKunjunganService {
         if(!result) throw new Error("Gagal mengambil rekap kunjungan");
         return result;
     }
+
+    static async getRekapDokter(args) {
+        const result = await RekapKunjunganRepository.getRekapDokter(args);
+        if(!result) throw new Error("Gagal mengambil rekap dokter");
+        return result;
+    }
 }
