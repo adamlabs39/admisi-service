@@ -133,13 +133,20 @@ export default class LogPelayananRepository {
           sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }), // Find by address
           sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }), // Find By Rm patient
         ],
-        tglRegistrasi: {
+        dischargeDate: {
+          [Op.not]: null,
           [Op.between]: [args.start_date, args.end_date],
         },
       };
 
-      if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
+      //* Filter Jenis Kunjungan
       if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
+
+      //* Filter Dokter
+      if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
+
+      //* Filter Penjamin
+      if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.name"), { [Op.iLike]: `%${args.penjamin}%` });
 
       const options = {
         include: [
@@ -232,13 +239,16 @@ export default class LogPelayananRepository {
           sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }), // Find by address
           sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }), // Find By Rm patient
         ],
-        tglRegistrasi: {
+        cancelDate: {
           [Op.between]: [args.start_date, args.end_date],
         },
       };
+
       if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
-      if (args.dpjp) filter.practitionerUuid = args.dpjp;
-      if (args.lokasi) filter.lokasiUuid = args.lokasi;
+
+      //* Filter Penjamin
+      if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.name"), { [Op.iLike]: `%${args.penjamin}%` });
+      
       const options = {
         include: [
           {

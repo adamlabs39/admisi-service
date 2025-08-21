@@ -403,6 +403,9 @@ export default class RawatJalanRepository {
                 birthDetailUuid: patient.birthDetailUuid,
                 lokasiUuid: jadwalDokter.lokasiUuid,
                 platform: data.platform,
+                noAntrianAdmisi: data.noAntrianAdmisi,
+                noAntrianPoli: data.noAntrianPoli,
+                noAntrianFarmasi: data.noAntrianFarmasi,
                 tanggalCheckin: moment().unix(),
                 tanggalDaftar: moment().unix(),
             };
@@ -417,12 +420,6 @@ export default class RawatJalanRepository {
 
             return regist.dataValues.uuid;
         });
-
-           //*GENERATE NO ANTRIAN
-            await generateNoAntrian.post("/", {
-                rawat_jalan_uuid: create,
-                is_pasien_baru: data.isPasienBaru
-            });
 
         return await this.getOneApm(create);
     }
@@ -478,7 +475,7 @@ export default class RawatJalanRepository {
             }
 
             // const antrianPoli = await generateAntrianPoli(data.jadwalDokterUuid);
-            // if (!noAntrianPoli) dataRJ.noAntrianPoli = antrianPoli.code_antrian_poli;
+            if (!noAntrianPoli) dataRJ.noAntrianPoli = data.no_antrian_poli;
             // if (!jadwalPeriksa) dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
             if (!jadwalDokterUuid) dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
 
@@ -510,17 +507,6 @@ export default class RawatJalanRepository {
                 lokasi_uuid: updatedRegist.lokasiUuid,
                 payment_method: data.paymentMethod === "TUNAI" ? 1 : 2,
             });
-
-            //* GENERATE NO ANTRIAN
-            try {
-                if (!updatedRegist.dataValues.noAntrianPoli) {
-                    await generateNoAntrian.post("/", {
-                        rawat_jalan_uuid: updatedRegist.dataValues.uuid,
-                    });
-                }
-            } catch (error) {
-                console.error("Error generating no antrian:", error);
-            }
 
             return updatedRegist.dataValues.uuid;
         });

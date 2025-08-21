@@ -5,6 +5,10 @@ import { Op } from "sequelize";
 import { PegawaiModel, PractitionerModel } from "@adameds/model-sdk/datamaster";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
 
+PractitionerModel.hasOne(LogPelayananModel, {
+    foreignKey: "practitioner_uuid",
+});
+
 export default class RekapKunjunganRepository{
     static async getRekapJenisKunjungan(args) {
         const { faskesUuid } = Context.get(CTX_AUTHOR);
@@ -96,25 +100,25 @@ export default class RekapKunjunganRepository{
                     where: {
                         is_doctor: { [Op.is]: true }
                     },
-                attributes: ["uuid"],
+                attributes: [],
                 include: {
                     model: PegawaiModel,
                     as: "pegawai",
                     required: true,
-                    attributes: ["name"]
+                    attributes: []
                 }
             },
             attributes: [
-                [sequelizeInstace.col("practitioner.uuid"), "practitioner_uuid"],
-                [sequelizeInstace.col("practitioner.pegawai.name"), "pegawai_name"],
-                // [sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
-                // [sequelizeInstace.fn("COUNT", sequelizeInstace.col(`log_pelayanans.uuid`)), "total_harian"],
+                [sequelizeInstace.col("practitioner.pegawai.name"), "nama_dokter"],
+                [sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
+                [sequelizeInstace.fn("COUNT", sequelizeInstace.col(`LogPelayananModel.uuid`)), "total_harian"],
             ],
             group: [
                 sequelizeInstace.col("practitioner.uuid"),
                 sequelizeInstace.col("practitioner.pegawai.uuid"),
-                // sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")
+                sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")
             ],
+            order: [[PractitionerModel, PegawaiModel, "name", "ASC"]],
             raw: true,
         });
 

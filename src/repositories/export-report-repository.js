@@ -31,7 +31,7 @@ export default class ExportReportRepository {
             sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }),
             ],
                 //* Filter Tanggal Registrasi
-            tglRegistrasi: {
+            dischargeDate: {
                 [Op.between]: [args.start_date, args.end_date],
             },
         }
@@ -47,7 +47,10 @@ export default class ExportReportRepository {
 
         return await LogPelayananModel.findAll({
             where: {
-                ...filter
+                ...filter,
+                dischargeDate: {
+                    [Op.not]: null
+                }
             },
             include: [
                 {
@@ -146,7 +149,7 @@ export default class ExportReportRepository {
             sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }),
             ],
                 //* Filter Tanggal Registrasi
-            tglRegistrasi: {
+            cancelDate: {
                 [Op.between]: [args.start_date, args.end_date],
             },
         }
@@ -159,7 +162,10 @@ export default class ExportReportRepository {
 
         return await LogPelayananModel.findAll({
             where: {
-                ...filter
+                ...filter,
+                cancelDate: {
+                    [Op.not]: null
+                }
             },
             include: [
                 {
@@ -305,7 +311,6 @@ export default class ExportReportRepository {
 
         const filter = {
             faskesUuid,
-            // dischargeDate: { [Op.ne]: null },
             [Op.or]: [
                    //* Filter No Rm Layanan
             { no_rm: { [Op.iLike]: `%${args.q || ""}%` } },
@@ -317,7 +322,7 @@ export default class ExportReportRepository {
             sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }),
             ],
             status_ri: { [Op.not]: 0 },
-            tanggalDaftar: {
+            dischargeDate: {
                 [Op.between]: [args.start_date, args.end_date]
             }
         };
@@ -326,7 +331,10 @@ export default class ExportReportRepository {
 
         return await RawatInapModel.findAll({
             where: {
-                ...filter
+                ...filter,
+                dischargeDate: {
+                    [Op.not]: null
+                }
             },
             include: [
             {
@@ -342,7 +350,7 @@ export default class ExportReportRepository {
                         where: {
                         deletedAt: { [Op.is]: null },
                         },
-                        attributes: [],
+                        attributes: ["full_address"],
                     },
                 ],
                 attributes: ["name"],
@@ -381,6 +389,13 @@ export default class ExportReportRepository {
         const filter = {
             faskesUuid,
             deletedAt: null,
+            [Op.and]: [
+                sequelizeInstance.where(
+                    sequelizeInstance.col("birth_detail.patient.log_pelayanan.discharge_date"), 
+                    { [Op.not]: null },
+                    { [Op.between]: [args.start_date, args.end_date] }
+                ),
+            ],
             [Op.or]: [
                 { noRmBaby: { [Op.iLike]: `%${args.q}%` } },
                 { nameBaby: { [Op.iLike]: `%${args.q}%` } },
@@ -389,9 +404,6 @@ export default class ExportReportRepository {
                     { [Op.iLike]: `%${args.q || ""}%` }
                 )
             ],
-            tglDaftar: {
-                [Op.between]: [args.start_date, args.end_date],
-            },
         };
 
         if (args.jenis_kunjungan) filter.jenis_kunjungan = sequelizeInstance.where(
@@ -427,9 +439,6 @@ export default class ExportReportRepository {
                                     required: true,
                                     as: 'log_pelayanan',
                                     attributes: ["uuid", "jenis_kunjungan", "discharge_date"],
-                                    // where: {
-                                    //     discharge_date: { [Op.ne]: null }
-                                    // }
                                 }
                             ]
                         }
