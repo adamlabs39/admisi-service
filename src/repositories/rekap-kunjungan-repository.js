@@ -2,6 +2,7 @@ import { LogPelayananModel } from "@adameds/model-sdk/pelayanan";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
 import { Context } from "../middlewares/context.js";
 import { Op, Sequelize } from "sequelize";
+import { PegawaiModel, PractitionerModel } from "@adameds/model-sdk/datamaster";
 
 export default class RekapKunjunganRepository{
     static async getRekapJenisKunjungan(args) {
@@ -67,5 +68,45 @@ export default class RekapKunjunganRepository{
         });
 
         return { kunjungan, total_harian, total_jenis_kunjungan, total_kunjungan };
+    }
+
+    static async getRekapDokter(args) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+
+        const filter = {
+            faskesUuid,
+            status: true,
+                //* Filter Tanggal Registrasi
+            tglRegistrasi: {
+                [Op.between]: [args.start_date, args.end_date],
+            },
+        }
+
+        if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
+
+        const kunjungan = await LogPelayananModel.findAll({
+            where: {
+            ...filter,
+            },
+            include: {
+                model: PractitionerModel,
+                as: "practitioner",
+                required: true,
+                where: {
+
+                },
+                include: {
+                    model: PegawaiModel,
+                    as: "pegawai",
+                    required: true,
+                    attributes: ["name"]
+                }
+            },
+            // [Sequelize.fn("TO_CHAR", Sequelize.fn("TO_TIMESTAMP", Sequelize.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
+            // [Sequelize.fn("COUNT", Sequelize.col("uuid")), "total_harian"],
+            group: [],
+            order: [],
+            raw: true,
+        });
     }
 }
