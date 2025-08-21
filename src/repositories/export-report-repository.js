@@ -1,4 +1,4 @@
-import { BirthDetailModel, PatientModel, RoomMonitoringModel } from "@adameds/model-sdk/admisi";
+import { BirthDetailModel, NewBornModel, PatientModel, RoomMonitoringModel } from "@adameds/model-sdk/admisi";
 import { PegawaiModel, PractitionerModel, LokasiModel, KategoriRuanganModel } from "@adameds/model-sdk/datamaster";
 import { LogPelayananModel, RawatInapModel } from "@adameds/model-sdk/pelayanan";
 import { AddressModel } from "@adameds/model-sdk/setting";
@@ -124,7 +124,7 @@ export default class ExportReportRepository {
                     attributes: ["name"], 
                 },
             ],
-            attributes: ["tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid"]
+            attributes: ["tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "discharge_date"]
         });
     }
 
@@ -258,7 +258,9 @@ export default class ExportReportRepository {
         if (args.room) filter.room_uuid = args.room;
 
         return await RoomMonitoringModel.findAll({
-            where: filter,
+            where: { 
+                ...filter 
+            },
             include: [
                 {
                     model: LokasiModel,
@@ -294,6 +296,145 @@ export default class ExportReportRepository {
                 "room.uuid",
                 "room.name",
                 "room.class_name"
+            ],
+        });
+    }
+
+    static async getExportKeperawatanInap(args) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+
+        const filter = {
+            faskesUuid,
+            // dischargeDate: { [Op.ne]: null },
+            [Op.or]: [
+                   //* Filter No Rm Layanan
+            { no_rm: { [Op.iLike]: `%${args.q || ""}%` } },
+                //* Filter Nama dan Title patient
+            sequelizeInstance.where(sequelizeInstance.fn("concat", sequelizeInstance.col("patient.title"), " ", sequelizeInstance.col("patient.name")), { [Op.iLike]: `%${args.q || ""}%` }),
+                //* Filter Alamat
+            sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }),
+                //* Filter No Rm Patient
+            sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }),
+            ],
+            status_ri: { [Op.not]: 0 },
+            tanggalDaftar: {
+                [Op.between]: [args.start_date, args.end_date]
+            }
+        };
+
+        if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col("monitoring_room.room.uuid"), { [Op.iLike]: `${args.room}` });
+
+        return await RawatInapModel.findAll({
+            where: {
+                ...filter
+            },
+            include: [
+            {
+                model: PatientModel,
+                as: "patient",
+                required: true,
+                where: { deletedAt: { [Op.is]: null } },
+                include: [
+                    {
+                        model: AddressModel,
+                        as: "address",
+                        required: true,
+                        where: {
+                        deletedAt: { [Op.is]: null },
+                        },
+                        attributes: [],
+                    },
+                ],
+                attributes: [],
+            },
+            {
+                model: RoomMonitoringModel,
+                as: "monitoring_room",
+                required: true,
+                where: { deletedAt: { [Op.is]: null } },
+                attributes: ["uuid", "room_uuid", "no_bed"],
+                include: [
+                    {
+                        model: LokasiModel,
+                        as: "bed_lokasi",
+                        required: true,
+                        where: { deletedAt: { [Op.is]: null } },
+                        attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                    },
+                    {
+                        model: LokasiModel,
+                        as: "room",
+                        required: true,
+                        where: { deletedAt: { [Op.is]: null } },
+                        attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                    }
+                ],
+            },
+            ],
+            attributes: ["no_rm", "tanggal_daftar", "tanggal_dirawat", "discharge_date"],
+        })
+    }
+
+    static async getExportNewBorn(args) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+
+        const filter = {
+            faskesUuid,
+            deletedAt: null,
+            [Op.or]: [
+                { noRmBaby: { [Op.iLike]: `%${args.q}%` } },
+                { nameBaby: { [Op.iLike]: `%${args.q}%` } },
+                sequelizeInstance.where(
+                    sequelizeInstance.col("address.full_address"),
+                    { [Op.iLike]: `%${args.q || ""}%` }
+                )
+            ],
+        };
+
+        if (args.jenis_kunjungan) filter.jenis_kunjungan = sequelizeInstance.where(
+            sequelizeInstance.col('birth_detail.patient.log_pelayanan.jenis_kunjungan'),
+            { [Op.eq]: `${args.jenis_kunjungan}` }
+        );
+
+        return await NewBornModel.findAll({
+            where: {
+                ...filter
+            },
+            include: [
+                {
+                    model: AddressModel,
+                    as: 'address',
+                    required: true,
+                    attributes: ["full_address"]
+                },
+                {
+                    model: BirthDetailModel,
+                    as: 'birth_detail',
+                    required: true,
+                    attributes: ["birth_place", "birth_date"],
+                    include: [
+                        {
+                            model: PatientModel,
+                            as: 'patient',
+                            required: true,
+                            attributes: ["uuid", "no_identity"],
+                            include: [
+                                {
+                                    model: LogPelayananModel,
+                                    required: true,
+                                    as: 'log_pelayanan',
+                                    attributes: ["uuid", "jenis_kunjungan", "discharge_date"],
+                                    // where: {
+                                    //     discharge_date: { [Op.ne]: null }
+                                    // }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ],
+            attributes: [
+                "uuid", "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"
             ],
         });
     }

@@ -13,11 +13,16 @@ import {
     AddressModel
 } from "@adameds/model-sdk/setting";
 import Pagination from "../helper/pagination.js";
-import { RawatInapModel } from "@adameds/model-sdk/pelayanan";
+import { LogPelayananModel } from "@adameds/model-sdk/pelayanan";
 
-BirthDetailModel.hasOne(NewBornModel, {
+BirthDetailModel.hasOne(PatientModel, {
     foreignKey: "birth_detail_uuid",
-    as: "new_born",
+    as: "patient",
+});
+
+PatientModel.hasOne(LogPelayananModel, {
+    foreignKey: "patient_uuid",
+    as: "log_pelayanan",
 });
 
 export default class newBornRepository {
@@ -61,67 +66,63 @@ export default class newBornRepository {
                 faskesUuid,
                 deletedAt: null,
                 [Op.or]: [
-                    // {noRmBaby: {[Op.like]: `%${args.q}%`}},
-                    // {nameBaby: {[Op.like]: `%${args.q}%`}},
+                    {noRmBaby: {[Op.iLike]: `%${args.q}%`}},
+                    {nameBaby: {[Op.iLike]: `%${args.q}%`}},
                     sequelizeInstance.where(
-                        sequelizeInstance.col('patient.address.full_address'),
-                        {[Op.iLike]: `%${args.q || ''}%`}
-                    ),
-                    sequelizeInstance.where(
-                        sequelizeInstance.col('patient.birth_detail.new_born.no_rm_baby'),
-                        {[Op.iLike]: `%${args.q || ''}%`}
-                    ),
-                    sequelizeInstance.where(
-                        sequelizeInstance.col('patient.birth_detail.new_born.name_baby'),
+                        sequelizeInstance.col('address.full_address'),
                         {[Op.iLike]: `%${args.q || ''}%`}
                     ),
                 ]
-            }
+            };
+
+            if (args.jenis_kunjungan) filter.jenis_kunjungan = sequelizeInstance.where(
+                sequelizeInstance.col('birth_detail.patient.log_pelayanan.jenis_kunjungan'),
+                { [Op.eq]: `${args.jenis_kunjungan}` }
+            );
 
             const options = {
                 include: [
                     {
-                        model: PatientModel,
-                        as: 'patient',
-                        attributes: [
-                            "uuid"
-                        ],
-                        where: {
-                            isNewBorn: true
-                        },
+                        model: AddressModel,
+                        as: 'address',
+                        required: true,
+                        attributes: ["full_address"]
+                    },
+                    {
+                        model: BirthDetailModel,
+                        as: 'birth_detail',
+                        required: true,
+                        attributes: ["birth_place", "birth_date"],
                         include: [
                             {
-                                model: AddressModel,
-                                as: 'address',
-                                attributes: ["full_address"]
-                            },
-                            {
-                                model: BirthDetailModel,
-                                as: 'birth_detail',
-                                attributes: ["birth_place", "birth_date"],
+                                model: PatientModel,
+                                as: 'patient',
+                                required: true,
+                                attributes: ["uuid", "no_identity"],
                                 include: [
                                     {
-                                        model: NewBornModel,
-                                        as: 'new_born',
-                                        attributes: ["uuid", "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"],
+                                        model: LogPelayananModel,
+                                        required: true,
+                                        as: 'log_pelayanan',
+                                        attributes: ["uuid", "jenis_kunjungan", "discharge_date"],
+                                        // where: {
+                                        //     discharge_date: {
+                                        //         [Op.ne]: null
+                                        //     }
+                                        // }
                                     }
                                 ]
                             }
                         ]
-                    },
+                    }
                 ],
                 attributes: [
-                    "uuid", "discharge_date"
+                    "uuid", "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"
                 ],
-                where: [
-                    {   
-                        discharge_date: { [Op.ne]: null }
-                    }
-                ]
             }
 
             return await Pagination.init(
-                RawatInapModel,
+                NewBornModel,
                 args,
                 filter,
                 options,

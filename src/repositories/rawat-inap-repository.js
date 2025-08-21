@@ -584,6 +584,7 @@ export default class RawatInapRepository {
         try {
             const filter = {
                 faskesUuid,
+                // dischargeDate: { [Op.ne]: null },
                 [Op.or]: [
                     {no_rm: {[Op.iLike]: `%${args.q || ''}%`}}, // Find by no_rm
                     sequelizeInstance.where(
@@ -601,7 +602,7 @@ export default class RawatInapRepository {
                 }
             };
 
-
+            if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col('monitoring_room.room.uuid'), { [Op.iLike]: `${args.room}` });
 
             const options = {
               include: [
@@ -637,13 +638,17 @@ export default class RawatInapRepository {
                       where: { deletedAt: { [Op.is]: null } },
                       attributes: ["uuid", "code", "name", "class_code", "class_name"],
                     },
+                    {
+                      model: LokasiModel,
+                      as: "room",
+                      required: true,
+                      where: { deletedAt: { [Op.is]: null } },
+                      attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                    }
                   ],
                 },
               ],
               attributes: ["no_rm", "tanggal_daftar", "tanggal_dirawat", "discharge_date"],
-              where: {
-                dischargeDate: { [Op.ne]: null }
-              }
             };
 
             return await Pagination.init(

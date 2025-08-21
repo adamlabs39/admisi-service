@@ -315,6 +315,7 @@ export default class RawatJalanRepository {
 
             //* GET JADWAL DOKTER DARI ANTRIAN
             const jadwalDokter = await this.findJadwalDokterByUuid(data.jadwalDokterUuid);
+
             const dataRJ = {
                 faskesUuid,
                 patientUuid: patient.uuid,
@@ -368,11 +369,12 @@ export default class RawatJalanRepository {
             return regist.dataValues.uuid;
         });
 
-        //*GENERATE NO ANTRIAN
+        //* GENERATE NO ANTRIAN
         try{
             await generateNoAntrian.post("/", {
             rawat_jalan_uuid: create
         });
+
         } catch (error) {
             console.error("Error generating no antrian:", error);
         }
