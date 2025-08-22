@@ -144,7 +144,7 @@ export default class RawatJalanRepository {
                     as: "jadwal_dokter",
                     required: true,
                     where: {deletedAt: {[Op.is]: null}},
-                    attributes: ["uuid","start_time", "end_time"],
+                    attributes: ["uuid","start_time", "end_time",],
                 }
             ],
             attributes: [
@@ -458,7 +458,6 @@ export default class RawatJalanRepository {
                 noAntrianPoli: data.noAntrianPoli,
                 noAntrianFarmasi: data.noAntrianFarmasi,
                 kodeBooking: data.kodeBooking,
-                tanggalCheckin: moment().unix(),
                 tanggalDaftar: moment().unix(),
             };
 
@@ -536,12 +535,16 @@ export default class RawatJalanRepository {
             }
 
             // const antrianPoli = await generateAntrianPoli(data.jadwalDokterUuid);
-            if (!noAntrianPoli) dataRJ.noAntrianPoli = data.no_antrian_poli;
+            if (!data.noAntrianPoli) dataRJ.noAntrianPoli = data.no_antrian_poli;
             // if (!jadwalPeriksa) dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
             if (!jadwalDokterUuid) dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
 
-            if (statusRj === 1) dataRJ.statusRj = 2;
+            if (statusRj === 1 || statusRj === 2) dataRJ.statusRj = 3;
 
+            if (data.platform === "MOBILE"){
+                dataRJ.tanggalCheckin = moment().unix();
+            }
+            
             const updatedRegist = await existingRegist.update(dataRJ, { transaction: t });
 
             if (data.paymentMethod === "ASURANSI") {

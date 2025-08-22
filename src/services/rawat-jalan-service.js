@@ -63,11 +63,15 @@ export class RawatJalanService {
         if (data.platform === "APM") {
             validData = ZodValidator.validate(RawatJalanValidation.RAJAL_APM_VALIDATOR, data);
             if (!validData) throw new BadRequestException("Bad Request");
-        }else {
+        } else if (data.platform === "MOBILE") {
+            validData = ZodValidator.validate(RawatJalanValidation.RAJAL_MOBILE_VALIDATOR, data);
+            if (!validData) throw new BadRequestException("Bad Request");
+        } else {
             validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
             if (!validData) throw new BadRequestException("Bad Request");
             if (validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Insurance data is required");
         }
+        
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 

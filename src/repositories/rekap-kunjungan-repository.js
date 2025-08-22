@@ -207,8 +207,7 @@ export default class RekapKunjunganRepository{
                 [sequelizeInstace.fn("COUNT", sequelizeInstace.col(`LogPelayananModel.uuid`)), "total_harian"],
             ],
             group: [
-                sequelizeInstace.col("patient.uuid"),
-                sequelizeInstace.col("patient.insurance.uuid"),
+                sequelizeInstace.col("patient.insurance.name"),
                 sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")
             ],
             raw: true,
