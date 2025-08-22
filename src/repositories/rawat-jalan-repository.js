@@ -33,8 +33,8 @@ export default class RawatJalanRepository {
      * @param args
      * @returns {Promise<{pagination: {next_page: null, total_page: number, total_data: *, page: number, prev_page: null, page_size: number}, data: *}>}
      */
-    static async getAll(args) {
-        const { faskesUuid } = Context.get(CTX_AUTHOR);
+    static async getAll(args, faskesUuidMobile) {
+        let faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR).faskesUuid;
         const filter = {
             faskesUuid,
             [Op.or]: [
@@ -74,6 +74,25 @@ export default class RawatJalanRepository {
                 filter.statusRj = {[Op.in]: [1, 2, 3, 4]};
             }else{
                 filter.statusRj = {[Op.in]: [5]};
+            }
+        }
+
+        if (args.status_antrian) {
+            const statusAntrianArray = args.status_antrian.split(',').map(item => item.trim());
+            let statusAntrian = [];
+            
+            statusAntrianArray.forEach(status => {
+                if (status === "antri") {
+                    statusAntrian.push(1, 2, 3);
+                } else if (status === "proses") {
+                    statusAntrian.push(4);
+                } else if (status === "selesai") {
+                    statusAntrian.push(5);
+                }
+            });
+
+            if (statusAntrian.length > 0) {
+                filter.statusRj = { [Op.in]: statusAntrian };
             }
         }
 
@@ -144,7 +163,7 @@ export default class RawatJalanRepository {
                     as: "jadwal_dokter",
                     required: true,
                     where: {deletedAt: {[Op.is]: null}},
-                    attributes: ["uuid","start_time", "end_time"],
+                    attributes: ["uuid","start_time", "end_time",],
                 }
             ],
             attributes: [
@@ -152,6 +171,7 @@ export default class RawatJalanRepository {
             ],
         };
 
+        
 
         const transform = {
             practitioner: (row) => ({
@@ -335,11 +355,9 @@ export default class RawatJalanRepository {
 
             // const antrianPoli = await generateAntrianPoli(data.jadwalDokterUuid);
             dataRJ.tanggalDaftar = moment().unix();
-            dataRJ.statusRj = 2;
-            // dataRJ.noAntrianPoli = antrianPoli.code_antrian_poli;
+            dataRJ.statusRj = 3;
             // dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
             dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
-            // dataRJ.kodeBooking = generateBookingCode();
             dataRJ.noReg = await generateNoReg();
             dataRJ.noPelayanan = await generateNoPelayanan('RJ');
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
@@ -369,7 +387,7 @@ export default class RawatJalanRepository {
             return regist.dataValues.uuid;
         });
 
-        //* GENERATE NO ANTRIAN
+          //* GENERATE NO ANTRIAN
         try{
             await generateNoAntrian.post("/", {
             rawat_jalan_uuid: create
@@ -406,6 +424,7 @@ export default class RawatJalanRepository {
                 noAntrianAdmisi: data.noAntrianAdmisi,
                 noAntrianPoli: data.noAntrianPoli,
                 noAntrianFarmasi: data.noAntrianFarmasi,
+                kodeBooking: data.kodeBooking,
                 tanggalCheckin: moment().unix(),
                 tanggalDaftar: moment().unix(),
             };
@@ -418,10 +437,70 @@ export default class RawatJalanRepository {
             dataRJ.noPelayanan = await generateNoPelayanan('RJ');
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
+                tgl_registrasi: regist.tanggalDaftar,
+                noreg: regist.noReg,
+                no_pelayanan: regist.noPelayanan,
+                jenis_kunjungan: "RJ",
+                practitioner_uuid: regist.practitionerUuid,
+                patient_uuid: patient.uuid,
+                lokasi_uuid: regist.lokasiUuid,
+                payment_method: data.paymentMethod === "TUNAI" ? 1 : 2,
+            });
             return regist.dataValues.uuid;
         });
 
         return await this.getOneApm(create);
+    }
+
+    static async createMobile(data, faskesUuid) {
+        const create = await sequelizeInstace.transaction(async (t) => {
+            const patient = await PatientRepository.registPatientMobile(data.patient_data, faskesUuid, t);
+            if (!patient) throw new Error("Failed to create patient");
+            console.log("data patient", patient);
+            data = convertSnakeToCamel(data);
+
+            //* GET JADWAL DOKTER DARI ANTRIAN
+            const jadwalDokter = await this.findJadwalDokterByUuid(data.jadwalDokterUuid);
+
+            const dataRJ = {
+                faskesUuid,
+                patientUuid: patient.uuid,
+                name: patient.name,
+                noRm: patient.noRm,
+                gender: patient.gender,
+                practitionerUuid: jadwalDokter.practitionerUuid,
+                birthDetailUuid: patient.birthDetailUuid,
+                lokasiUuid: jadwalDokter.lokasiUuid,
+                platform: data.platform,
+                noAntrianAdmisi: data.noAntrianAdmisi,
+                noAntrianPoli: data.noAntrianPoli,
+                noAntrianFarmasi: data.noAntrianFarmasi,
+                kodeBooking: data.kodeBooking,
+                tanggalDaftar: moment().unix(),
+            };
+
+            dataRJ.tanggalDaftar = moment().unix();
+            dataRJ.statusRj = 1;
+            dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
+            dataRJ.noReg = await generateNoReg();
+            dataRJ.noPelayanan = await generateNoPelayanan('RJ');
+            const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
+
+            eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
+                tgl_registrasi: regist.tanggalDaftar,
+                noreg: regist.noReg,
+                no_pelayanan: regist.noPelayanan,
+                jenis_kunjungan: "RJ",
+                practitioner_uuid: regist.practitionerUuid,
+                patient_uuid: patient.uuid,
+                lokasi_uuid: regist.lokasiUuid,
+                payment_method: data.paymentMethod === "TUNAI" ? 1 : 2,
+            });
+            return regist.dataValues.uuid;
+        });
+
+        return this.getOne(create);
     }
 
     static async update(uuid, data) {
@@ -475,12 +554,16 @@ export default class RawatJalanRepository {
             }
 
             // const antrianPoli = await generateAntrianPoli(data.jadwalDokterUuid);
-            if (!noAntrianPoli) dataRJ.noAntrianPoli = data.no_antrian_poli;
+            if (!data.noAntrianPoli) dataRJ.noAntrianPoli = data.no_antrian_poli;
             // if (!jadwalPeriksa) dataRJ.jadwalPeriksa = antrianPoli.estimate_time;
             if (!jadwalDokterUuid) dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
 
-            if (statusRj === 1) dataRJ.statusRj = 2;
+            if (statusRj === 1 || statusRj === 2) dataRJ.statusRj = 3;
 
+            if (data.platform === "MOBILE"){
+                dataRJ.tanggalCheckin = moment().unix();
+            }
+            
             const updatedRegist = await existingRegist.update(dataRJ, { transaction: t });
 
             if (data.paymentMethod === "ASURANSI") {
@@ -514,7 +597,6 @@ export default class RawatJalanRepository {
         return await this.getOne(update);
     }
 
-
     /**
      * Cancel visit
      * @param data
@@ -524,6 +606,7 @@ export default class RawatJalanRepository {
         try {
             const user = Context.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
+            console.log("user: ", user);
 
             return await sequelizeInstace.transaction(async (t) => {
                 const rawatJalan = await RawatJalanModel.findAll({
@@ -543,6 +626,7 @@ export default class RawatJalanRepository {
                 if (rawatJalan.length !== data.listUuid.length) {
                     throw new NotfoundException("Data tidak ditemukan");
                 }
+                
                 await RawatJalanModel.update(
                     {statusRj: 0, cancelReason: data.cancelReason},
                     {where: {uuid: data.listUuid, faskesUuid: user.faskesUuid}, transaction: t}
@@ -550,7 +634,8 @@ export default class RawatJalanRepository {
 
                 eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
                     list_no_pelayanan: rawatJalan.map(rj => rj.noPelayanan),
-                    cancel_reason: data.cancelReason
+                    cancel_reason: data.cancelReason,
+                    cancel_by: user.username
                 });
 
                 return rawatJalan;

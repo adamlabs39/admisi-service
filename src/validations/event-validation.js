@@ -32,5 +32,6 @@ export default class EventValidation{
     static CANCELLOGPELAYANAN = z.object({
         list_no_pelayanan: z.array(z.string().max(255)),
         cancel_reason: z.string().max(255),
+        cancel_by: z.string().max(255)
     });
 }

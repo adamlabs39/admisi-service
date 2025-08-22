@@ -42,6 +42,12 @@ const generateNoRM = async () => {
     return `${paddedNumber.slice(0, 2)}-${paddedNumber.slice(2, 4)}-${paddedNumber.slice(4, 6)}`;
 };
 
+const generateNoRmMobile = async (faskesUuid) => {
+    let countPatient = await PatientModel.unscoped().count({ where: { faskesUuid } });
+    countPatient += 1;
+    const paddedNumber = countPatient.toString().padStart(6, '0');
+    return `${paddedNumber.slice(0, 2)}-${paddedNumber.slice(2, 4)}-${paddedNumber.slice(4, 6)}`;
+};
 
 const generateAntrianAdmisi = async () => {
     const today = moment().startOf('day').unix();
@@ -311,6 +317,7 @@ const getInfoPelayanan = async (pelayanan, noreg, column = ['uuid']) => {
 export {
     paginationHelper,
     generateNoRM,
+    generateNoRmMobile,
     getInfoAge,
     convertSnakeToCamel,
     generateNoReg,

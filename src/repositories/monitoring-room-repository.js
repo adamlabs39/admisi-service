@@ -274,7 +274,6 @@ export default class MonitoringRoomRepository {
             if (!bedLocation || bedLocation.location_type !== "Bed") {
               throw new BadRequestException(`Bed tidak tertemui atau bukan lokasi tipe Bed`);
             }
-
             //* CHECK JIKA BED MERUPAKAN BAGIAN DARI RUANGAN
             if (bedLocation.part_of_uuid !== uuid) {
               throw new BadRequestException(`Bed tidak termasuk dalam ruang ini`);
@@ -294,9 +293,15 @@ export default class MonitoringRoomRepository {
           }
 
           // check no bed is duplicated
-          const checkDuplicate = data.filter((bed) => bed.no_bed === bedData.no_bed);
-          if (checkDuplicate.length > 1) {
+          const checkDuplicateNoBed = data.filter((bed) => bed.no_bed === bedData.no_bed);
+          if (checkDuplicateNoBed.length > 1) {
             throw new DuplicateException(`Terdapat duplikasi no bed: ${bedData.no_bed}`);
+          }
+
+          //* Check duplikasi Jenis bed
+          const checkDuplicateBed = data.filter((bed) => bed.lokasi_uuid === bedData.lokasi_uuid);
+          if (checkDuplicateBed.length > 1) {
+            throw new DuplicateException(`Setiap lokasi bed hanya dapat digunakan satu kali dalam satu ruangan`);
           }
 
           if (bedData.uuid) {

@@ -11,11 +11,11 @@ import RawatJalanModel from "../models/rawat-jalan-model.js";
 import AsuransiValidator from "../validations/asuransi-validator.js";
 
 export class RawatJalanService {
-    static async getAll(args) {
+    static async getAll(args, faskesUuidMobile) {
         if(!args.start_date || !args.end_date){
             throw new BadRequestException("Start date and end date is required");
         }
-        return await RawatJalanRepository.getAll(args);
+        return await RawatJalanRepository.getAll(args, faskesUuidMobile);
     }
 
     static async registRawatJalan(data) {
@@ -43,25 +43,35 @@ export class RawatJalanService {
         return result;
     }
 
+    static async registRawatJalanMobile(data, faskesUuid) {
+        const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_MOBILE_VALIDATOR, data);
+        if (!validData) throw new BadRequestException("Validasi gagal");
+        const result = await RawatJalanRepository.createMobile(validData, faskesUuid);
+        if (!result) throw new Error("Gagal membuat rawat jalan mobile");
+
+        return result;
+    }
+
     static async updateRawatJalan(uuid, data) {
         const user = Ctx.get(CTX_AUTHOR);
         const checkExist = await checkExistData(RawatJalanModel, uuid);
         if(!checkExist) throw new NotfoundException('Data tidak ditemukan');
 
-        console.log("data", data);
-
         let validData;
 
-        console.log(data)
         //* Check platform untuk validasi
         if (data.platform === "APM") {
             validData = ZodValidator.validate(RawatJalanValidation.RAJAL_APM_VALIDATOR, data);
             if (!validData) throw new BadRequestException("Bad Request");
-        }else {
+        } else if (data.platform === "MOBILE") {
+            validData = ZodValidator.validate(RawatJalanValidation.RAJAL_MOBILE_VALIDATOR, data);
+            if (!validData) throw new BadRequestException("Bad Request");
+        } else {
             validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);
             if (!validData) throw new BadRequestException("Bad Request");
             if (validData.payment_method === "ASURANSI" && !validData.insurance) throw new BadRequestException("Insurance data is required");
         }
+        
         const faskes = await FaskesRepository.getFaskesByUuid(user.faskesUuid);
         if (!faskes) throw new NotfoundException('Faskes tidak ditemukan');
 

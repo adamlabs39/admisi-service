@@ -4,10 +4,7 @@ import { Context } from "../middlewares/context.js";
 import { Op } from "sequelize";
 import { PegawaiModel, PractitionerModel } from "@adameds/model-sdk/datamaster";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
-
-PractitionerModel.hasOne(LogPelayananModel, {
-    foreignKey: "practitioner_uuid",
-});
+import { InsuranceAccountModel, PatientModel } from "@adameds/model-sdk/admisi";
 
 export default class RekapKunjunganRepository{
     static async getRekapJenisKunjungan(args) {
@@ -87,8 +84,6 @@ export default class RekapKunjunganRepository{
             },
         }
 
-        // if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
-
         const dokter = await LogPelayananModel.findAll({
             where: {
             ...filter,
@@ -98,7 +93,8 @@ export default class RekapKunjunganRepository{
                 as: "practitioner",
                 required: true,
                     where: {
-                        is_doctor: { [Op.is]: true }
+                        is_doctor: { [Op.is]: true },
+                        deletedAt: { [Op.is]: null }
                     },
                 attributes: [],
                 include: {
@@ -118,10 +114,159 @@ export default class RekapKunjunganRepository{
                 sequelizeInstace.col("practitioner.pegawai.uuid"),
                 sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")
             ],
-            order: [[PractitionerModel, PegawaiModel, "name", "ASC"]],
+            // order: [[PractitionerModel, PegawaiModel, "name", "ASC"]],
             raw: true,
         });
 
-        return dokter;
+        //* Total Harian dokter berdasarkan tanggal
+        const totalHarian = dokter.reduce((total_harian, row) => {
+            const tgl = row.tanggal;
+            if (!total_harian[tgl]) total_harian[tgl] = 0;
+            total_harian[tgl] += parseInt(row.total_harian);
+            return total_harian;
+        }, {});
+
+        const total_harian = Object.entries(totalHarian).map(([tgl, total]) => ({
+            tanggal: tgl,
+            total: total
+        }));
+
+        //* Total Kunjungan berdasarkan Nama Dokter
+        const totalDokter = dokter.reduce((dokter, row) => {
+            const nama_dokter = row.nama_dokter;
+            if (!dokter[nama_dokter]) dokter[nama_dokter] = 0;
+            dokter[nama_dokter] += parseInt(row.total_harian);
+            return dokter;
+        }, {});
+
+        const total_dokter = Object.entries(totalDokter).map(([nama_dokter, total]) => ({
+            nama_dokter: nama_dokter,
+            total: total
+        }));
+        
+        //* Total Kunjungan
+        const total_keseluruhan = await LogPelayananModel.count({
+            where: {
+                ...filter,
+            },
+            include: {
+                model: PractitionerModel,
+                as: "practitioner",
+                required: true,
+                    where: {
+                        is_doctor: { [Op.is]: true },
+                        deletedAt: { [Op.is]: null }
+                    },
+                attributes: [],
+                include: {
+                    model: PegawaiModel,
+                    as: "pegawai",
+                    required: true,
+                    attributes: []
+                }
+            },
+        });
+
+        return { dokter, total_harian, total_dokter, total_keseluruhan };
+    }
+
+    static async getRekapPenjamin(args) {
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+
+        const filter = {
+            faskesUuid,
+            status: true,
+                //* Filter Tanggal Registrasi
+            tglRegistrasi: {
+                [Op.between]: [args.start_date, args.end_date],
+            },
+        }
+
+        const penjamin = await LogPelayananModel.findAll({
+            where: {
+            ...filter,
+            },
+            include: {
+                model: PatientModel,
+                as: "patient",
+                required: true,
+                where: {
+                    deletedAt: { [Op.is]: null }
+                },
+                attributes: [],
+                include: {
+                    model: InsuranceAccountModel,
+                    as: "insurance",
+                    required: true,
+                    attributes: []
+                }
+            },
+            attributes: [
+                [sequelizeInstace.col("patient.insurance.name"), "nama_penjamin"],
+                [sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
+                [sequelizeInstace.fn("COUNT", sequelizeInstace.col(`LogPelayananModel.uuid`)), "total_harian"],
+            ],
+            group: [
+                sequelizeInstace.col("patient.insurance.name"),
+                sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")
+            ],
+            raw: true,
+        });
+
+         //* Total Harian dokter berdasarkan tanggal
+        const totalHarian = penjamin.reduce((total_harian, row) => {
+            const tgl = row.tanggal;
+            if (!total_harian[tgl]) total_harian[tgl] = 0;
+            total_harian[tgl] += parseInt(row.total_harian);
+            return total_harian;
+        }, {});
+
+        const total_harian = Object.entries(totalHarian).map(([tgl, total]) => ({
+            tanggal: tgl,
+            total: total
+        }));
+
+        //* Total Kunjungan berdasarkan Nama Penjamin
+        const totalPenjamin = penjamin.reduce((penjamin, row) => {
+            const nama_penjamin = row.nama_penjamin;
+            if (!penjamin[nama_penjamin]) penjamin[nama_penjamin] = 0;
+            penjamin[nama_penjamin] += parseInt(row.total_harian);
+            return penjamin;
+        }, {});
+
+        const total_penjamin = Object.entries(totalPenjamin).map(([nama_penjamin, total]) => ({
+            nama_penjamin: nama_penjamin,
+            total: total
+        }));
+
+        //* Total Keselurhan penjamin
+        const total_keseluruhan = await LogPelayananModel.count({
+            where: {
+                ...filter,
+                [Op.and]: [
+                    sequelizeInstace.where(sequelizeInstace.col("patient.insurance.uuid"), { [Op.not]: null }),
+                ]
+            }, include: [
+                {
+                    model: PatientModel,
+                    as: "patient",
+                    required: true,
+                    where: {
+                        deletedAt: {
+                            [Op.is]: null
+                        }
+                    },
+                    attributes: [],
+                    include: {
+                        model: InsuranceAccountModel,
+                        as: "insurance",
+                        required: true,
+                        attributes: []
+                    }
+                }
+            ]
+        });
+
+        return { penjamin, total_harian, total_penjamin, total_keseluruhan };
     }
 }
