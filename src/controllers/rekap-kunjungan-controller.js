@@ -19,4 +19,13 @@ export default class RekapKunjunganController {
             next(error);
         }
     }
+
+    static async getRekapPenjamin(req, res, next) {
+        try {
+            const result = await RekapKunjunganService.getRekapPenjamin(req.query);
+            return res.status(200).json(successResponse("Data Rekap Penjamin berhasil ditampilkan", result));
+        } catch (error) {
+            next(error);
+        }
+    }
 }

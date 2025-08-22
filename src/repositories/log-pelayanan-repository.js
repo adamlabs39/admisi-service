@@ -208,7 +208,7 @@ export default class LogPelayananRepository {
             attributes: ["name"],
           },
         ],
-        attributes: ["tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "cancel_date"],
+        attributes: ["tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "discharge_date"],
       };
 
       const transform = {

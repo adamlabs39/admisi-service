@@ -9,7 +9,7 @@ import {
 import {Op} from "sequelize";
 import Pagination from "../helper/pagination.js";
 import moment from "moment";
-import {convertSnakeToCamel, generateNoRM, getInfoAge} from "../helper/utility.js";
+import {convertSnakeToCamel, generateNoRM, generateNoRmMobile, getInfoAge} from "../helper/utility.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import DuplicateException from "../exception/duplicate-exception.js";
@@ -195,6 +195,71 @@ export default class PatientRepository{
             };
 
         }catch (error) {
+            if (!externalTransaction) await transaction.rollback();
+            console.error(error);
+            throw error;
+        }
+    }
+
+    static async registPatientMobile(data, faskesUuid, externalTransaction = null) {
+        const transaction = externalTransaction || await sequelizeInstace.transaction();
+        data = convertSnakeToCamel(data);
+
+        PatientService.patientIdentityFormat(data.identity, data.noIdentity);
+
+        try {
+            if (data.isNewBorn === undefined || !data.isNewBorn) {
+                data.isNewBorn = false;
+            }
+
+            if (!data.birthDetailUuid) {
+                const birthDetail = await BirthDetailModel.create({
+                    faskesUuid: faskesUuid,
+                    birthPlace: 'Surabaya',
+                    birthDate: new Date('2000-01-01'),
+                    ageYear: 0,
+                    ageMonth: 0,
+                    ageDay: 0
+                }, { transaction });
+                
+                data.birthDetailUuid = birthDetail.uuid;
+            }
+
+            // Handle address
+            let address = null;
+            if (data.address) {
+                data.address.faskesUuid = faskesUuid;
+                address = await AddressModel.create(data.address, { transaction });
+                data.addressUuid = address.uuid;
+            }
+
+            if (!data.noRm) {
+                data.noRm = await generateNoRmMobile(faskesUuid);
+            }
+
+            data.faskesUuid = faskesUuid;
+
+            const patientModel = await PatientModel.create({
+                ...data,
+                noRm: data.noRm,
+            }, { transaction });
+
+            if (!externalTransaction) await transaction.commit();
+
+            return {
+                ...patientModel.get({ plain: true }),
+                address: address ? address.get({ plain: true }) : null,
+                birthDetail: {
+                    uuid: data.birthDetailUuid,
+                    birthPlace: 'Surabaya',
+                    birthDate: new Date('2000-01-01'),
+                    ageYear: 0,
+                    ageMonth: 0,
+                    ageDay: 0
+                }
+            };
+
+        } catch (error) {
             if (!externalTransaction) await transaction.rollback();
             console.error(error);
             throw error;

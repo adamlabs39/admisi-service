@@ -1,10 +1,12 @@
 import {RawatJalanService} from "../services/rawat-jalan-service.js";
 import successResponse from "../responses/success-response.js";
+import FaskesRepository from "../repositories/faskes-repository.js";
 
 export default class RawatJalanController {
     static async getAll(request, response, nextFunction) {
         try {
-            const data = await RawatJalanService.getAll(request.query);
+            const faskesUuidMobile = request.headers["faskes-uuid"];
+            const data = await RawatJalanService.getAll(request.query, faskesUuidMobile);
             return response.status(200).json(successResponse(
                 "Data Rawat Jalan Berhasil Ditampilkan",
                 data.data,
@@ -28,6 +30,16 @@ export default class RawatJalanController {
         try {
             const data = await RawatJalanService.registRawatJalanApm(request.body);
             return response.status(201).json(successResponse("Rawat Jalan APM Berhasil Dibuat", data));
+        } catch (error) {
+            nextFunction(error);
+        }
+    }
+
+    static async registRawatJalanMobile(request, response, nextFunction) {
+        try {
+            const faskesUuid = request.headers["faskes-uuid"];
+            const data = await RawatJalanService.registRawatJalanMobile(request.body, faskesUuid);
+            return response.status(201).json(successResponse("Rawat Jalan Mobile Berhasil Dibuat", data));
         } catch (error) {
             nextFunction(error);
         }

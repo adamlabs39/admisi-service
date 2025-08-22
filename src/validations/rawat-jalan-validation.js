@@ -44,6 +44,20 @@ export default class RawatJalanValidation {
         is_pasien_baru: z.boolean().optional()
     })
 
+    static RAJAL_MOBILE_VALIDATOR = z.object({
+        patient_data: z.object({
+            patient_uuid: z.optional(z.string().max(255).uuid()),
+            // no_rm: z.string().max(255).optional(),
+            ...PatientValidation.PATIENT_VALIDATOR.shape
+        }),
+        no_antrian_admisi: z.string().max(255).optional(),
+        no_antrian_poli: z.string().max(255).optional(),
+        no_antrian_farmasi: z.string().max(255).optional(),
+        kode_booking: z.string().max(255).optional(),
+        maternity: z.boolean().default(false),
+        platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("MOBILE").optional(),
+        jadwal_dokter_uuid: z.string().max(255).uuid(),
+    })
 
     static cancelVisit = z.object({
         list_uuid: z.array(z.string().max(255)),

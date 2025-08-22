@@ -20,7 +20,8 @@ const routes = express.Router();
 
 // Routes Mobile
 routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
-
+routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
+routes.get("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.getAll);
 
 //TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);
@@ -97,4 +98,6 @@ routes.get("/export/new-born", ExportReportController.getExportNewBorn);
 // Rekap Kunjungan
 routes.get("/rekap/jenis-kunjungan", RekapKunjunganController.getRekapKunjungan);
 routes.get("/rekap/dokter", RekapKunjunganController.getRekapDokter);
+routes.get("/rekap/penjamin", RekapKunjunganController.getRekapPenjamin);
+
 export default routes;
