@@ -77,6 +77,16 @@ export default class RawatJalanRepository {
             }
         }
 
+        if (args.status_antrian){
+            if (args.status_antrian === "antri") {
+                filter.statusRj = { [Op.in]: [1, 2, 3] };
+            } else if (args.status_antrian === "proses") {
+                filter.statusRj = { [Op.in]: [4] };
+            } else if (args.status_antrian === "selesai") {
+                filter.statusRj = { [Op.in]: [5] };
+            }
+        }
+
         if (args.dpjp) filter.practitionerUuid = args.dpjp;
 
         const options = {
@@ -587,6 +597,7 @@ export default class RawatJalanRepository {
         try {
             const user = Context.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
+            console.log("user: ", user);
 
             return await sequelizeInstace.transaction(async (t) => {
                 const rawatJalan = await RawatJalanModel.findAll({
@@ -615,7 +626,7 @@ export default class RawatJalanRepository {
                 eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
                     list_no_pelayanan: rawatJalan.map(rj => rj.noPelayanan),
                     cancel_reason: data.cancelReason,
-                    cancel_by: user.name
+                    cancel_by: user.username
                 });
 
                 return rawatJalan;

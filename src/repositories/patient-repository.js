@@ -79,7 +79,7 @@ export default class PatientRepository{
                     transaction
                 });
                 if (existingPatient && existingPatient.uuid !== uuid) {
-                    throw new DuplicateException("No identity already exists for this faskes.");
+                    throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
                 }
             } else if (!uuid && !data.isNewBorn) {
                 // Check uniqueness for new patients
@@ -91,7 +91,7 @@ export default class PatientRepository{
                     },
                     transaction
                 });
-                if (existingPatient) throw new DuplicateException("No identity already exists");
+                if (existingPatient) throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
             }
 
             // Create or update patient
@@ -150,7 +150,7 @@ export default class PatientRepository{
                     },
                     transaction
                 });
-                if (existingPatient) throw new DuplicateException("No identity already exists");
+                if (existingPatient) throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
             }
 
             // Handle address
@@ -210,6 +210,20 @@ export default class PatientRepository{
         try {
             if (data.isNewBorn === undefined || !data.isNewBorn) {
                 data.isNewBorn = false;
+            }
+
+            const uuid = data.patientUuid || null;
+            if (!uuid && !data.isNewBorn) {
+                // Check uniqueness for new patients
+                const existingPatient = await PatientModel.findOne({
+                    where: {
+                        faskesUuid,
+                        noIdentity: data.noIdentity,
+                        deletedAt: { [Op.is]: null }
+                    },
+                    transaction
+                });
+                if (existingPatient) throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
             }
 
             if (!data.birthDetailUuid) {

@@ -51,7 +51,7 @@ export default class LogPelayananRepository {
   }
 
   static async cancelVisitLogPelayanan(data) {
-    const { faskesUuid, name } = Context.get(CTX_AUTHOR);
+    const { faskesUuid, username } = Context.get(CTX_AUTHOR);
     data = convertSnakeToCamel(data);
     try {
       return await LogPelayananModel.update(
@@ -59,7 +59,7 @@ export default class LogPelayananRepository {
           status: false,
           cancelReason: data.cancelReason,
           cancelDate: moment().unix(),
-          cancelBy: name,
+          cancelBy: username,
         },
         {
           where: {
@@ -130,7 +130,7 @@ export default class LogPelayananRepository {
         [Op.or]: [
           { noreg: { [Op.iLike]: `%${args.q || ""}%` } }, // Find by no_rm
           sequelizeInstance.where(sequelizeInstance.fn("concat", sequelizeInstance.col("patient.title"), " ", sequelizeInstance.col("patient.name")), { [Op.iLike]: `%${args.q || ""}%` }), // Find by title and name
-          sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }), // Find by address
+          sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }), // Find by address0198cb04-f643-7535-90b6-4bce75afd7ab
           sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }), // Find By Rm patient
         ],
         dischargeDate: {
