@@ -77,13 +77,22 @@ export default class RawatJalanRepository {
             }
         }
 
-        if (args.status_antrian){
-            if (args.status_antrian === "antri") {
-                filter.statusRj = { [Op.in]: [1, 2, 3] };
-            } else if (args.status_antrian === "proses") {
-                filter.statusRj = { [Op.in]: [4] };
-            } else if (args.status_antrian === "selesai") {
-                filter.statusRj = { [Op.in]: [5] };
+        if (args.status_antrian) {
+            const statusAntrianArray = args.status_antrian.split(',').map(item => item.trim());
+            let statusAntrian = [];
+            
+            statusAntrianArray.forEach(status => {
+                if (status === "antri") {
+                    statusAntrian.push(1, 2, 3);
+                } else if (status === "proses") {
+                    statusAntrian.push(4);
+                } else if (status === "selesai") {
+                    statusAntrian.push(5);
+                }
+            });
+
+            if (statusAntrian.length > 0) {
+                filter.statusRj = { [Op.in]: statusAntrian };
             }
         }
 
