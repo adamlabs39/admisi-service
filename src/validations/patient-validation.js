@@ -54,7 +54,7 @@ export default class PatientValidation{
         phone: z.string({ required_error: "No HP Perlu diisi sesuai format Excel" }).max(15),
         religion: z.string().max(25),
         language: z.string().max(50),
-        maritial_status: z.string().max(50),
+        maritial_status: z.string({ required_error: "Status Pernikahan Perlu diisi sesuai format Excel" }).max(50),
         mother_name: z.string().max(255),
         address: z.object({
             prov: z.string({ required_error: "Provinsi Perlu diisi sesuai format Excel" }).max(150),

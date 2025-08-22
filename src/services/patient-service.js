@@ -117,15 +117,15 @@ export default class PatientService {
         identity: rawData["Identitas*"] ,
         no_identity: rawData["No_Identitas*"]?.toString(),
         birth_detail: {
-        birth_place: rawData["Tempat_Lahir*"] || "",
+        birth_place: rawData["Tempat_Lahir*"],
         birth_date: rawData["Tanggal_Lahir*"] ? moment(birthExcel).format("YYYY-MM-DD") : "",
         },
         gender: rawData["Jenis_Kelamin*"] === "Perempuan" ? "Female" : "Male",
         phone: rawData["No_HP*"]?.toString(),
         religion: rawData["Agama"] || "",
-        language: rawData["Bahasa_yang_Dikuasai"],
+        language: rawData["Bahasa_yang_Dikuasai"] || "",
         maritial_status: rawData["Status_Pernikahan*"],
-        mother_name: rawData["Nama_Ibu_Kandung"],
+        mother_name: rawData["Nama_Ibu_Kandung"] || "",
         address: {
         prov: rawData["Provinsi*"],
         city: rawData["Kabupaten_atau_Kota*"],
@@ -135,7 +135,7 @@ export default class PatientService {
         rw: rawData["RW*"]?.toString(),
         postal_code: rawData["Kode_Pos*"]?.toString(),
         full_address: rawData["Alamat*"],
-        country: rawData["Negara*"] || "Indonesia",
+        country: rawData["Negara*"],
         },
     };
     }
