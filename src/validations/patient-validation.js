@@ -2,32 +2,32 @@ import {z} from "zod";
 
 export default class PatientValidation{
     static PATIENT_VALIDATOR = z.object({
-        title: z.string().max(255),
-        name: z.string().max(255),
-        identity: z.string().max(255),
-        no_identity: z.string().max(255),
+        title: z.string({ required_error: "Title perlu diisi"}).max(255),
+        name: z.string({ required_error: "Nama perlu diisi"}).max(255),
+        identity: z.string({ required_error: "Identitas perlu diisi"}).max(255),
+        no_identity: z.string({ required_error: "No Identitas perlu diisi"}).max(255),
         birth_detail: z.object({
-            birth_place: z.string().max(150),
+            birth_place: z.string({ required_error: "Tempat Lahir perlu diisi"}).max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
                 message: "Invalid date format"
             }).transform(value => new Date(value)),
         }),
-        gender: z.string().max(15),
-        phone: z.string().max(15),
-        religion: z.string().max(25),
-        language: z.string().max(50),
-        maritial_status: z.string().max(50),
-        mother_name: z.string().max(255),
+        gender: z.string({ required_error: "Jenis Kelamin perlu diisi"}).max(15),
+        phone: z.string({ required_error: "No HP perlu diisi"}).max(15),
+        religion: z.string({ required_error: "Agama perlu diisi"}).max(25),
+        language: z.string({ required_error: "Bahasa perlu diisi"}).max(50),
+        maritial_status: z.string({ required_error: "Status Pernikahan perlu diisi"}).max(50),
+        mother_name: z.string({ required_error: "Nama Ibu Kandung perlu diisi"}).max(255),
         address: z.object({
-            prov: z.string().max(150),
-            city: z.string().max(150),
-            district: z.string().max(150),
-            rt: z.string().max(150),
-            rw: z.string().max(150),
-            full_address: z.string().max(255),
-            country: z.string().max(150),
-            village: z.string().max(150),
-            postal_code: z.string().max(150),
+            prov: z.string({ required_error: "Provinsi perlu diisi"}).max(150),
+            city: z.string({ required_error: "Kota perlu diisi"}).max(150),
+            district: z.string({ required_error: "Kecamatan perlu diisi"}).max(150),
+            rt: z.string({ required_error: "RT perlu diisi"}).max(150),
+            rw: z.string({ required_error: "RW perlu diisi"}).max(150),
+            full_address: z.string({ required_error: "Alamat Lengkap perlu diisi"}).max(255),
+            country: z.string({ required_error: "Negara perlu diisi"}).max(150),
+            village: z.string({ required_error: "Desa perlu diisi"}).max(150),
+            postal_code: z.string({ required_error: "Kode Pos perlu diisi"}).max(150),
         })
     });
 
@@ -40,32 +40,32 @@ export default class PatientValidation{
     });
 
     static PATIENT_IMPORT_VALIDATOR = z.object({
-        title: z.string().max(255),
-        name: z.string().max(255),
-        identity: z.string().max(255),
-        no_identity: z.string().max(255),
+        title: z.string({ required_error: "Title Perlu diisi sesuai format Excel sesuai format Excel" }).max(255),
+        name: z.string({ required_error: "Nama Perlu diisi sesuai format Excel" }).max(255),
+        identity: z.string({ required_error: "Identitas Perlu diisi sesuai format Excel" }).max(255),
+        no_identity: z.string({ required_error: "No Identitas Perlu diisi sesuai format Excel" }).max(255),
         birth_detail: z.object({
             birth_place: z.string().max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
                 message: "Invalid date format"
             }).transform(value => new Date(value)),
         }),
-        gender: z.string().max(15),
-        phone: z.string().max(15),
+        gender: z.string({ required_error: "Jenis Kelamin Perlu diisi sesuai format Excel" }).max(15),
+        phone: z.string({ required_error: "No HP Perlu diisi sesuai format Excel" }).max(15),
         religion: z.string().max(25),
         language: z.string().max(50),
         maritial_status: z.string().max(50),
         mother_name: z.string().max(255),
         address: z.object({
-            prov: z.string().max(150),
-            city: z.string().max(150),
-            district: z.string().max(150),
-            rt: z.string().max(150),
-            rw: z.string().max(150),
-            full_address: z.string().max(255),
-            country: z.string().max(150),
-            village: z.string().max(150),
-            postal_code: z.string().max(150),
+            prov: z.string({ required_error: "Provinsi Perlu diisi sesuai format Excel" }).max(150),
+            city: z.string({ required_error: "Kota Perlu diisi sesuai format Excel" }).max(150),
+            district: z.string({ required_error: "Kecamatan Perlu diisi sesuai format Excel" }).max(150),
+            rt: z.string({ required_error: "RT Perlu diisi sesuai format Excel" }).max(150),
+            rw: z.string({ required_error: "RW Perlu diisi sesuai format Excel" }).max(150),
+            full_address: z.string({ required_error: "Alamat Lengkap Perlu diisi sesuai format Excel" }).max(255),
+            country: z.string({ required_error: "Negara Perlu diisi sesuai format Excel" }).max(150),
+            village: z.string({ required_error: "Desa Perlu diisi sesuai format Excel" }).max(150),
+            postal_code: z.string({ required_error: "Kode Pos Perlu diisi sesuai format Excel" }).max(150),
         })
     })
 

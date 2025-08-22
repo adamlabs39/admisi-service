@@ -163,9 +163,6 @@ export default class ExportReportRepository {
         return await LogPelayananModel.findAll({
             where: {
                 ...filter,
-                cancelDate: {
-                    [Op.not]: null
-                }
             },
             include: [
                 {

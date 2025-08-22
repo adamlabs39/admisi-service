@@ -2,7 +2,7 @@ import axios from "axios";
 import { Context as Ctx } from "../middlewares/context.js";
 import { CTX_TOKEN } from "../constant/context-constant.js";
 
-const BASE_URL_ANTRIAN = "http://192.168.1.77:7001/api/v3/antrian";
+const BASE_URL_ANTRIAN = "https://3nzgdggf-3000.asse.devtunnels.ms/api/v3/antrian";
 
 const authInterceptor = (config) => {
   const token = Ctx.get(CTX_TOKEN);
@@ -14,7 +14,7 @@ const authInterceptor = (config) => {
 
 //* Modul Antrian
 const generateNoAntrian = axios.create({
-  baseURL: `${BASE_URL_ANTRIAN}/data-antrian/process-registration`,
+  baseURL: `${BASE_URL_ANTRIAN}/data-antrian/admisi-registration`,
   timeout: 10000,
   method: "POST",
   headers: {

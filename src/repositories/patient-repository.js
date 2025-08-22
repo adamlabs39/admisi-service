@@ -337,6 +337,11 @@ export default class PatientRepository{
                     currentInsert++;
                     i++;
                 }
+
+                if (data.length === 0) {
+                    throw new BadRequestException("File kosong, tidak ada data pasien untuk diimpor");
+                }
+
                 return {message: `Berhasil import : ${data.length} data pasien`};
             });
         }catch (error){
