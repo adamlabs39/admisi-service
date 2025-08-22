@@ -251,6 +251,8 @@ export default class MonitoringRoomRepository {
           transaction: t,
         });
 
+        console.log("exist: ", existingBeds);
+
         // Collect UUIDs from incoming data
         const incomingUuids = data.map((bed) => bed.uuid).filter((uuid) => uuid !== null);
 
@@ -285,7 +287,8 @@ export default class MonitoringRoomRepository {
                 throw new BadRequestException(`Bed yang sedang digunakan tidak dapat diubah`);
               }
 
-              if (bedExist.lokasi_uuid && bedExist.type !== bedData.type) {
+              //* Tipe bednya
+              if (bedExist.lokasi_uuid === bedData.lokasi_uuid && bedExist.type !== bedData.type && bedExist.patientUuid) {
                 throw new BadRequestException(`Bed yang sedang digunakan tidak dapat diubah`);
               }
             }
