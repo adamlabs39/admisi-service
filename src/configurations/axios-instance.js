@@ -14,7 +14,7 @@ const authInterceptor = (config) => {
 
 //* Modul Antrian
 const generateNoAntrian = axios.create({
-  baseURL: `${BASE_URL_ANTRIAN}/data-antrian/process-registration`,
+  baseURL: `${BASE_URL_ANTRIAN}/data-antrian/admisi-registration`,
   timeout: 10000,
   method: "POST",
   headers: {

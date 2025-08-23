@@ -92,50 +92,50 @@ export default class PatientService {
     static patientIdentityFormat(identitas, noIdentitas){
         if (identitas === "KTP" && !/^\d{16}$/.test(noIdentitas)) {
             throw new BadRequestException("Nomor KTP harus terdiri dari 16 digit angka");
-        } else if (identitas === "Passport" && !/^[A-Za-z].{8}$/.test(noIdentitas)) {
+        } else if (identitas === "Passport" && !/^[A-Z]\d{8}$/.test(noIdentitas)) {
             throw new BadRequestException("Nomor paspor harus diawali 1 huruf, diikuti 8 digit angka");
         }
     }
 
     static async import(data) {
-    const result = [];
-    data.map((item, index) => {
-        const patientData = this.mapPatientData(item);
-        const validData = ZodValidator.validate(PatientValidation.PATIENT_IMPORT_VALIDATOR, patientData);
-        this.patientIdentityFormat(validData.identity, validData.no_identity);
-        if (!validData) throw new BadRequestException("Error on row " + (index + 1));
-        result.push(validData);
-    });
-    return await PatientRepository.importData(result);
+        const result = [];
+        data.map((item, index) => {
+            const patientData = this.mapPatientData(item);
+            const validData = ZodValidator.validate(PatientValidation.PATIENT_IMPORT_VALIDATOR, patientData);
+            this.patientIdentityFormat(validData.identity, validData.no_identity);
+            if (!validData) throw new BadRequestException("Error on row " + (index + 1));
+            result.push(validData);
+        });
+        return await PatientRepository.importData(result);
     }
 
     static mapPatientData(rawData) {
     const birthExcel = new Date((rawData["Tanggal_Lahir*"] - 25569) * 86400 * 1000);
     return {
-        title: rawData["Awalan_atau_Gelar*"] || "",
-        name: rawData["Nama_Lengkap*"] || "",
-        identity: rawData["Identitas*"] || "",
-        no_identity: rawData["No_Identitas*"]?.toString() || "",
+        title: rawData["Awalan_atau_Gelar*"],
+        name: rawData["Nama_Lengkap*"],
+        identity: rawData["Identitas*"] ,
+        no_identity: rawData["No_Identitas*"]?.toString(),
         birth_detail: {
-        birth_place: rawData["Tempat_Lahir*"] || "",
+        birth_place: rawData["Tempat_Lahir*"],
         birth_date: rawData["Tanggal_Lahir*"] ? moment(birthExcel).format("YYYY-MM-DD") : "",
         },
         gender: rawData["Jenis_Kelamin*"] === "Perempuan" ? "Female" : "Male",
-        phone: rawData["No_HP*"]?.toString() || "",
+        phone: rawData["No_HP*"]?.toString(),
         religion: rawData["Agama"] || "",
         language: rawData["Bahasa_yang_Dikuasai"] || "",
-        maritial_status: rawData["Status_Pernikahan*"] || "",
+        maritial_status: rawData["Status_Pernikahan*"],
         mother_name: rawData["Nama_Ibu_Kandung"] || "",
         address: {
-        prov: rawData["Provinsi*"] || "",
-        city: rawData["Kabupaten_atau_Kota*"] || "",
-        district: rawData["Kecamatan*"] || "",
-        village: rawData["Kelurahan_atau_Desa*"] || "",
-        rt: rawData["RT*"]?.toString() || "",
-        rw: rawData["RW*"]?.toString() || "",
-        postal_code: rawData["Kode_Pos*"]?.toString() || "",
-        full_address: rawData["Alamat*"] || "",
-        country: rawData["Negara*"] || "Indonesia",
+        prov: rawData["Provinsi*"],
+        city: rawData["Kabupaten_atau_Kota*"],
+        district: rawData["Kecamatan*"],
+        village: rawData["Kelurahan_atau_Desa*"],
+        rt: rawData["RT*"]?.toString(),
+        rw: rawData["RW*"]?.toString(),
+        postal_code: rawData["Kode_Pos*"]?.toString(),
+        full_address: rawData["Alamat*"],
+        country: rawData["Negara*"],
         },
     };
     }

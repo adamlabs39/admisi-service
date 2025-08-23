@@ -238,7 +238,7 @@ export default class RawatJalanRepository {
                 attributes: ["start_time", "end_time"],
             },
             ],
-            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj"],
+            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar"],
             });
             if (!result) throw new NotfoundException("Data tidak ditemukan");
             if (result.dataValues.payment_method === 2) {
@@ -328,6 +328,7 @@ export default class RawatJalanRepository {
     static async create(data) {
         const create = await sequelizeInstace.transaction(async (t) => {
             const {faskesUuid} = Ctx.get(CTX_AUTHOR);
+            console.log("data jadwal dokter", data.jadwal_dokter_uuid);
             const patient = await PatientRepository.registPatient(data.patient_data, t);
             if (!patient) throw new Error("Failed to create patient");
             console.log("data patient", patient);
@@ -390,7 +391,9 @@ export default class RawatJalanRepository {
           //* GENERATE NO ANTRIAN
         try{
             await generateNoAntrian.post("/", {
-            rawat_jalan_uuid: create
+            rawat_jalan_uuid: create,
+            jadwal_dokter_uuid: data.jadwal_dokter_uuid,
+            platform: "ADMISI"
         });
 
         } catch (error) {
@@ -547,7 +550,7 @@ export default class RawatJalanRepository {
             const { statusRj, lokasiUuid, practitionerUuid, jadwalDokterUuid } = existingRegist;
 
             if (statusRj === 0) throw new BadRequestException("Data sudah dibatalkan");
-            if (statusRj >= 3) throw new BadRequestException("Data telah diproses");
+            if (statusRj >= 4) throw new BadRequestException("Data telah diproses");
 
             if (lokasiUuid && practitionerUuid && (lokasiUuid !== dataRJ.lokasiUuid || practitionerUuid !== dataRJ.practitionerUuid)) {
                 throw new BadRequestException("Tidak bisa mengubah poli atau dokter");
