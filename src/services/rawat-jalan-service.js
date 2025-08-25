@@ -18,8 +18,8 @@ export class RawatJalanService {
         return await RawatJalanRepository.getAll(args, faskesUuidMobile);
     }
 
-    static async getRawatJalanToday(){
-        return await RawatJalanRepository.getRawatJalanToday();
+    static async getRawatJalanToday(faskesUuidMobile) {
+        return await RawatJalanRepository.getRawatJalanToday(faskesUuidMobile);
     }
 
     static async registRawatJalan(data) {

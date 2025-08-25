@@ -197,8 +197,8 @@ export default class RawatJalanRepository {
         );
     }
 
-    static async getRawatJalanToday() {
-        const { faskesUuid } = Context.get(CTX_AUTHOR);
+    static async getRawatJalanToday(faskesUuidMobile) {
+        let faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR).faskesUuid;
 
         const count = await RawatJalanModel.count({
             where: {
@@ -343,7 +343,7 @@ export default class RawatJalanRepository {
         const create = await sequelizeInstace.transaction(async (t) => {
             const {faskesUuid} = Ctx.get(CTX_AUTHOR);
             console.log("data:", data);
-            const checkPatient = await PatientRepository.checkExistPatient(data);
+            const checkPatient = await PatientRepository.checkExistPatient(data.patient_data);
             console.log("check patient", checkPatient);
             // const patient = await PatientRepository.registPatient(data.patient_data, t);
             if (!patient) throw new Error("Failed to create patient");

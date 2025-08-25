@@ -19,7 +19,8 @@ export default class RawatJalanController {
 
     static async getRawatJalanToday(request, response, nextFunction) {
         try {
-            const data = await RawatJalanService.getRawatJalanToday();
+            const faskesUuidMobile = request.headers["faskes-uuid"];
+            const data = await RawatJalanService.getRawatJalanToday(faskesUuidMobile);
             return response.status(200).json(successResponse("Data Rawat Jalan Hari Ini Berhasil Ditampilkan", data));
         } catch (error) {
             nextFunction(error);
