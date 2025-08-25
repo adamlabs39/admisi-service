@@ -145,9 +145,6 @@ export default class LogPelayananRepository {
       //* Filter Dokter
       if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
 
-      //* Filter Penjamin
-      if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.name"), { [Op.iLike]: `%${args.penjamin}%` });
-
       const options = {
         include: [
           {
@@ -195,7 +192,9 @@ export default class LogPelayananRepository {
                 model: PegawaiModel,
                 as: "pegawai",
                 required: true,
-                where: { deletedAt: { [Op.is]: null } },
+                where: { deletedAt: { [Op.is]: null },
+                        ...(args.penjamin && { name: { [Op.iLike]: `%${args.penjamin}%` } })
+                      },
                 attributes: ["first_title", "last_title", ["name", "nama"], "gender"],
               },
             ],
@@ -245,9 +244,6 @@ export default class LogPelayananRepository {
       };
 
       if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
-
-      //* Filter Penjamin
-      if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.name"), { [Op.iLike]: `%${args.penjamin}%` });
       
       const options = {
         include: [

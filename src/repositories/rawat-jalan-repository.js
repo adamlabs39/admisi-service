@@ -51,6 +51,9 @@ export default class RawatJalanRepository {
             statusRj: {[Op.not]: 0},
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date]
+            },
+            dischargeDate: {
+                [Op.is]: null
             }
         };
 

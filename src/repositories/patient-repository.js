@@ -140,7 +140,20 @@ export default class PatientRepository{
                 transaction
             }) : null;
 
-            if (!uuid && !data.isNewBorn) {
+            if (uuid && !data.isNewBorn) {
+                const existingPatient = await PatientModel.findOne({
+                    where: {
+                        [Op.and]: [
+                            { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
+                            { faskesUuid: faskesUuid }
+                        ]
+                    },
+                    transaction
+                });
+                if (existingPatient && existingPatient.uuid !== uuid) {
+                    throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
+                }
+            } else if (!uuid && !data.isNewBorn) {
                 // Check uniqueness for new patients
                 const existingPatient = await PatientModel.findOne({
                     where: {
@@ -162,9 +175,7 @@ export default class PatientRepository{
                 address = await AddressModel.create(data.address, { transaction });
             }
             data.addressUuid = address?.uuid || null;
-
-    
-
+            
             if (!data.birthDetailUuid) {
                 const birthDetail = await BirthDetailModel.create({
                     faskesUuid: faskesUuid,
@@ -213,7 +224,20 @@ export default class PatientRepository{
             }
 
             const uuid = data.patientUuid || null;
-            if (!uuid && !data.isNewBorn) {
+            if (uuid && !data.isNewBorn) {
+                const existingPatient = await PatientModel.findOne({
+                    where: {
+                        [Op.and]: [
+                            { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
+                            { faskesUuid: faskesUuid }
+                        ]
+                    },
+                    transaction
+                });
+                if (existingPatient && existingPatient.uuid !== uuid) {
+                    throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
+                }
+            } else if (!uuid && !data.isNewBorn) {
                 // Check uniqueness for new patients
                 const existingPatient = await PatientModel.findOne({
                     where: {
@@ -360,13 +384,13 @@ export default class PatientRepository{
             include: [
                     {
                         model: AddressModel,
-                        required: true,
+                        required: false,
                         as: "address",
                         attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "postal_code", "country"]
                     },
                     {
                         model: BirthDetailModel,
-                        required: true,
+                        required: false,
                         as: "birth_detail",
                         attributes: ["uuid", "birth_place", "birth_date", "age_year", "age_month", "age_day"]
                     }
