@@ -681,7 +681,7 @@ export default class RawatJalanRepository {
         try{
             const jadwalList = await this.getAllJadwalDokter();
             let jadwalDokter = null;
-
+            
             for (const item of jadwalList) {
             const foundJadwal = item.jadwal_dokter.find((jadwal) => jadwal.jadwal_dokter_uuid === uuid);
                 

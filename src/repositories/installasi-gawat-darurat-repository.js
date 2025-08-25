@@ -47,8 +47,8 @@ export default class InstallasiGawatDaruratRepository {
             const patient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!patient) throw new Error("Failed to process patient data");
 
-            const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
-            if (!practitioner) throw new NotfoundException('Practitioner not found');
+            // const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
+            // if (!practitioner) throw new NotfoundException('Practitioner not found');
 
             const commonIgdData = {
                 faskesUuid,
@@ -89,7 +89,7 @@ export default class InstallasiGawatDaruratRepository {
                 },transaction)
             }
 
-            await transaction.commit();
+            console.log("IGD created successfully:", resultIgd);
 
             if (data.isNewborn) {
                 await newBornRepository.upsertNewBorn({
@@ -117,6 +117,8 @@ export default class InstallasiGawatDaruratRepository {
                 lokasi_uuid: null,
                 payment_method: resultIgd.paymentMethod
             })
+
+            await transaction.commit();
 
             return await this.getDetail(resultIgd.uuid);
         } catch (e) {

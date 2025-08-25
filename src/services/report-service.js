@@ -13,15 +13,7 @@ export default class ReportService{
         return await LogPelayananRepository.getAllLogPelayanan(args);
     }
 
-
-    static async getReportPenjamin(args){
-        if(!args.start_date || !args.end_date){
-            throw new BadRequestException("Start date and end date is required");
-        }
-
-        return await LogPelayananRepository.getAllLogPenjamin(args);
-    }
-
+    
     static async getCancelVisitReport(args){
         if(!args.start_date || !args.end_date){
             throw new BadRequestException("Start date and end date is required");
