@@ -350,7 +350,6 @@ export default class PatientRepository{
         }
     }
 
-
     static async checkExistPatient(data){
         try {
             return await PatientModel.findOne({

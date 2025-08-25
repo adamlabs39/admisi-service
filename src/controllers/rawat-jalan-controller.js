@@ -17,6 +17,15 @@ export default class RawatJalanController {
         }
     }
 
+    static async getRawatJalanToday(request, response, nextFunction) {
+        try {
+            const data = await RawatJalanService.getRawatJalanToday();
+            return response.status(200).json(successResponse("Data Rawat Jalan Hari Ini Berhasil Ditampilkan", data));
+        } catch (error) {
+            nextFunction(error);
+        }
+    }
+
     static async registRawatJalan(request, response, nextFunction) {
         try {
             const data = await RawatJalanService.registRawatJalan(request.body);

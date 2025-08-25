@@ -32,6 +32,7 @@ routes.use(AuthorizationMiddleware);
 
 // Rawat jalan
 routes.get("/rawat-jalan", RawatJalanController.getAll);
+routes.get("/rawat-jalan/today", RawatJalanController.getRawatJalanToday);
 routes.post("/rawat-jalan", RawatJalanController.registRawatJalan);
 routes.post("/rawat-jalan/apm", RawatJalanController.registRawatJalanApm);
 routes.get("/rawat-jalan/jadwal-dokter", RawatJalanController.getAllJadwalDokter);
