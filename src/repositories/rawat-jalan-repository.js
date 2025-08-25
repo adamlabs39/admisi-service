@@ -342,10 +342,7 @@ export default class RawatJalanRepository {
     static async create(data) {
         const create = await sequelizeInstace.transaction(async (t) => {
             const {faskesUuid} = Ctx.get(CTX_AUTHOR);
-            console.log("data:", data);
-            const checkPatient = await PatientRepository.checkExistPatient(data.patient_data);
-            console.log("check patient", checkPatient);
-            // const patient = await PatientRepository.registPatient(data.patient_data, t);
+            const patient = await PatientRepository.registPatient(data.patient_data, t);
             if (!patient) throw new Error("Failed to create patient");
             console.log("data patient", patient);
             data = convertSnakeToCamel(data);

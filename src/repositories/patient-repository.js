@@ -357,6 +357,35 @@ export default class PatientRepository{
                 [Op.or]: [{ noIdentity: data.no_identity, faskesUuid: data.faskes_uuid }],
                 [Op.and]: [{ deletedAt: { [Op.is]: null } }],
             },
+            include: [
+                    {
+                        model: AddressModel,
+                        required: true,
+                        as: "address",
+                        attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "postal_code", "country"]
+                    },
+                    {
+                        model: BirthDetailModel,
+                        required: true,
+                        as: "birth_detail",
+                        attributes: ["uuid", "birth_place", "birth_date", "age_year", "age_month", "age_day"]
+                    }
+                ],
+                attributes: [
+                    "uuid",
+                    "no_rm",
+                    "title",
+                    "name",
+                    "identity",
+                    "no_identity",
+                    "gender",
+                    "phone",
+                    "religion",
+                    "language",
+                    "mother_name",
+                    "maritial_status",
+                    "status",
+                ],
             });
         } catch (error) {
             console.log(error);
