@@ -145,6 +145,8 @@ export default class LogPelayananRepository {
       //* Filter Dokter
       if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
 
+      if (args.penjamin) filter.paymentMethod = args.penjamin;
+
       const options = {
         include: [
           {
@@ -192,9 +194,7 @@ export default class LogPelayananRepository {
                 model: PegawaiModel,
                 as: "pegawai",
                 required: true,
-                where: { deletedAt: { [Op.is]: null },
-                        ...(args.penjamin && { name: { [Op.iLike]: `%${args.penjamin}%` } })
-                      },
+                where: { deletedAt: { [Op.is]: null },},
                 attributes: ["first_title", "last_title", ["name", "nama"], "gender"],
               },
             ],
