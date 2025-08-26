@@ -634,7 +634,6 @@ export default class RawatJalanRepository {
     }
 
     static async update(uuid, data) {
-        console.log("Rawat jalan update: ", data);
         const update = await sequelizeInstace.transaction(async (t) => {
             const { faskesUuid } = Ctx.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
@@ -650,9 +649,6 @@ export default class RawatJalanRepository {
 
             //* GET JADWAL DOKTER DARI ANTRIAN
             const jadwalDokter = await this.findJadwalDokterByUuid(data.jadwalDokterUuid);
-
-            console.log("existingRegist", existingRegist.dataValues.patientUuid);
-            console.log("data.patientData", data.patientData);
 
             data.patientData.patient_uuid = existingRegist.dataValues.patientUuid;
             const patient = await PatientRepository.registPatient(data.patientData, t);
