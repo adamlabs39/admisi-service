@@ -59,6 +59,10 @@ export default class RawatJalanValidation {
         jadwal_dokter_uuid: z.string().max(255).uuid(),
     })
 
+    static CHECK_KODE_BOOKING_VALIDATOR = z.object({
+        kode_booking: z.string({ required_error: "Kode booking Perlu di isi" }).max(255)
+    })
+
     static cancelVisit = z.object({
         list_uuid: z.array(z.string().max(255)),
         cancel_reason: z.string().max(255)

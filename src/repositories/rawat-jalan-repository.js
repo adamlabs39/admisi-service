@@ -522,6 +522,76 @@ export default class RawatJalanRepository {
         return this.getOne(create);
     }
 
+    static async checkBookingRajal(faskesUuid, data){
+        const booking = await RawatJalanModel.findOne({
+            where: {
+                faskesUuid,
+                kodeBooking: data.kode_booking,
+                deletedAt: null,
+                dischargeDate: null
+            },
+            include: [
+                {
+                    model: PatientModel,
+                    as: "patient",
+                    required: true,
+                    attributes: ["uuid", "no_rm","title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name","maritial_status", "status"],
+                    include: [
+                        {
+                        model: AddressModel,
+                        required: false,
+                        as: "address",
+                        attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "postal_code", "country"]
+                    },
+                    {
+                        model: BirthDetailModel,
+                        required: false,
+                        as: "birth_detail",
+                        attributes: ["uuid", "birth_place", "birth_date", "age_year", "age_month", "age_day"]
+                    }
+                    ],
+                },
+                {
+                    model: PractitionerModel,
+                    as: "practitioner",
+                    required: true,
+                    where: {deletedAt: {[Op.is]: null}},
+                    attributes: ["uuid"],
+                    include: [
+                        {
+                            model: PegawaiModel,
+                            as: "pegawai",
+                            required: true,
+                            where: {deletedAt: {[Op.is]: null}},
+                            attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
+                        }
+                    ]
+                },
+                {
+                    model: LokasiModel,
+                    as: "lokasi",
+                    required: true,
+                    where: {deletedAt: {[Op.is]: null}},
+                    attributes: [
+                        "uuid", "name", "code"
+                    ]
+                },
+                {
+                    model: JadwalDokterModel,
+                    as: "jadwal_dokter",
+                    required: true,
+                    where: {deletedAt: {[Op.is]: null}},
+                    attributes: ["uuid","start_time", "end_time",],
+                }
+            ],
+            attributes: [
+                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "no_antrian_farmasi", "kode_booking", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
+            ],
+        });
+
+        return booking;
+    }
+
     static async update(uuid, data) {
         const update = await sequelizeInstace.transaction(async (t) => {
             const { faskesUuid } = Ctx.get(CTX_AUTHOR);
