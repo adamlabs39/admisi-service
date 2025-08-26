@@ -56,10 +56,10 @@ export class RawatJalanService {
         return result;
     }
 
-    static async checkBookingRajal(data, faskesUuid) {
+    static async checkBookingRajal(data) {
         const validData = ZodValidator.validate(RawatJalanValidation.CHECK_KODE_BOOKING_VALIDATOR, data);
         if (!validData) throw new BadRequestException("Validasi gagal");
-        const result = await RawatJalanRepository.checkBookingRajal(faskesUuid, validData);
+        const result = await RawatJalanRepository.checkBookingRajal(validData);
         if (!result) throw new NotfoundException("Kode Booking tidak ditemukan");
         return result;
     }

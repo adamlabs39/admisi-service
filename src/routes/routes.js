@@ -23,7 +23,6 @@ routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.chec
 routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
 routes.get("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.getAll);
 routes.get("/rawat-jalan/mobile/today", apiKeyCheckPatient, RawatJalanController.getRawatJalanToday);
-routes.post("/rawat-jalan/mobile/check-booking", apiKeyCheckPatient, RawatJalanController.checkBookingRajal);
 
 //TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);
@@ -40,6 +39,7 @@ routes.post("/rawat-jalan/apm", RawatJalanController.registRawatJalanApm);
 routes.get("/rawat-jalan/jadwal-dokter", RawatJalanController.getAllJadwalDokter);
 routes.get("/rawat-jalan/:uuid", RawatJalanController.getDetail);
 routes.put("/rawat-jalan/:uuid", RawatJalanController.updateRawatJalan);
+routes.post("/rawat-jalan/mobile/check-booking", RawatJalanController.checkBookingRajal);
 routes.delete("/rawat-jalan/cancel", RawatJalanController.cancelVisitRawatJalan);
 
 // Instalasi Gawat Darurat

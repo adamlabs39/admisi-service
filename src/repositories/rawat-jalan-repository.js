@@ -522,7 +522,8 @@ export default class RawatJalanRepository {
         return this.getOne(create);
     }
 
-    static async checkBookingRajal(faskesUuid, data){
+    static async checkBookingRajal(data){
+        const { faskesUuid } = Ctx.get(CTX_AUTHOR);
         const booking = await RawatJalanModel.findOne({
             where: {
                 faskesUuid,
