@@ -64,6 +64,15 @@ export default class RawatJalanController {
         }
     }
 
+    static async getRajalBooking(request, response, nextFunction) {
+        try {
+            const data = await RawatJalanService.getRajalBooking(request.body);
+            return response.status(200).json(successResponse("Data Booking Rawat Jalan Berhasil Ditampilkan", data));
+        } catch (error) {
+            nextFunction(error);
+        }
+    }
+
     static async updateRawatJalan(request, response, nextFunction) {
         try{
             const data = await RawatJalanService.updateRawatJalan(request.params.uuid, request.body);
