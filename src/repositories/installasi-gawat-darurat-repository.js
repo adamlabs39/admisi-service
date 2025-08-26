@@ -346,7 +346,8 @@ export default class InstallasiGawatDaruratRepository {
             statusIgd: {[Op.not]: 0},
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date]
-            }
+            },
+            dischargeDate: {[Op.is]: null}
         }
 
         if (args.payment_method) filter.paymentMethod = args.payment_method;

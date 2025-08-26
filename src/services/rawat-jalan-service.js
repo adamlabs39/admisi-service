@@ -56,6 +56,20 @@ export class RawatJalanService {
         return result;
     }
 
+    static async checkBookingRajal(data) {
+        const validData = ZodValidator.validate(RawatJalanValidation.CHECK_KODE_BOOKING_VALIDATOR, data);
+        if (!validData) throw new BadRequestException("Validasi gagal");
+        const result = await RawatJalanRepository.checkBookingRajal(validData);
+        return result;
+    }
+
+    static async getRajalBooking(data) {
+        const validData = ZodValidator.validate(RawatJalanValidation.CHECK_KODE_BOOKING_VALIDATOR, data);
+        if (!validData) throw new BadRequestException("Validasi gagal");
+        const result = await RawatJalanRepository.getBookingRajal(validData);
+        return result;
+    }
+
     static async updateRawatJalan(uuid, data) {
         const user = Ctx.get(CTX_AUTHOR);
         const checkExist = await checkExistData(RawatJalanModel, uuid);

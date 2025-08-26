@@ -145,7 +145,7 @@ export default class LogPelayananRepository {
       //* Filter Dokter
       if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
 
-      if (args.penjamin) filter.paymentMethod = args.penjamin;
+      // if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.uuid"), { [Op.iLike]: `%${args.penjamin}%` });
 
       const options = {
         include: [
@@ -177,7 +177,7 @@ export default class LogPelayananRepository {
                 model: InsuranceAccountModel,
                 as: "insurance",
                 required: false,
-                where: { deletedAt: { [Op.is]: null } },
+                where: { deletedAt: { [Op.is]: null }, ...(args.penjamin && { uuid: { [Op.iLike]: `%${args.penjamin}%` } }) },
                 attributes: ["name", "account_number"],
               },
             ],
@@ -194,7 +194,7 @@ export default class LogPelayananRepository {
                 model: PegawaiModel,
                 as: "pegawai",
                 required: true,
-                where: { deletedAt: { [Op.is]: null },},
+                where: { deletedAt: { [Op.is]: null } },
                 attributes: ["first_title", "last_title", ["name", "nama"], "gender"],
               },
             ],

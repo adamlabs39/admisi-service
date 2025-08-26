@@ -48,9 +48,6 @@ export default class ExportReportRepository {
         return await LogPelayananModel.findAll({
             where: {
                 ...filter,
-                dischargeDate: {
-                    [Op.not]: null
-                }
             },
             include: [
                 {

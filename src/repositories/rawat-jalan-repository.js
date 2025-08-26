@@ -26,6 +26,7 @@ import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
 import { generateNoAntrian, jadwalDokterAntrian } from "../configurations/axios-instance.js";
+import { th } from "zod/v4/locales";
 
 export default class RawatJalanRepository {
     /**
@@ -255,7 +256,7 @@ export default class RawatJalanRepository {
                 attributes: ["start_time", "end_time"],
             },
             ],
-            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar"],
+            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar", "tanggal_checkin"],
             });
             if (!result) throw new NotfoundException("Data tidak ditemukan");
             if (result.dataValues.payment_method === 2) {
@@ -522,11 +523,120 @@ export default class RawatJalanRepository {
         return this.getOne(create);
     }
 
+    static async checkBookingRajal(data){
+        const { faskesUuid } = Ctx.get(CTX_AUTHOR);
+        const rawatJalan = await RawatJalanModel.findOne({
+            where: {
+                faskesUuid,
+                kodeBooking: data.kode_booking,
+                deletedAt: null,
+                dischargeDate: null
+            },
+        });
+
+        if (!rawatJalan) throw new NotfoundException("Kode booking tidak ditemukan");
+
+        const patient = await PatientModel.findOne({
+            where: {
+                uuid: rawatJalan.dataValues.patientUuid,
+                deletedAt: null
+            },
+            include: [
+                    {
+                        model: AddressModel,
+                        required: false,
+                        as: "address",
+                        attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "postal_code", "country"]
+                    },
+                    {
+                        model: BirthDetailModel,
+                        required: false,
+                        as: "birth_detail",
+                        attributes: ["uuid", "birth_place", "birth_date", "age_year", "age_month", "age_day"]
+                    },
+            ],
+            attributes: [
+                    "uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language",
+                    "mother_name", "maritial_status", "status",
+                ],
+        });
+
+        return this.update(rawatJalan.dataValues.uuid, { patient_data: patient, ...rawatJalan.dataValues });
+    }
+
+    static async getBookingRajal(data){
+        const { faskesUuid } = Ctx.get(CTX_AUTHOR);
+        const rawatJalan = await RawatJalanModel.findOne({
+            where: {
+                faskesUuid,
+                kodeBooking: data.kode_booking,
+                deletedAt: null,
+                dischargeDate: null
+            },
+            include: [
+                {
+                    model: PatientModel,
+                    as: "patient",
+                    required: false,
+                    attributes: [ "uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status",],
+                    include: [
+                    {
+                        model: AddressModel,
+                        required: false,
+                        as: "address",
+                        attributes: ["uuid", "full_address","prov", "city", "district", "rt", "rw", "village", "postal_code", "country"]
+                    },
+                    {
+                        model: BirthDetailModel,
+                        required: false,
+                        as: "birth_detail",
+                        attributes: ["uuid", "birth_place", "birth_date", "age_year", "age_month", "age_day"]
+                    }, 
+                    ]
+                },
+                {
+                    model: PractitionerModel,
+                    as: "practitioner",
+                    required: true,
+                    where: {deletedAt: {[Op.is]: null}},
+                    attributes: ["uuid"],
+                    include: [
+                        {
+                            model: PegawaiModel,
+                            as: "pegawai",
+                            required: true,
+                            where: {deletedAt: {[Op.is]: null}},
+                            attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
+                        }
+                    ]
+                },
+                {
+                    model: LokasiModel,
+                    as: "lokasi",
+                    required: true,
+                    where: {deletedAt: {[Op.is]: null}},
+                    attributes: [
+                        "uuid", "name", "code"
+                    ]
+                },
+                {
+                    model: JadwalDokterModel,
+                    as: "jadwal_dokter",
+                    required: true,
+                    where: {deletedAt: {[Op.is]: null}},
+                    attributes: ["uuid","start_time", "end_time",],
+                }
+            ],
+            attributes: ["uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "no_antrian_farmasi", "kode_booking", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"]
+        });
+
+        return rawatJalan;
+    }
+
     static async update(uuid, data) {
         const update = await sequelizeInstace.transaction(async (t) => {
             const { faskesUuid } = Ctx.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
-
             const existingRegist = await RawatJalanModel.findOne({
                 where: {
                 uuid: uuid,
