@@ -43,7 +43,7 @@ export default class PatientRepository{
             if (data.isNewBorn === undefined || !data.isNewBorn) {
                 data.isNewBorn = false;
             }
-
+            
             // Handle address
             let address = patient ? patient.address : null;
             if (address) {
@@ -72,7 +72,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
-                            { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
+                            { noIdentity: data.noIdentity || data.dataValues.no_identity, deletedAt: { [Op.is]: null } },
                             { faskesUuid: faskesUuid }
                         ]
                     },

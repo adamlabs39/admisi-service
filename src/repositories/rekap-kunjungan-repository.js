@@ -28,9 +28,11 @@ export default class RekapKunjunganRepository{
             attributes: [
             "jenis_kunjungan",
             [sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
-            // [sequelizeInstace.fn("COUNT", sequelizeInstace.col("uuid")), "total_harian"],
+            [sequelizeInstace.fn("COUNT", sequelizeInstace.col("uuid")), "total_harian"],
             ],
-            order: [["tanggal", "ASC"]],
+            group: ["jenis_kunjungan", 
+                sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")],
+            order: [["jenis_kunjungan", "ASC"]],
             raw: true,
         });
 
