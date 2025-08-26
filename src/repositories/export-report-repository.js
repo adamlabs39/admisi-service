@@ -435,7 +435,7 @@ export default class ExportReportRepository {
                                     model: LogPelayananModel,
                                     required: true,
                                     as: 'log_pelayanan',
-                                    attributes: ["uuid", "jenis_kunjungan", "discharge_date"],
+                                    attributes: ["uuid", "jenis_kunjungan", "noreg", "discharge_date"],
                                 }
                             ]
                         }

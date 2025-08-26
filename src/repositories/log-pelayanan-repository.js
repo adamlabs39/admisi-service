@@ -145,8 +145,7 @@ export default class LogPelayananRepository {
       //* Filter Dokter
       if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
 
-      //* Filter Penjamin
-      if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.name"), { [Op.iLike]: `%${args.penjamin}%` });
+      if (args.penjamin) filter.paymentMethod = args.penjamin;
 
       const options = {
         include: [
@@ -195,7 +194,7 @@ export default class LogPelayananRepository {
                 model: PegawaiModel,
                 as: "pegawai",
                 required: true,
-                where: { deletedAt: { [Op.is]: null } },
+                where: { deletedAt: { [Op.is]: null },},
                 attributes: ["first_title", "last_title", ["name", "nama"], "gender"],
               },
             ],
@@ -245,9 +244,6 @@ export default class LogPelayananRepository {
       };
 
       if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
-
-      //* Filter Penjamin
-      if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.name"), { [Op.iLike]: `%${args.penjamin}%` });
       
       const options = {
         include: [
@@ -319,98 +315,6 @@ export default class LogPelayananRepository {
       throw error;
     }
   }
-
-  // static async getAllLogPenjamin(args) {
-  //   const { faskesUuid } = Context.get(CTX_AUTHOR);
-  //   try {
-  //     const filter = {
-  //       faskesUuid,
-  //       status: true,
-  //       [Op.or]: [
-  //         { noreg: { [Op.iLike]: `%${args.q || ""}%` } }, // Find by no_rm
-  //         sequelizeInstance.where(sequelizeInstance.fn("concat", sequelizeInstance.col("patient.title"), " ", sequelizeInstance.col("patient.name")), { [Op.iLike]: `%${args.q || ""}%` }), // Find by title and name
-  //         sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }), // Find by address
-  //         sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }), // Find By Rm patient
-  //       ],
-  //       tglRegistrasi: {
-  //         [Op.between]: [args.start_date, args.end_date],
-  //       },
-  //     };
-
-  //     if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
-  //     if (args.penjamin) filter.paymentMethod = args.penjamin;
-  //     if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
-
-  //     const options = {
-  //       include: [
-  //         {
-  //           model: PatientModel,
-  //           as: "patient",
-  //           required: true,
-  //           where: {
-  //             deletedAt: { [Op.is]: null },
-  //           },
-  //           include: [
-  //             {
-  //               model: AddressModel,
-  //               as: "address",
-  //               required: true,
-  //               where: {
-  //                 deletedAt: { [Op.is]: null },
-  //               },
-  //               attributes: ["prov", "city", "district", "rt", "rw", "full_address", "country", "village"],
-  //             },
-  //             {
-  //               model: BirthDetailModel,
-  //               as: "birth_detail",
-  //               required: true,
-  //               where: { deletedAt: { [Op.is]: null } },
-  //               attributes: ["age_year", "age_month", "age_day", "birth_date"],
-  //             },
-  //           ],
-  //           attributes: ["uuid", "title", "name", "identity", "no_identity", "phone", "gender", "no_rm"],
-  //         },
-  //         {
-  //           model: LokasiModel,
-  //           as: "lokasi",
-  //           required: false,
-  //           where: { deletedAt: { [Op.is]: null } },
-  //           attributes: ["name"],
-  //         },
-  //         {
-  //           model: PractitionerModel,
-  //           as: "practitioner",
-  //           required: true,
-  //           where: { deletedAt: { [Op.is]: null } },
-  //           attributes: ["uuid"],
-  //           include: [
-  //             {
-  //               model: PegawaiModel,
-  //               as: "pegawai",
-  //               required: true,
-  //               where: { deletedAt: { [Op.is]: null } },
-  //               attributes: ["first_title", "last_title", ["name", "nama"], "gender"],
-  //             },
-  //           ],
-  //         },
-  //       ],
-  //       attributes: ["tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "lokasi_uuid", "payment_method"],
-  //     };
-
-  //     const transform = {
-  //       practitioner: (row) => ({
-  //         uuid: undefined, // delete practitioner uuid
-  //         ...row.practitioner.pegawai.get(),
-  //       }),
-  //       no_penjamin: async (row) => (row.payment_method === 2 ? (await getInfoInsurance(row.jenis_kunjungan, row.noreg)).insurance : null),
-  //     };
-
-  //     return await Pagination.init(LogPelayananModel, args, filter, options, transform);
-  //   } catch (error) {
-  //     console.log("Error on LogPelayananRepository");
-  //     throw error;
-  //   }
-  // }
 
     static async getReportStatusKamar(args) {
         const { faskesUuid } = Context.get(CTX_AUTHOR);

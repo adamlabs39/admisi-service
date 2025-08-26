@@ -47,8 +47,8 @@ export default class InstallasiGawatDaruratRepository {
             const patient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!patient) throw new Error("Failed to process patient data");
 
-            const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
-            if (!practitioner) throw new NotfoundException('Practitioner not found');
+            // const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
+            // if (!practitioner) throw new NotfoundException('Practitioner not found');
 
             const commonIgdData = {
                 faskesUuid,
@@ -75,7 +75,7 @@ export default class InstallasiGawatDaruratRepository {
             } else if (data.isNewborn) {
                 additionalData = {newborn: true};
             }
-
+            
             const resultIgd = await InstalasiGawatDaruratModel.create({...commonIgdData, ...additionalData}, {transaction});
 
             if (data.paymentMethod === 'ASURANSI') {
@@ -88,8 +88,10 @@ export default class InstallasiGawatDaruratRepository {
                     admissionType: 2
                 },transaction)
             }
-
-            await transaction.commit();
+            
+            console.log("Datas: ", data);
+            console.log("Datas Bayi: ", data.birthTimeBaby);
+            console.log("IGD created successfully:", resultIgd);
 
             if (data.isNewborn) {
                 await newBornRepository.upsertNewBorn({
@@ -98,11 +100,11 @@ export default class InstallasiGawatDaruratRepository {
                     name_baby: patient.name,
                     no_rm_baby: patient.noRm,
                     birth_detail_uuid: patient.birthDetailUuid,
-                    birth_time_baby: moment(data.birthtime).format('HH:mm:ss'),
+                    birth_time_baby: data.patientData.birth_time_baby,
                     gender_baby: patient.gender,
-                    multiple_birth: data.multipleBirth,
+                    multiple_birth: resultIgd.multipleBirth,
                     address_uuid: patient.address.uuid,
-                    tanggal_daftar: moment().unix(),
+                    tanggal_daftar: moment().format('YYYY-MM-DD'),
                     status: true,
                 }, transaction);
             }
@@ -117,6 +119,8 @@ export default class InstallasiGawatDaruratRepository {
                 lokasi_uuid: null,
                 payment_method: resultIgd.paymentMethod
             })
+
+            await transaction.commit();
 
             return await this.getDetail(resultIgd.uuid);
         } catch (e) {
@@ -207,11 +211,11 @@ export default class InstallasiGawatDaruratRepository {
                         name_baby: patient.name,
                         no_rm_baby: patient.noRm,
                         birth_detail_uuid: patient.birthDetailUuid,
-                        birth_time_baby: moment(data.birthtime).format('HH:mm:ss'),
+                        birth_time_baby: data.patientData.birth_time_baby,
                         gender_baby: patient.gender,
                         multiple_birth: data.multipleBirth,
                         address_uuid: patient.address.uuid,
-                        tanggal_daftar: moment().unix(),
+                        tanggal_daftar: moment().format('YYYY-MM-DD'),
                         status: true,
                     }, transaction);
                 }

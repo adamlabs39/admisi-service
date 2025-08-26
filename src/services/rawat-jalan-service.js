@@ -18,6 +18,10 @@ export class RawatJalanService {
         return await RawatJalanRepository.getAll(args, faskesUuidMobile);
     }
 
+    static async getRawatJalanToday(faskesUuidMobile) {
+        return await RawatJalanRepository.getRawatJalanToday(faskesUuidMobile);
+    }
+
     static async registRawatJalan(data) {
         const user = Ctx.get(CTX_AUTHOR);
         const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_VALIDATOR, data);

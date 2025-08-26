@@ -84,6 +84,8 @@ export default class RekapKunjunganRepository{
             },
         }
 
+        if (args.dokter) filter.practitionerUuid = args.dokter
+
         const dokter = await LogPelayananModel.findAll({
             where: {
             ...filter,
@@ -181,6 +183,8 @@ export default class RekapKunjunganRepository{
                 [Op.between]: [args.start_date, args.end_date],
             },
         }
+
+        if (args.penjamin) filter.penjaminUuid = sequelizeInstace.where(sequelizeInstace.col("patient.insurance.uuid"), { [Op.eq]: `${args.penjamin}` });
 
         const penjamin = await LogPelayananModel.findAll({
             where: {

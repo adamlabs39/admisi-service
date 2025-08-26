@@ -51,6 +51,9 @@ export default class RawatJalanRepository {
             statusRj: {[Op.not]: 0},
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date]
+            },
+            dischargeDate: {
+                [Op.is]: null
             }
         };
 
@@ -197,6 +200,20 @@ export default class RawatJalanRepository {
         );
     }
 
+    static async getRawatJalanToday(faskesUuidMobile) {
+        let faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR).faskesUuid;
+
+        const count = await RawatJalanModel.count({
+            where: {
+                faskesUuid,
+                tanggalDaftar: { [Op.gte]: moment().startOf('day').unix() },
+                deletedAt: { [Op.is]: null }
+            }
+        });
+
+        return { jumlah: count };
+    }
+
     /**
      * Get one rawat jalan
      * @param uuid
@@ -328,7 +345,6 @@ export default class RawatJalanRepository {
     static async create(data) {
         const create = await sequelizeInstace.transaction(async (t) => {
             const {faskesUuid} = Ctx.get(CTX_AUTHOR);
-            console.log("data jadwal dokter", data.jadwal_dokter_uuid);
             const patient = await PatientRepository.registPatient(data.patient_data, t);
             if (!patient) throw new Error("Failed to create patient");
             console.log("data patient", patient);
@@ -665,7 +681,7 @@ export default class RawatJalanRepository {
         try{
             const jadwalList = await this.getAllJadwalDokter();
             let jadwalDokter = null;
-
+            
             for (const item of jadwalList) {
             const foundJadwal = item.jadwal_dokter.find((jadwal) => jadwal.jadwal_dokter_uuid === uuid);
                 

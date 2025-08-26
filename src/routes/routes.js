@@ -22,6 +22,7 @@ const routes = express.Router();
 routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
 routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
 routes.get("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.getAll);
+routes.get("/rawat-jalan/mobile/today", apiKeyCheckPatient, RawatJalanController.getRawatJalanToday);
 
 //TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);
@@ -32,6 +33,7 @@ routes.use(AuthorizationMiddleware);
 
 // Rawat jalan
 routes.get("/rawat-jalan", RawatJalanController.getAll);
+routes.get("/rawat-jalan/today", RawatJalanController.getRawatJalanToday);
 routes.post("/rawat-jalan", RawatJalanController.registRawatJalan);
 routes.post("/rawat-jalan/apm", RawatJalanController.registRawatJalanApm);
 routes.get("/rawat-jalan/jadwal-dokter", RawatJalanController.getAllJadwalDokter);
@@ -82,7 +84,6 @@ routes.delete("/general-consent/:uuid", GeneralConsentController.delete);
 
 // Report
 routes.get("/report/kunjungan", ReportController.getReport);
-routes.get("/report/penjamin", ReportController.getReportPenjamin);
 routes.get("/report/cancel-visit", ReportController.getCancelVisitReport);
 routes.get("/report/room", ReportController.getReportRoom);
 routes.get("/report/rawat-inap", ReportController.getReportRawatInap);
