@@ -760,9 +760,9 @@ export default class RawatJalanRepository {
                     transaction: t
                 });
 
-                const isProcessed = rawatJalan.filter(rj => rj.statusRj >= 3);
+                const isProcessed = rawatJalan.filter(rj => rj.statusRj >= 4);
                 if (isProcessed.length > 0) {
-                    throw new BadRequestException("Data telah diproses");
+                    throw new BadRequestException("Pembatalan tidak diizinkan, pasien sudah diperiksa");
                 }
 
                 if (rawatJalan.length !== data.listUuid.length) {

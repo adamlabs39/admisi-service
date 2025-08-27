@@ -95,7 +95,7 @@ export default class PatientService {
         if (identitas === "KTP" && !/^\d{16}$/.test(noIdentitas)) {
             throw new BadRequestException("Nomor KTP harus terdiri dari 16 digit angka");
         } else if (identitas === "Passport" && !/^[A-Z]\d{8}$/.test(noIdentitas)) {
-            throw new BadRequestException("Nomor paspor harus diawali 1 huruf, diikuti 8 digit angka");
+            throw new BadRequestException("Nomor Paspor harus terdiri dari 1 huruf besar di awal dan 8 digit angka setelahnya");
         }
     }
 

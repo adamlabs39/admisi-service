@@ -522,7 +522,8 @@ export default class PatientRepository{
                         noIdentity: {
                             [Op.iLike]: `%${args.q || ""}%`
                         }
-                    }
+                    },
+                    sequelizeInstace.where(sequelizeInstace.col("address.full_address"), { [Op.iLike]: `%${args.q || ""}%` })
                 ]
             };
 
