@@ -51,15 +51,16 @@ export default class LogPelayananRepository {
   }
 
   static async cancelVisitLogPelayanan(data) {
-    const { faskesUuid, username } = Context.get(CTX_AUTHOR);
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
     data = convertSnakeToCamel(data);
+    console.log("Cancel datas:", data);
     try {
-      return await LogPelayananModel.update(
+      const update = await LogPelayananModel.update(
         {
           status: false,
           cancelReason: data.cancelReason,
           cancelDate: moment().unix(),
-          cancelBy: username,
+          cancelBy: data.cancelBy,
         },
         {
           where: {
@@ -70,6 +71,9 @@ export default class LogPelayananRepository {
           },
         }
       );
+
+      console.log("Hasil update: ", update);
+      return update;
     } catch (error) {
       throw error;
     }
