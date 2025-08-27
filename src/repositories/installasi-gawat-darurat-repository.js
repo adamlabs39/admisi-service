@@ -89,10 +89,6 @@ export default class InstallasiGawatDaruratRepository {
                 },transaction)
             }
             
-            console.log("Datas: ", data);
-            console.log("Datas Bayi: ", data.birthTimeBaby);
-            console.log("IGD created successfully:", resultIgd);
-
             if (data.isNewborn) {
                 await newBornRepository.upsertNewBorn({
                     identifier_mom: patient.identity,

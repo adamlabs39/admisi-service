@@ -180,8 +180,8 @@ export default class LogPelayananRepository {
               {
                 model: InsuranceAccountModel,
                 as: "insurance",
-                required: false,
-                where: { deletedAt: { [Op.is]: null }, ...(args.penjamin && { uuid: { [Op.iLike]: `%${args.penjamin}%` } }) },
+                required: true,
+                where: { deletedAt: { [Op.is]: null }, ...(args.penjamin && { name: { [Op.iLike]: `%${args.penjamin}%` } }) },
                 attributes: ["name", "account_number"],
               },
             ],
