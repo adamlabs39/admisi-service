@@ -192,6 +192,19 @@ export default class RawatJalanRepository {
             jadwal_dokter: (row) => undefined,
         };
 
+        if (args.all) {
+            const allData = await RawatJalanModel.findAll({
+                where: filter,
+                ...options
+            });
+
+            const dataTransform = await Pagination.transform(allData, transform);
+
+            return {
+                data: dataTransform
+            };
+        }
+
         return await Pagination.init(
             RawatJalanModel,
             args,
