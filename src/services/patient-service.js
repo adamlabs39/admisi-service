@@ -41,8 +41,10 @@ export default class PatientService {
         return { message: "Berhasil Mengubah Pasien" };
     }
 
-    static async delete(uuid) {
-        const result = await PatientRepository.deletePatient(uuid);
+    static async delete(data) {
+        const validData = ZodValidator.validate(PatientValidation.PATIENT_DELETE_VALIDATOR, data);
+        if (!validData) throw new BadRequestException("Bad Request");
+        const result = await PatientRepository.deletePatient(validData);
         if (!result) throw new NotfoundException("Pasien Tidak Ditemukan");
         return result;
     }

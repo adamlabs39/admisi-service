@@ -31,6 +31,10 @@ export default class PatientValidation{
         })
     });
 
+    static PATIENT_DELETE_VALIDATOR = z.object({
+        list_uuid: z.array(z.string().max(255)),
+    });
+
     static PATIENT_UPLOAD_VALIDATOR = z.object({
         unggah_berkas: z.any().refine(file => file && file.size <= (2 * 1024 * 1024), {
             message: "Size file harus dibawah 2MB"

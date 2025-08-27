@@ -468,21 +468,30 @@ export default class PatientRepository{
         }
     }
 
-    static async deletePatient(uuid){
+    static async deletePatient(data){
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        data = convertSnakeToCamel(data);
         try{
             return await sequelizeInstace.transaction(async (t) => {
+                const patient = await PatientModel.findAll({
+                    where: {
+                        uuid: data.listUuid,
+                        faskesUuid,
+                        deletedAt: { [Op.is]: null }
+                    }
+                })
+
+                if (patient.length !== data.listUuid.length) {
+                    throw new NotfoundException("Data Pasien tidak ditemukan");
+                }
+
                 return await PatientModel.update(
                     { deletedAt: moment().unix() },
                     {
                         where: {
-                            [Op.and]: [
-                                { uuid },
-                                {
-                                    deletedAt: {
-                                        [Op.is]: null
-                                    }
-                                }
-                            ]
+                            uuid: data.listUuid,
+                            faskesUuid,
+                            deletedAt: { [Op.is]: null }
                         },
                         transaction: t
                     }
@@ -501,17 +510,17 @@ export default class PatientRepository{
                 [Op.or]: [
                     {
                         name: {
-                            [Op.like]: `%${args.q || ""}%`
+                            [Op.iLike]: `%${args.q || ""}%`
                         }
                     },
                     {
                         noRm: {
-                            [Op.like]: `%${args.q || ""}%`
+                            [Op.iLike]: `%${args.q || ""}%`
                         }
                     },
                     {
                         noIdentity: {
-                            [Op.like]: `%${args.q || ""}%`
+                            [Op.iLike]: `%${args.q || ""}%`
                         }
                     }
                 ]

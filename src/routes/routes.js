@@ -62,7 +62,7 @@ routes.get("/patient", PatientController.findAll);
 routes.get("/patient/:uuid", PatientController.findByUuid);
 routes.post("/patient", PatientController.create);
 routes.put("/patient/:uuid", PatientController.update);
-routes.delete("/patient/:uuid", PatientController.delete);
+routes.delete("/patient/cancel", PatientController.delete);
 routes.get("/patient/history/:uuid", PatientController.getHistoryPatient);
 routes.post("/patient/check-patient/apm", PatientController.checkPatientExist);
 routes.post("/patient/import", PatientController.import);
