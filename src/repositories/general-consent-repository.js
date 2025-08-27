@@ -15,6 +15,11 @@ export default class GeneralConsentRepository {
             return sequelizeInstace.transaction(async (t) => {
                 const {faskesUuid} = Context.get(CTX_AUTHOR);
 
+                if (!data.familyData) {
+                throw new NotfoundException("Data keluarga pasien tidak ditemukan");
+                }
+
+                console.log("Data Family: ", data.familyData);
                 if (data.familyData) {
                     const familyData = await PatientFamilyRepository.create({
                         ...data.familyData,
@@ -23,6 +28,7 @@ export default class GeneralConsentRepository {
 
                     data.patientFamiliesUuid = familyData.dataValues.uuid;
                 }
+
 
                 return GeneralConsentModel.create({
                     ...data,

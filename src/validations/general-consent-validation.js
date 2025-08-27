@@ -7,6 +7,7 @@ export default class GeneralConsentValidation{
                 name: z.string().max(255),
                 gender: z.string().max(15),
                 relationship: z.string().max(150),
+                address: z.string().max(255).optional(),
             }),
             z.null(),
         ]),
