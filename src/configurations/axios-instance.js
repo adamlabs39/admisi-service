@@ -25,7 +25,7 @@ const generateNoAntrian = axios.create({
 
 generateNoAntrian.interceptors.request.use(authInterceptor);
 
-const jadwalDokterAntrian = axios.create({
+const jadwalDokter = axios.create({
   baseURL: `${BASE_URL_ANTRIAN}/jadwal-dokter`,
   timeout: 10000,
   method: "GET",
@@ -35,6 +35,15 @@ const jadwalDokterAntrian = axios.create({
   },
 });
 
-jadwalDokterAntrian.interceptors.request.use(authInterceptor);
+jadwalDokter.interceptors.request.use(authInterceptor);
 
-export { generateNoAntrian, jadwalDokterAntrian };
+const jadwalDokterMobile = axios.create({
+  baseURL: `${BASE_URL_ANTRIAN}/mobile/jadwal-dokter`,
+  timeout: 10000,
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": "KalGen6eMdJmzLBgl1cgp6D68Q4XHRLIm8sry6ylJYZlH1x1cv",
+  },
+});
+
+export { generateNoAntrian, jadwalDokter, jadwalDokterMobile };

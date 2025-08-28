@@ -91,26 +91,26 @@ const generateAntrianPoli = async (jadwalUuid) => {
     };
 };
 
-const generateNoReg = async () => {
-const today = moment().format("YYMMDD");
-const { faskesUuid } = Context.get(CTX_AUTHOR);
-const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
+const generateNoReg = async (faskesUuidMobile = null) => {
+    const today = moment().format("YYMMDD");
+    const faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR)?.faskesUuid;
+    const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
 
-const count =
-    (
-    await Promise.all(
-        listModel.map((model) =>
-        model.count({
-            where: {
-            faskesUuid,
-            createdAt: { [Op.between]: [today, today + 86400] },
-            },
-        })
+    const count =
+        (
+        await Promise.all(
+            listModel.map((model) =>
+            model.count({
+                where: {
+                faskesUuid,
+                createdAt: { [Op.between]: [today, today + 86400] },
+                },
+            })
+            )
         )
-    )
-    ).reduce((total, count) => total + count, 0) + 1;
+        ).reduce((total, count) => total + count, 0) + 1;
 
-return `REG${today}${count.toString().padStart(4, "0")}`;
+    return `REG${today}${count.toString().padStart(4, "0")}`;
 };
 
 //TODO ini mengambil no registrasi terbesar
@@ -145,9 +145,10 @@ return `REG${today}${count.toString().padStart(4, "0")}`;
 // };
 
 
-const generateNoPelayanan = async (service) => {
+const generateNoPelayanan = async (service, faskesUuidMobile = null) => {
     const today = moment().format('YYMMDD');
-    const { faskesUuid } = Context.get(CTX_AUTHOR);
+    const faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR)?.faskesUuid;
+
     const { model, prefix } = {
         'IGD': { model: InstalasiGawatDaruratModel, prefix: 'IGD' },
         'RI': { model: RawatInapModel, prefix: 'RI' },
@@ -162,8 +163,6 @@ const generateNoPelayanan = async (service) => {
 
     return `${prefix}${today}${(count + 1).toString().padStart(4, '0')}`;
 };
-
-
 
 const generateBookingCode = (length = 6) => {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';

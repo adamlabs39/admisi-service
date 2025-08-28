@@ -332,8 +332,7 @@ export default class LogPelayananRepository {
               }),
             ]
         };
-        if (args.room) filter.room_uuid = args.room;
-        
+        if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col("room.name"), args.room);
 
         const options = {
         include: [

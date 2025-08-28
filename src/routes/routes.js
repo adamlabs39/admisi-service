@@ -20,9 +20,9 @@ const routes = express.Router();
 
 // Routes Mobile
 routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
-routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
 routes.get("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.getAll);
 routes.get("/rawat-jalan/mobile/today", apiKeyCheckPatient, RawatJalanController.getRawatJalanToday);
+routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
 
 //TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);
@@ -42,6 +42,7 @@ routes.put("/rawat-jalan/:uuid", RawatJalanController.updateRawatJalan);
 routes.post("/rawat-jalan/check-booking", RawatJalanController.checkBookingRajal);
 routes.post("/rawat-jalan/print-booking", RawatJalanController.getRajalBooking);
 routes.delete("/rawat-jalan/cancel", RawatJalanController.cancelVisitRawatJalan);
+
 
 // Instalasi Gawat Darurat
 routes.post("/igd", InstalasiGawatDaruratController.registIgd);

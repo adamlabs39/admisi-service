@@ -21,12 +21,10 @@ import {BirthDetailModel, InsuranceAccountModel, PatientModel} from "@adameds/mo
 import {AddressModel} from "@adameds/model-sdk/setting";
 import {JadwalDokterModel} from "@adameds/model-sdk/antrian";
 import {InsuranceAdmissionModel, RawatJalanModel} from "@adameds/model-sdk/pelayanan";
-
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import { generateNoAntrian, jadwalDokterAntrian } from "../configurations/axios-instance.js";
-import { th } from "zod/v4/locales";
+import { generateNoAntrian, jadwalDokter, jadwalDokterMobile } from "../configurations/axios-instance.js";
 
 export default class RawatJalanRepository {
     /**
@@ -49,6 +47,7 @@ export default class RawatJalanRepository {
                     {[Op.iLike]: `%${args.q || ''}%`}
                 ) // Find by address
             ],
+            deletedAt: {[Op.is]: null},
             statusRj: {[Op.not]: 0},
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date]
@@ -490,11 +489,10 @@ export default class RawatJalanRepository {
         const create = await sequelizeInstace.transaction(async (t) => {
             const patient = await PatientRepository.registPatientMobile(data.patient_data, faskesUuid, t);
             if (!patient) throw new Error("Failed to create patient");
-            console.log("data patient", patient);
             data = convertSnakeToCamel(data);
 
             //* GET JADWAL DOKTER DARI ANTRIAN
-            const jadwalDokter = await this.findJadwalDokterByUuid(data.jadwalDokterUuid);
+            const jadwalDokter = await this.findJadwalDokterUuidMobile(faskesUuid, data.jadwalDokterUuid);
 
             const dataRJ = {
                 faskesUuid,
@@ -516,8 +514,8 @@ export default class RawatJalanRepository {
             dataRJ.tanggalDaftar = moment().unix();
             dataRJ.statusRj = 1;
             dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
-            dataRJ.noReg = await generateNoReg();
-            dataRJ.noPelayanan = await generateNoPelayanan('RJ');
+            dataRJ.noReg = await generateNoReg(faskesUuid);
+            dataRJ.noPelayanan = await generateNoPelayanan('RJ', faskesUuid);
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
@@ -790,13 +788,47 @@ export default class RawatJalanRepository {
 
     static async getAllJadwalDokter() {
         try {
-            const { data } = await jadwalDokterAntrian.get("/");
+            const { data } = await jadwalDokter.get("/");
             const jadwalList = data.payload;
 
             return jadwalList
         } catch (err) {
             console.error("Error getAllJadwalDokter:", err.message);
             throw err;
+        }
+    }
+
+    static async findJadwalDokterUuidMobile(faskesUuid, jadwalUuid) {
+        try {
+        const { data } = await jadwalDokterMobile.get("", {
+            headers: { "faskes-uuid": faskesUuid },
+        });
+
+        const jadwalList = data.payload.flatMap((item) =>
+            item.jadwal_dokter.map((jadwal) => ({
+            ...jadwal,
+            practitionerUuid: item.doctor.uuid,
+            practitionerName: item.doctor.name,
+            practitionerCode: item.doctor.kode_antrian,
+            lokasiUuid: item.poli.uuid,
+            lokasiName: item.poli.name,
+            lokasiCode: item.poli.kode_antrian,
+            }))
+        );
+
+        // cari jadwal spesifik
+        const jadwalDokter = jadwalList.find(
+            (j) => j.jadwal_dokter_uuid === jadwalUuid
+        );
+
+        if (!jadwalDokter) {
+            throw new NotfoundException("Jadwal Dokter tidak ditemukan");
+        }
+
+        return jadwalDokter;
+        } catch (err) {
+        console.error("Error getAllJadwalDokterMobile:", err.message);
+        throw err;
         }
     }
 
