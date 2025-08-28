@@ -41,8 +41,10 @@ export default class PatientService {
         return { message: "Berhasil Mengubah Pasien" };
     }
 
-    static async delete(uuid) {
-        const result = await PatientRepository.deletePatient(uuid);
+    static async delete(data) {
+        const validData = ZodValidator.validate(PatientValidation.PATIENT_DELETE_VALIDATOR, data);
+        if (!validData) throw new BadRequestException("Bad Request");
+        const result = await PatientRepository.deletePatient(validData);
         if (!result) throw new NotfoundException("Pasien Tidak Ditemukan");
         return result;
     }
@@ -93,7 +95,7 @@ export default class PatientService {
         if (identitas === "KTP" && !/^\d{16}$/.test(noIdentitas)) {
             throw new BadRequestException("Nomor KTP harus terdiri dari 16 digit angka");
         } else if (identitas === "Passport" && !/^[A-Z]\d{8}$/.test(noIdentitas)) {
-            throw new BadRequestException("Nomor paspor harus diawali 1 huruf, diikuti 8 digit angka");
+            throw new BadRequestException("Nomor Paspor harus terdiri dari 1 huruf besar di awal dan 8 digit angka setelahnya");
         }
     }
 

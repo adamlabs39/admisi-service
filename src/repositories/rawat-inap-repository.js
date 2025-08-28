@@ -61,7 +61,8 @@ export default class RawatInapRepository {
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date]
             },
-            dischargeDate: {[Op.is]: null}
+            dischargeDate: {[Op.is]: null},
+            deletedAt: {[Op.is]: null} 
         }
 
         if (args.payment_method) filter.paymentMethod = args.payment_method;
@@ -190,7 +191,6 @@ export default class RawatInapRepository {
 
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
 
-            console.log("Bed Data:", bedData);
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
 
             const registRI = await RawatInapModel.create({
@@ -238,7 +238,7 @@ export default class RawatInapRepository {
                 name_baby: patient.name,
                 no_rm_baby: patient.noRm,
                 birth_detail_uuid: patient.birthDetailUuid,
-                birth_time_baby: moment(data.birthTimeBaby).format('HH:mm'),
+                birth_time_baby: data.patientData.birth_time_baby,
                 gender_baby: patient.gender,
                 multiple_birth: data.multipleBirth,
                 address_uuid: patient.address.uuid,
@@ -301,7 +301,7 @@ export default class RawatInapRepository {
                     admissionUuid: rawatInap.uuid,
                     monitoringRuanganUuid: rawatInap.monitoringRoomUuid,
                 });
-            } else if (data.monitoringRoomUuid !== rawatInap.monitoringRoomUuid && rawatInap.statusRi !== 1) {
+            } else if (data.monitoringRoomUuid !== rawatInap.monitoringRoomUuid && rawatInap.statusRi !== 2) {
                 throw new DuplicateException("Tidak dapat memperbarui tempat tidur, status Rawat Inap sedang diproses");
             }
 
@@ -338,6 +338,24 @@ export default class RawatInapRepository {
                     admissionType: 3,
                 }, transaction)
             }
+
+            console.log("address:", patient.address);
+            await newBornRepository.upsertNewBorn(
+              {
+                identifier_mom: patient.identity,
+                name_mom: patient.motherName,
+                name_baby: patient.name,
+                no_rm_baby: patient.noRm,
+                birth_detail_uuid: patient.birthDetailUuid,
+                birth_time_baby: data.patientData.birth_time_baby,
+                gender_baby: patient.gender,
+                multiple_birth: data.multipleBirth,
+                address_uuid: updatedPatient.address.uuid,
+                tanggal_daftar: moment().format("YYYY-MM-DD"),
+                status: true,
+              },
+              transaction
+            );
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: rawatInap.tanggalDaftar,
@@ -429,6 +447,7 @@ export default class RawatInapRepository {
               attributes: [
                 "uuid",
                 "no_reg",
+                "tanggal_daftar",
                 "payment_method",
                 "maternity",
                 "note",

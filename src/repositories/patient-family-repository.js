@@ -8,6 +8,7 @@ import {CTX_AUTHOR} from "../constant/context-constant.js";
 export default class PatientFamilyRepository {
     static async create(data, transaction = null) {
         let t = transaction;
+        console.log("Creating Patient Family: ", data);
         try {
             const user = Context.get(CTX_AUTHOR);
             t = t || await sequelizeInstance.transaction();

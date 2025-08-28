@@ -47,7 +47,6 @@ export default class RawatJalanValidation {
     static RAJAL_MOBILE_VALIDATOR = z.object({
         patient_data: z.object({
             patient_uuid: z.optional(z.string().max(255).uuid()),
-            // no_rm: z.string().max(255).optional(),
             ...PatientValidation.PATIENT_VALIDATOR.shape
         }),
         no_antrian_admisi: z.string().max(255).optional(),

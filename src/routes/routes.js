@@ -20,9 +20,9 @@ const routes = express.Router();
 
 // Routes Mobile
 routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
-routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
 routes.get("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.getAll);
 routes.get("/rawat-jalan/mobile/today", apiKeyCheckPatient, RawatJalanController.getRawatJalanToday);
+routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
 
 //TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);
@@ -43,6 +43,7 @@ routes.post("/rawat-jalan/check-booking", RawatJalanController.checkBookingRajal
 routes.post("/rawat-jalan/print-booking", RawatJalanController.getRajalBooking);
 routes.delete("/rawat-jalan/cancel", RawatJalanController.cancelVisitRawatJalan);
 
+
 // Instalasi Gawat Darurat
 routes.post("/igd", InstalasiGawatDaruratController.registIgd);
 routes.put("/igd/:uuid", InstalasiGawatDaruratController.updateIgd);
@@ -62,7 +63,7 @@ routes.get("/patient", PatientController.findAll);
 routes.get("/patient/:uuid", PatientController.findByUuid);
 routes.post("/patient", PatientController.create);
 routes.put("/patient/:uuid", PatientController.update);
-routes.delete("/patient/:uuid", PatientController.delete);
+routes.delete("/patient/cancel", PatientController.delete);
 routes.get("/patient/history/:uuid", PatientController.getHistoryPatient);
 routes.post("/patient/check-patient/apm", PatientController.checkPatientExist);
 routes.post("/patient/import", PatientController.import);

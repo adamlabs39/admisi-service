@@ -89,10 +89,6 @@ export default class InstallasiGawatDaruratRepository {
                 },transaction)
             }
             
-            console.log("Datas: ", data);
-            console.log("Datas Bayi: ", data.birthTimeBaby);
-            console.log("IGD created successfully:", resultIgd);
-
             if (data.isNewborn) {
                 await newBornRepository.upsertNewBorn({
                     identifier_mom: patient.identity,
@@ -428,24 +424,32 @@ export default class InstallasiGawatDaruratRepository {
     }
 
     static async cancelVisitIGD(data) {
-        const {faskesUuid} = Context.get(CTX_AUTHOR);
+        const user = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
         try {
             return sequelizeInstance.transaction(async (t) => {
                 const igd = await InstalasiGawatDaruratModel.findAll({
                     where: {
                         uuid: data.listUuid,
-                        faskesUuid,
+                        faskesUuid: user.faskesUuid,
                         statusIgd: {[Op.not]: 0}
-                    }
-                })
-                const isDischarged = igd.filter(item => item.statusIgd !== 1);
-                if (isDischarged.length > 0) throw new BadRequestException("IGD Tidak bisa di cancel karena sudah di pulangkan");
-                if (igd.length !== data.listUuid.length) throw new BadRequestException("IGD tidak ditemukan");
+                    },
+                    transaction: t
+                });
+                
+                const isDischarged = igd.filter(igd => igd.statusIgd >= 2);
+                if (isDischarged.length > 0) {
+                    throw new BadRequestException("IGD Tidak bisa di cancel karena sudah di pulangkan");
+                }
+
+                if (igd.length !== data.listUuid.length) {
+                    throw new BadRequestException("IGD tidak ditemukan");
+                }
+
                 await InstalasiGawatDaruratModel.update({statusIgd: 0}, {
                     where: {
                         uuid: data.listUuid,
-                        faskesUuid,
+                        faskesUuid: user.faskesUuid,
                         statusIgd: {[Op.not]: 0}
                     },
                     transaction: t
@@ -453,8 +457,9 @@ export default class InstallasiGawatDaruratRepository {
 
                 eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL,{
                     list_no_pelayanan: igd.map(item => item.noPelayanan),
-                    cancel_reason: data.cancelReason
-                })
+                    cancel_reason: data.cancelReason,
+                    cancel_by: user.username
+                });
                 return igd;
             });
         } catch (e) {

@@ -5,6 +5,7 @@ import { Op } from "sequelize";
 import { PegawaiModel, PractitionerModel } from "@adameds/model-sdk/datamaster";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
 import { InsuranceAccountModel, PatientModel } from "@adameds/model-sdk/admisi";
+import { buildRekap, generateDateRange } from "../helper/rekap-helper.js";
 
 export default class RekapKunjunganRepository{
     static async getRekapJenisKunjungan(args) {
@@ -13,63 +14,40 @@ export default class RekapKunjunganRepository{
         const filter = {
             faskesUuid,
             status: true,
-                //* Filter Tanggal Registrasi
             tglRegistrasi: {
-                [Op.between]: [args.start_date, args.end_date],
+            [Op.between]: [args.start_date, args.end_date],
             },
+        };
+
+        if (args.jenis_kunjungan) {
+            const jenisKunjunganArray = args.jenis_kunjungan.split(",").map((item) => item.trim());
+            filter.jenisKunjungan = { [Op.in]: jenisKunjunganArray };
         }
 
-        if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
-
-        const kunjungan = await LogPelayananModel.findAll({
+        const kunjunganRows = await LogPelayananModel.findAll({
             where: {
             ...filter,
             },
             attributes: [
-            "jenis_kunjungan",
-            [sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD"), "tanggal"],
-            [sequelizeInstace.fn("COUNT", sequelizeInstace.col("uuid")), "total_harian"],
+                "jenis_kunjungan",
+                [sequelizeInstace.fn("TO_CHAR",sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")),"YYYY-MM-DD"), "tanggal"],
+                [sequelizeInstace.fn("COUNT", sequelizeInstace.col("uuid")), "total_harian"],
             ],
-            group: ["jenis_kunjungan", 
-                sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")],
+            group: [
+                "jenis_kunjungan",
+                sequelizeInstace.fn("TO_CHAR",sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD"),
+            ],
             order: [["jenis_kunjungan", "ASC"]],
             raw: true,
         });
 
-        //* Total Harian kunjungan berdasarkan tanggal
-        const totalHarian = kunjungan.reduce((total_harian, row) => {
-            const tgl = row.tanggal;
-            if (!total_harian[tgl]) total_harian[tgl] = 0;
-            total_harian[tgl] += parseInt(row.total_harian);
-            return total_harian;
-        }, {});
+        const allDates = generateDateRange(args.start_date, args.end_date);
+        const { dataByGroup: kunjungan, totalHarian, totalPerGroup } = buildRekap(kunjunganRows, "jenis_kunjungan", allDates);
 
-        const total_harian = Object.entries(totalHarian).map(([tgl, total]) => ({
-            tanggal: tgl,
-            total: total
-        }));
+        //* Total keseluruhan Log
+        const total_keseluruhan = await LogPelayananModel.count({ where: { ...filter } });
 
-        //* Total Kunjungan berdasarkan jenis layanan
-        const totalJenisKunjungan = kunjungan.reduce((jenis_kunjungan, row) => {
-            const kunjungan = row.jenis_kunjungan;
-            if (!jenis_kunjungan[kunjungan]) jenis_kunjungan[kunjungan] = 0;
-            jenis_kunjungan[kunjungan] += parseInt(row.total_harian);
-            return jenis_kunjungan;
-        }, {});
-
-        const total_jenis_kunjungan = Object.entries(totalJenisKunjungan).map(([jenis_kunjungan, total]) => ({
-            jenis_kunjungan: jenis_kunjungan,
-            total: total
-        }));
-
-        //* Total Kunjungan
-        const total_kunjungan = await LogPelayananModel.count({
-            where: {
-                ...filter,
-            }
-        });
-
-        return { kunjungan, total_harian, total_jenis_kunjungan, total_kunjungan };
+        return { kunjungan, total_harian: totalHarian, total_jenis_kunjungan: totalPerGroup, total_keseluruhan };
     }
 
     static async getRekapDokter(args) {
@@ -84,9 +62,12 @@ export default class RekapKunjunganRepository{
             },
         }
 
-        if (args.dokter) filter.practitionerUuid = args.dokter
+        if (args.practitioner_uuid) {
+            const practitionerArray = args.practitioner_uuid.split(",").map((item) => item.trim());
+            filter.practitionerUuid = { [Op.in]: practitionerArray };
+        }
 
-        const dokter = await LogPelayananModel.findAll({
+        const dokterRows = await LogPelayananModel.findAll({
             where: {
             ...filter,
             },
@@ -116,37 +97,13 @@ export default class RekapKunjunganRepository{
                 sequelizeInstace.col("practitioner.pegawai.uuid"),
                 sequelizeInstace.fn("TO_CHAR", sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD")
             ],
-            // order: [[PractitionerModel, PegawaiModel, "name", "ASC"]],
             raw: true,
         });
 
-        //* Total Harian dokter berdasarkan tanggal
-        const totalHarian = dokter.reduce((total_harian, row) => {
-            const tgl = row.tanggal;
-            if (!total_harian[tgl]) total_harian[tgl] = 0;
-            total_harian[tgl] += parseInt(row.total_harian);
-            return total_harian;
-        }, {});
+        const allDates = generateDateRange(args.start_date, args.end_date);
+        const { dataByGroup: dokter, totalHarian, totalPerGroup } = buildRekap(dokterRows, "nama_dokter", allDates);
 
-        const total_harian = Object.entries(totalHarian).map(([tgl, total]) => ({
-            tanggal: tgl,
-            total: total
-        }));
-
-        //* Total Kunjungan berdasarkan Nama Dokter
-        const totalDokter = dokter.reduce((dokter, row) => {
-            const nama_dokter = row.nama_dokter;
-            if (!dokter[nama_dokter]) dokter[nama_dokter] = 0;
-            dokter[nama_dokter] += parseInt(row.total_harian);
-            return dokter;
-        }, {});
-
-        const total_dokter = Object.entries(totalDokter).map(([nama_dokter, total]) => ({
-            nama_dokter: nama_dokter,
-            total: total
-        }));
-        
-        //* Total Kunjungan
+        //* Total keseluruhan Dokter
         const total_keseluruhan = await LogPelayananModel.count({
             where: {
                 ...filter,
@@ -169,7 +126,7 @@ export default class RekapKunjunganRepository{
             },
         });
 
-        return { dokter, total_harian, total_dokter, total_keseluruhan };
+        return { dokter, total_harian: totalHarian, total_dokter: totalPerGroup, total_keseluruhan };
     }
 
     static async getRekapPenjamin(args) {
@@ -184,9 +141,14 @@ export default class RekapKunjunganRepository{
             },
         }
 
-        if (args.penjamin) filter.penjaminUuid = sequelizeInstace.where(sequelizeInstace.col("patient.insurance.uuid"), { [Op.eq]: `${args.penjamin}` });
+        if (args.penjamin) {
+            const penjaminArray = args.penjamin.split(",").map((item) => item.trim());
+            filter[Op.and] = {
+                [Op.or]: penjaminArray.map((penjamin) => sequelizeInstace.where(sequelizeInstace.col("patient.insurance.name"), { [Op.iLike]: `%${penjamin}%` })),
+            };
+        }
 
-        const penjamin = await LogPelayananModel.findAll({
+        const penjaminRows = await LogPelayananModel.findAll({
             where: {
             ...filter,
             },
@@ -217,31 +179,8 @@ export default class RekapKunjunganRepository{
             raw: true,
         });
 
-         //* Total Harian dokter berdasarkan tanggal
-        const totalHarian = penjamin.reduce((total_harian, row) => {
-            const tgl = row.tanggal;
-            if (!total_harian[tgl]) total_harian[tgl] = 0;
-            total_harian[tgl] += parseInt(row.total_harian);
-            return total_harian;
-        }, {});
-
-        const total_harian = Object.entries(totalHarian).map(([tgl, total]) => ({
-            tanggal: tgl,
-            total: total
-        }));
-
-        //* Total Kunjungan berdasarkan Nama Penjamin
-        const totalPenjamin = penjamin.reduce((penjamin, row) => {
-            const nama_penjamin = row.nama_penjamin;
-            if (!penjamin[nama_penjamin]) penjamin[nama_penjamin] = 0;
-            penjamin[nama_penjamin] += parseInt(row.total_harian);
-            return penjamin;
-        }, {});
-
-        const total_penjamin = Object.entries(totalPenjamin).map(([nama_penjamin, total]) => ({
-            nama_penjamin: nama_penjamin,
-            total: total
-        }));
+        const allDates = generateDateRange(args.start_date, args.end_date);
+        const { dataByGroup: penjamin, totalHarian, totalPerGroup } = buildRekap(penjaminRows, "nama_penjamin", allDates);
 
         //* Total Keselurhan penjamin
         const total_keseluruhan = await LogPelayananModel.count({
@@ -271,6 +210,6 @@ export default class RekapKunjunganRepository{
             ]
         });
 
-        return { penjamin, total_harian, total_penjamin, total_keseluruhan };
+        return { penjamin, total_harian: totalHarian, total_penjamin: totalPerGroup, total_keseluruhan };
     }
 }

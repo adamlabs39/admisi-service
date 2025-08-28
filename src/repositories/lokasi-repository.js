@@ -85,7 +85,7 @@ export default class LokasiRepository {
       if (args.name && args.name.trim() !== "") {
         options.where[Op.and].push({
           name: {
-            [Op.like]: `%${args.name.trim()}%`,
+            [Op.iLike]: `%${args.name.trim()}%`,
           },
         });
       }

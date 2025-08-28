@@ -51,15 +51,16 @@ export default class LogPelayananRepository {
   }
 
   static async cancelVisitLogPelayanan(data) {
-    const { faskesUuid, username } = Context.get(CTX_AUTHOR);
+    const { faskesUuid } = Context.get(CTX_AUTHOR);
     data = convertSnakeToCamel(data);
+    console.log("Cancel datas:", data);
     try {
-      return await LogPelayananModel.update(
+      const update = await LogPelayananModel.update(
         {
           status: false,
           cancelReason: data.cancelReason,
           cancelDate: moment().unix(),
-          cancelBy: username,
+          cancelBy: data.cancelBy,
         },
         {
           where: {
@@ -70,6 +71,9 @@ export default class LogPelayananRepository {
           },
         }
       );
+
+      console.log("Hasil update: ", update);
+      return update;
     } catch (error) {
       throw error;
     }
@@ -176,8 +180,8 @@ export default class LogPelayananRepository {
               {
                 model: InsuranceAccountModel,
                 as: "insurance",
-                required: false,
-                where: { deletedAt: { [Op.is]: null }, ...(args.penjamin && { uuid: { [Op.iLike]: `%${args.penjamin}%` } }) },
+                required: true,
+                where: { deletedAt: { [Op.is]: null }, ...(args.penjamin && { name: { [Op.iLike]: `%${args.penjamin}%` } }) },
                 attributes: ["name", "account_number"],
               },
             ],
@@ -328,8 +332,7 @@ export default class LogPelayananRepository {
               }),
             ]
         };
-        if (args.room) filter.room_uuid = args.room;
-        
+        if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col("room.name"), args.room);
 
         const options = {
         include: [

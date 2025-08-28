@@ -215,7 +215,8 @@ export default class PatientRepository{
     static async registPatientMobile(data, faskesUuid, externalTransaction = null) {
         const transaction = externalTransaction || await sequelizeInstace.transaction();
         data = convertSnakeToCamel(data);
-
+        data.address = convertSnakeToCamel(data.address);
+        data.birthDetail = convertSnakeToCamel(data.birthDetail);
         PatientService.patientIdentityFormat(data.identity, data.noIdentity);
 
         try {
@@ -224,6 +225,15 @@ export default class PatientRepository{
             }
 
             const uuid = data.patientUuid || null;
+            const patient = uuid ? await PatientModel.findOne({
+                where: { uuid, deletedAt: { [Op.is]: null } },
+                include: [
+                    { model: AddressModel, as: 'address' },
+                    { model: BirthDetailModel, as: 'birth_detail' }
+                ],
+                transaction
+            }) : null;
+
             if (uuid && !data.isNewBorn) {
                 const existingPatient = await PatientModel.findOne({
                     where: {
@@ -250,51 +260,50 @@ export default class PatientRepository{
                 if (existingPatient) throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
             }
 
-            if (!data.birthDetailUuid) {
-                const birthDetail = await BirthDetailModel.create({
-                    faskesUuid: faskesUuid,
-                    birthPlace: 'Surabaya',
-                    birthDate: new Date('2000-01-01'),
-                    ageYear: 0,
-                    ageMonth: 0,
-                    ageDay: 0
-                }, { transaction });
-                
-                data.birthDetailUuid = birthDetail.uuid;
-            }
-
             // Handle address
-            let address = null;
-            if (data.address) {
+            let address = patient ? patient.address : null;
+            if (address) {
+                await address.update(data.address || {}, { transaction });
+            } else if (data.address) {
                 data.address.faskesUuid = faskesUuid;
                 address = await AddressModel.create(data.address, { transaction });
-                data.addressUuid = address.uuid;
             }
+            data.addressUuid = address?.uuid || null;
 
-            if (!data.noRm) {
-                data.noRm = await generateNoRmMobile(faskesUuid);
+            let birthDetail = patient ? patient.birth_detail : null;
+            
+            if (birthDetail && data.birthDetail) {
+                const infoAge = getInfoAge(data.birthDetail.birthDate);
+                Object.assign(data.birthDetail, infoAge);
+                await birthDetail.update(data.birthDetail, { transaction });
+            } else if (!birthDetail && data.birthDetail) {
+
+                data.birthDetail.faskesUuid = faskesUuid;
+                const infoAge = getInfoAge(data.birthDetail.birthDate);
+                Object.assign(data.birthDetail, infoAge);
+                birthDetail = await BirthDetailModel.create(data.birthDetail, { transaction });
             }
-
+            
+            data.birthDetailUuid = birthDetail?.uuid || null;
+            
             data.faskesUuid = faskesUuid;
 
-            const patientModel = await PatientModel.create({
-                ...data,
-                noRm: data.noRm,
-            }, { transaction });
+            let patientModel;
+            if (patient) {
+                patientModel = await patient.update(data, { transaction });
+            } else {
+                patientModel = await PatientModel.create({
+                    ...data,
+                    noRm: await generateNoRmMobile(faskesUuid),
+                }, { transaction });
+            }
 
             if (!externalTransaction) await transaction.commit();
 
             return {
                 ...patientModel.get({ plain: true }),
                 address: address ? address.get({ plain: true }) : null,
-                birthDetail: {
-                    uuid: data.birthDetailUuid,
-                    birthPlace: 'Surabaya',
-                    birthDate: new Date('2000-01-01'),
-                    ageYear: 0,
-                    ageMonth: 0,
-                    ageDay: 0
-                }
+                birthDetail: birthDetail ? birthDetail.get({ plain: true }) : null,
             };
 
         } catch (error) {
@@ -468,21 +477,30 @@ export default class PatientRepository{
         }
     }
 
-    static async deletePatient(uuid){
+    static async deletePatient(data){
+        const { faskesUuid } = Context.get(CTX_AUTHOR);
+        data = convertSnakeToCamel(data);
         try{
             return await sequelizeInstace.transaction(async (t) => {
+                const patient = await PatientModel.findAll({
+                    where: {
+                        uuid: data.listUuid,
+                        faskesUuid,
+                        deletedAt: { [Op.is]: null }
+                    }
+                })
+
+                if (patient.length !== data.listUuid.length) {
+                    throw new NotfoundException("Data Pasien tidak ditemukan");
+                }
+
                 return await PatientModel.update(
                     { deletedAt: moment().unix() },
                     {
                         where: {
-                            [Op.and]: [
-                                { uuid },
-                                {
-                                    deletedAt: {
-                                        [Op.is]: null
-                                    }
-                                }
-                            ]
+                            uuid: data.listUuid,
+                            faskesUuid,
+                            deletedAt: { [Op.is]: null }
                         },
                         transaction: t
                     }
@@ -501,19 +519,20 @@ export default class PatientRepository{
                 [Op.or]: [
                     {
                         name: {
-                            [Op.like]: `%${args.q || ""}%`
+                            [Op.iLike]: `%${args.q || ""}%`
                         }
                     },
                     {
                         noRm: {
-                            [Op.like]: `%${args.q || ""}%`
+                            [Op.iLike]: `%${args.q || ""}%`
                         }
                     },
                     {
                         noIdentity: {
-                            [Op.like]: `%${args.q || ""}%`
+                            [Op.iLike]: `%${args.q || ""}%`
                         }
-                    }
+                    },
+                    sequelizeInstace.where(sequelizeInstace.col("address.full_address"), { [Op.iLike]: `%${args.q || ""}%` })
                 ]
             };
 
