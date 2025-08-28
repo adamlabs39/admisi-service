@@ -62,16 +62,9 @@ export default class RekapKunjunganRepository{
             },
         }
 
-        // if (args.dokter) {
-        //     const practitionerArray = args.dokter.split(",").map((item) => item.trim());
-        //     filter.practitionerUuid = { [Op.in]: practitionerArray };
-        // }
-
-        if (args.dokter) {
-            const dokterArray = args.dokter.split(",").map((item) => item.trim());
-            filter[Op.and] = {
-                [Op.or]: dokterArray.map((dokter) => sequelizeInstace.where(sequelizeInstace.col("practitioner.pegawai.name"), { [Op.iLike]: `%${dokter}%` })),
-            };
+        if (args.practitioner_uuid) {
+            const practitionerArray = args.practitioner_uuid.split(",").map((item) => item.trim());
+            filter.practitionerUuid = { [Op.in]: practitionerArray };
         }
 
         const dokterRows = await LogPelayananModel.findAll({
