@@ -9,6 +9,7 @@ import {CTX_AUTHOR} from "../constant/context-constant.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 import RawatJalanModel from "../models/rawat-jalan-model.js";
 import AsuransiValidator from "../validations/asuransi-validator.js";
+import JadwalDokterRepository from "../repositories/jadwal-dokter-repository.js";
 
 export class RawatJalanService {
     static async getAll(args, faskesUuidMobile) {
@@ -117,7 +118,7 @@ export class RawatJalanService {
     }
 
     static async getAllJadwalDokter(){
-        return await RawatJalanRepository.getAllJadwalDokter();
+        return await JadwalDokterRepository.getAllJadwalDokter();
     }
 
 }

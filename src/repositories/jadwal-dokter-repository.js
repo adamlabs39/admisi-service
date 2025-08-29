@@ -1,22 +1,81 @@
-import {
-    JadwalDokterModel
-} from "@adameds/model-sdk/antrian";
 import NotfoundException from "../exception/notfound-exception.js";
-import {CTX_AUTHOR} from "../constant/context-constant.js";
-import {Context} from "../middlewares/context.js";
-import { Op } from "sequelize";
+import { jadwalDokter, jadwalDokterMobile } from "../configurations/axios-instance.js";
 
 export default class JadwalDokterRepository{
-    static async getJadwalBy(col = 'uuid', val) {
-        const {faskesUuid} = Context.get(CTX_AUTHOR);
-        const data = await JadwalDokterModel.findOne({
-            where: {
-                [col]: val,
-                deletedAt: { [Op.is]: null },
-                faskesUuid
-            }
+    static async getAllJadwalDokter() {
+        try {
+            const { data } = await jadwalDokter.get("/");
+            const jadwalList = data.payload;
+
+            return jadwalList
+        } catch (err) {
+            console.error("Error getAllJadwalDokter:", err.message);
+            throw err;
+        }
+    }
+
+    static async findJadwalDokterUuidMobile(faskesUuid, jadwalUuid) {
+        try {
+        const { data } = await jadwalDokterMobile.get("", {
+            headers: { "faskes-uuid": faskesUuid },
         });
-        if (!data) throw new NotfoundException(`Jadwal Dokter tidak ditemukan`);
-        return data;
+
+        const jadwalList = data.payload.flatMap((item) =>
+            item.jadwal_dokter.map((jadwal) => ({
+            ...jadwal,
+            practitionerUuid: item.doctor.uuid,
+            practitionerName: item.doctor.name,
+            practitionerCode: item.doctor.kode_antrian,
+            lokasiUuid: item.poli.uuid,
+            lokasiName: item.poli.name,
+            lokasiCode: item.poli.kode_antrian,
+            }))
+        );
+
+        // cari jadwal spesifik
+        const jadwalDokter = jadwalList.find(
+            (j) => j.jadwal_dokter_uuid === jadwalUuid
+        );
+
+        if (!jadwalDokter) {
+            throw new NotfoundException("Jadwal Dokter tidak ditemukan");
+        }
+
+        return jadwalDokter;
+        } catch (err) {
+        console.error("Error getAllJadwalDokterMobile:", err.message);
+        throw err;
+        }
+    }
+
+    static async findJadwalDokterByUuid(uuid) {
+        try{
+            const jadwalList = await this.getAllJadwalDokter();
+            let jadwalDokter = null;
+            
+            for (const item of jadwalList) {
+            const foundJadwal = item.jadwal_dokter.find((jadwal) => jadwal.jadwal_dokter_uuid === uuid);
+                
+                if (foundJadwal) {
+                    jadwalDokter = {
+                    ...foundJadwal,
+                    practitionerUuid: item.doctor.uuid,
+                    lokasiUuid: item.poli.uuid,
+                    practitionerName: item.doctor.name,
+                    lokasiName: item.poli.name,
+                    practitionerCode: item.doctor.kode_antrian,
+                    lokasiCode: item.poli.kode_antrian,
+                    };
+                    break;
+                }
+            }
+            if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter tidak ditemukan");
+
+            return jadwalDokter;
+
+        } catch (err) {
+            console.error("Error findJadwalDokterByUuid:", err.message);
+            throw err;
+        }
     }
 }
