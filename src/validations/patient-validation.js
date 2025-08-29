@@ -39,7 +39,7 @@ export default class PatientValidation{
         unggah_berkas: z.any().refine(file => file && file.size <= (1 * 1024 * 1024), {
             message: "Size file harus dibawah 1MB"
         }).refine(file => file.mimetype === 'application/pdf', {
-            message: "File harus dalam format PDF"
+            message: "Format file tidak didukung. Silakan unggah file dengan format .pdf."
         }),
     });
 
@@ -49,7 +49,7 @@ export default class PatientValidation{
         identity: z.string({ required_error: "Identitas Perlu diisi sesuai format Excel" }).max(255),
         no_identity: z.string({ required_error: "No Identitas Perlu diisi sesuai format Excel" }).max(255),
         birth_detail: z.object({
-            birth_place: z.string().max(150),
+            birth_place: z.string({ required_error: "Tempat Lahir perlu diisi"}).max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
                 message: "Invalid date format"
             }).transform(value => new Date(value)),
@@ -74,47 +74,47 @@ export default class PatientValidation{
     })
 
     static NEWBORN_VALIDATOR = z.object({
-        title: z.string().max(255),
-        name: z.string().max(255),
-        identity: z.string().max(255),
-        no_identity: z.string().max(255),
+        title: z.string({ required_error: "Title Perlu diisi" }).max(255),
+        name: z.string({ required_error: "Nama Perlu diisi" }).max(255),
+        identity: z.string({ required_error: "Identitas Perlu diisi" }).max(255),
+        no_identity: z.string({ required_error: "No Identitas Perlu diisi" }).max(255),
         birth_detail: z.object({
-            birth_place: z.string().max(150),
+            birth_place: z.string({ required_error: "Tempat Lahir perlu diisi"}).max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
                 message: "Invalid date format"
             }).transform(value => new Date(value)),
         }),
         multiple_birth: z.boolean().default(false).optional(),
         birth_time_baby: z.string().max(255).optional(),
-        gender: z.string().max(15),
+        gender: z.string({ required_error: "Jenis Kelamin Perlu diisi" }).max(15),
         phone: z.nullable(z.string().max(15)),
         religion: z.nullable(z.string().max(25)),
         language: z.nullable(z.string().max(50)),
-        mother_name: z.string().max(255),
+        mother_name: z.string({ required_error: "Nama Ibu Perlu diisi" }).max(255),
         address: z.object({
-            prov: z.string().max(150),
-            city: z.string().max(150),
-            district: z.string().max(150),
-            rt: z.string().max(150),
-            rw: z.string().max(150),
-            full_address: z.string().max(255),
-            country: z.string().max(150),
-            village: z.string().max(150),
-            postal_code: z.string().max(150),
+            prov: z.string({ required_error: "Provinsi Perlu diisi" }).max(150),
+            city: z.string({ required_error: "Kota Perlu diisi" }).max(150),
+            district: z.string({ required_error: "Kecamatan Perlu diisi" }).max(150),
+            rt: z.string({ required_error: "RT Perlu diisi" }).max(150),
+            rw: z.string({ required_error: "RW Perlu diisi" }).max(150),
+            full_address: z.string({ required_error: "Alamat Lengkap Perlu diisi" }).max(255),
+            country: z.string({ required_error: "Negara Perlu diisi" }).max(150),
+            village: z.string({ required_error: "Desa Perlu diisi" }).max(150),
+            postal_code: z.string({ required_error: "Kode Pos Perlu diisi" }).max(150),
         })
     })
 
     static WITHOUT_IDENTITY = z.object({
-        name: z.string().max(255),
+        name: z.string({ required_error: "Nama Perlu diisi" }).max(255),
         birth_detail: z.object({
-            birth_place: z.string().max(150),
+            birth_place: z.string({ required_error: "Tempat Lahir Perlu diisi" }).max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
                 message: "Invalid date format"
             }).transform(value => new Date(value)),
         }),
-        identity: z.string().max(255),
-        no_identity: z.string().max(255),
-        gender: z.string().max(15),
+        identity: z.string({ required_error: "Identitas Perlu diisi" }).max(255),
+        no_identity: z.string({ required_error: "No Identitas Perlu diisi" }).max(255),
+        gender: z.string({ required_error: "Jenis Kelamin Perlu diisi" }).max(15),
         phone: z.nullable(z.string().max(15)),
     });
 

@@ -14,6 +14,7 @@ import { CTX_AUTHOR } from "../constant/context-constant.js";
 import upload from "../configurations/multer-config.js";
 import ExportReportController from "../controllers/export-report-controller.js";
 import RekapKunjunganController from "../controllers/rekap-kunjungan-controller.js";
+import AntrianCallController from "../controllers/antrian-call-controller.js";
 
 const routes = express.Router();
 
@@ -103,5 +104,8 @@ routes.get("/export/new-born", ExportReportController.getExportNewBorn);
 routes.get("/rekap/jenis-kunjungan", RekapKunjunganController.getRekapKunjungan);
 routes.get("/rekap/dokter", RekapKunjunganController.getRekapDokter);
 routes.get("/rekap/penjamin", RekapKunjunganController.getRekapPenjamin);
+
+// Antrian call
+routes.get("/antrian-call", AntrianCallController.getAllAntrian);
 
 export default routes;

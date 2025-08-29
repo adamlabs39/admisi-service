@@ -8,13 +8,13 @@ export default class RawatInapValidation {
             ...PatientValidation.NEWBORN_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        complaint: z.string().max(255),
-        note: z.string().max(255),
+        complaint: z.string({ required_error: "Keluhan perlu diisi" }).max(255),
+        note: z.string({ required_error: "Catatan perlu diisi" }).max(255),
         join_bill: z.boolean().default(false),
         family_bill: z.boolean().default(false),
-        monitoring_room_uuid: z.string().max(255),
+        monitoring_room_uuid: z.string({ required_error: "Bed perlu dipilih" }).max(255),
         multiple_birth: z.boolean().default(false),
-        practitioner_uuid: z.string().max(255),
+        practitioner_uuid: z.string({ required_error: "Dokter perlu dipilih" }).max(255),
         insurance: AsuransiValidator.ASURANSI_VALIDATOR.optional(),
     }).refine((data) => {
         if (data.payment_method === "ASURANSI" && !data.insurance) {
@@ -22,7 +22,7 @@ export default class RawatInapValidation {
         }
         return true;
     }, {
-        message: "Insurance information is required when payment method is ASURANSI",
+        message: "Informasi asuransi diperlukan saat metode pembayaran adalah ASURANSI",
         path: ["insurance"]
     });
 
@@ -33,12 +33,12 @@ export default class RawatInapValidation {
             ...PatientValidation.NEWBORN_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        complaint: z.string().max(255),
-        note: z.string().max(255),
+        complaint: z.string({ required_error: "Keluhan perlu diisi" }).max(255),
+        note: z.string({ required_error: "Catatan perlu diisi" }).max(255),
         family_bill: z.boolean().default(false),
-        monitoring_room_uuid: z.string().max(255),
+        monitoring_room_uuid: z.string({ required_error: "Bed perlu dipilih" }).max(255),
         multiple_birth: z.boolean().default(false),
-        practitioner_uuid: z.string().max(255),
+        practitioner_uuid: z.string({ required_error: "Dokter perlu dipilih" }).max(255),
         insurance: AsuransiValidator.ASURANSI_VALIDATOR.optional(),
     }).refine((data) => {
         if (data.payment_method === "ASURANSI" && !data.insurance) {
@@ -46,7 +46,7 @@ export default class RawatInapValidation {
         }
         return true;
     }, {
-        message: "Insurance information is required when payment method is ASURANSI",
+        message: "Informasi asuransi diperlukan saat metode pembayaran adalah ASURANSI",
         path: ["insurance"],
     });
 
@@ -56,8 +56,8 @@ export default class RawatInapValidation {
             ...PatientValidation.PATIENT_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        complaint: z.string().max(255),
-        note: z.string().max(255),
+        complaint: z.string({ required_error: "Keluhan perlu diisi" }).max(255),
+        note: z.string({ required_error: "Catatan perlu diisi" }).max(255),
         maternity: z.boolean().default(false),
         upgrade_class: z.boolean().default(false),
         entrusted_patient: z.boolean().default(false),
@@ -65,9 +65,9 @@ export default class RawatInapValidation {
         spare_bed: z.boolean().default(false),
         box_baby: z.boolean().default(false),
         family_bill: z.boolean().default(false),
-        monitoring_room_uuid: z.string().max(255),
+        monitoring_room_uuid: z.string({ required_error: "Bed perlu dipilih" }).max(255),
         multiple_birth: z.boolean().default(false),
-        practitioner_uuid: z.string().max(255),
+        practitioner_uuid: z.string({ required_error: "Dokter perlu dipilih" }).max(255),
         insurance: AsuransiValidator.ASURANSI_VALIDATOR.optional(),
     }).refine((data) => {
         if (data.payment_method === "ASURANSI" && !data.insurance) {
@@ -75,13 +75,13 @@ export default class RawatInapValidation {
         }
         return true;
     }, {
-        message: "Insurance information is required when payment method is ASURANSI",
+        message: "Informasi asuransi diperlukan saat metode pembayaran adalah ASURANSI",
         path: ["insurance"],
     });
 
 
     static CANCELVISIT = z.object({
-        list_uuid: z.array(z.string().max(255)),
-        cancel_reason: z.string().max(255)
+        list_uuid: z.array(z.string({ required_error: "Pembatalan Rawat Inap perlu diisi" }).max(255)),
+        cancel_reason: z.string({ required_error: "Alasan Pembatalan perlu diisi" }).max(255)
     });
 }

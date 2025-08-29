@@ -63,7 +63,7 @@ export default class RawatJalanValidation {
     })
 
     static cancelVisit = z.object({
-        list_uuid: z.array(z.string().max(255)),
-        cancel_reason: z.string().max(255)
+        list_uuid: z.array(z.string({ required_error: "Pembatalan Rawat Jalan perlu diisi" }).max(255)),
+        cancel_reason: z.string({ required_error: "Alasan Pembatalan perlu diisi" }).max(255)
     })
 }
