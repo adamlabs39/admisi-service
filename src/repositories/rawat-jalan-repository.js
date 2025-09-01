@@ -24,8 +24,9 @@ import {InsuranceAdmissionModel, LogPelayananModel, RawatJalanModel} from "@adam
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import { antrianCall, generateNoAntrian } from "../configurations/axios-instance.js";
+import { generateNoAntrian } from "../configurations/axios-instance.js";
 import DuplicateException from "../exception/duplicate-exception.js";
+import AntrianCallRepository from "./antrian-call-repository.js";
 
 export default class RawatJalanRepository {
     /**
@@ -366,21 +367,8 @@ export default class RawatJalanRepository {
 
             const regist = await RawatJalanModel.create(dataRJ, { transaction: t });
 
-            const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
-            const pasienBaru = data.patientData.patient_uuid == null;
-
-            try {
-                await antrianCall.post("/", {
-                    patient_uuid: patient.uuid,
-                    rawat_jalan_uuid: regist.dataValues.uuid,
-                    pelayanan: "poli",
-                    jenis_pasien: jenisPasien,
-                    pasien_baru: pasienBaru
-                });
-            }catch (error){
-                console.error("Error membuat no antrian:", error);
-                throw error;
-            }
+            //* Buat Pemanggilan antrian
+            await AntrianCallRepository.createAntrianCall(data, patient, regist);
 
             if (data.paymentMethod === 'ASURANSI') {
                 await InsuranceAdmissionRepository.AsuransiPelayanan({
@@ -448,6 +436,9 @@ export default class RawatJalanRepository {
             dataRJ.noPelayanan = await generateNoPelayanan('RJ');
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
+            //* Buat Pemanggilan antrian
+            await AntrianCallRepository.createAntrianCall(data, patient, regist);
+
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: regist.tanggalDaftar,
                 noreg: regist.noReg,
@@ -496,6 +487,9 @@ export default class RawatJalanRepository {
             dataRJ.noReg = await generateNoReg(faskesUuid);
             dataRJ.noPelayanan = await generateNoPelayanan('RJ', faskesUuid);
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
+
+            //* Buat Pemanggilan antrian
+            await AntrianCallRepository.createAntrianCall(data, patient, regist);
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: regist.tanggalDaftar,

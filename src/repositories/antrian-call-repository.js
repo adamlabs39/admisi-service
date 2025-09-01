@@ -1,52 +1,55 @@
-import { RawatJalanModel } from "@adameds/model-sdk/pelayanan";
-import { Context } from "../middlewares/context.js";
-import { CTX_AUTHOR } from "../constant/context-constant.js";
-import { InsuranceAccountModel, PatientModel } from "@adameds/model-sdk/admisi";
-import { Op } from "sequelize";
+import { createAntrianCall, getAllAntrianCall, updateAntrianCall } from "../configurations/axios-instance.js";
 
 export default class AntrianCallRepository {
-    static async getAllAntrian(){
-        const { faskesUuid } = Context.get(CTX_AUTHOR);
+    static async createAntrianCall(data, patient, rawatJalan){
+        const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
+        const pasienBaru = data.patientData.patient_uuid == null;
+        const pelayanan = rawatJalan.dataValues.platform === "ADMISI" ? "poli" : "admisi"
+
         try {
-            
-            const filter = {
-                faskesUuid,
-                deletedAt: null,
-                dischargeDate: null,
-                noAntrianAdmisi: { [Op.not]: null },
-                statusRj: [1, 2],
-            };
-
-
-            const antrian = await RawatJalanModel.findAll({
-                where: {
-                    ...filter
-                },
-                include: [
-                    {
-                        model: PatientModel,
-                        as: "patient",
-                        required: true,
-                        attributes: [ "identity", "no_identity" ],
-                        include: [
-                            {
-                                model: InsuranceAccountModel,
-                                as: "insurance",
-                                required: false,
-                                attributes: [ "name", "account_number" ]
-                            }
-                        ]
-                    }
-                ],
-                attributes: [ "name", "no_antrian_admisi", "kode_booking", "status_rj", "payment_method", "tanggal_daftar"],
-                order: [["no_antrian_admisi", "ASC"]]
+            await createAntrianCall.post("/", {
+                patient_uuid: patient.uuid,
+                rawat_jalan_uuid: rawatJalan.dataValues.uuid,
+                pelayanan: pelayanan,
+                jenis_pasien: jenisPasien,
+                pasien_baru: pasienBaru
             });
-
-            return antrian;
-        }catch (error){
-            console.log(error);
+        } catch (error) {
+            console.error("Error membuat no antrian:", error);
+            throw error;
         }
     }
 
+    static async getAllAntrianCall(args){
+        try {
+            const result = await getAllAntrianCall.get("/", { params: args });
+
+            if(args.skipped){
+                const skipped = result.data.payload.filter(item => item.status_panggilan === 2);
+                return skipped;
+            }
+            if(args.finished){
+                const finished = result.data.payload.filter(item => item.status_panggilan === 4);
+                return finished;
+            } else return result.data.payload;
+            
+        } catch (error) {
+            console.error("Error fetching all antrian:", error);
+            throw error;
+        }
+    }
+
+    static async updateAntrianCall(uuid, data){
+        try{
+            const result = await updateAntrianCall.put(`/${uuid}`, {
+                status_panggilan: data.status_panggilan
+            });
+
+            return result.data.payload;
+        }catch(error){
+            console.error("Error updating antrian:", error);
+            throw error;
+        }
+    }
 
 }

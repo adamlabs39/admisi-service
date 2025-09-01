@@ -106,6 +106,7 @@ routes.get("/rekap/dokter", RekapKunjunganController.getRekapDokter);
 routes.get("/rekap/penjamin", RekapKunjunganController.getRekapPenjamin);
 
 // Antrian call
-routes.get("/antrian-call", AntrianCallController.getAllAntrian);
+routes.get("/antrian-call", AntrianCallController.getAllAntrianCall);
+routes.put("/antrian-call/:uuid", AntrianCallController.updateAntrianCall);
 
 export default routes;

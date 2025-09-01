@@ -12,19 +12,7 @@ const authInterceptor = (config) => {
   return config;
 };
 
-const antrianCall = axios.create({
-  baseURL: `${BASE_URL_ANTRIAN}/admisi-antrian`,
-  timeout: 10000,
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${Ctx.get(CTX_TOKEN)}`,
-  },
-});
-
-antrianCall.interceptors.request.use(authInterceptor);
-
-//* Modul Antrian
+//! Buat No antrian admisi
 const generateNoAntrian = axios.create({
   baseURL: `${BASE_URL_ANTRIAN}/data-antrian/admisi-registration`,
   timeout: 10000,
@@ -37,6 +25,46 @@ const generateNoAntrian = axios.create({
 
 generateNoAntrian.interceptors.request.use(authInterceptor);
 
+//! Buat data Antrian Call
+const createAntrianCall = axios.create({
+  baseURL: `${BASE_URL_ANTRIAN}/admisi-antrian`,
+  timeout: 10000,
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${Ctx.get(CTX_TOKEN)}`,
+  },
+});
+
+createAntrianCall.interceptors.request.use(authInterceptor);
+
+//! Get data Antrian Call
+const getAllAntrianCall = axios.create({
+  baseURL: `${BASE_URL_ANTRIAN}/admisi-antrian`,
+  timeout: 10000,
+  method: "GET",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${Ctx.get(CTX_TOKEN)}`,
+  }
+});
+
+getAllAntrianCall.interceptors.request.use(authInterceptor);
+
+//! Update status Antrian Call
+const updateAntrianCall = axios.create({
+  baseURL: `${BASE_URL_ANTRIAN}/admisi-antrian`,
+  timeout: 10000,
+  method: "PUT",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${Ctx.get(CTX_TOKEN)}`,
+  }
+});
+
+updateAntrianCall.interceptors.request.use(authInterceptor);
+
+//! Jadwal Dokter
 const jadwalDokter = axios.create({
   baseURL: `${BASE_URL_ANTRIAN}/jadwal-dokter`,
   timeout: 10000,
@@ -49,6 +77,7 @@ const jadwalDokter = axios.create({
 
 jadwalDokter.interceptors.request.use(authInterceptor);
 
+//! Jadwal Dokter Mobile
 const jadwalDokterMobile = axios.create({
   baseURL: `${BASE_URL_ANTRIAN}/mobile/jadwal-dokter`,
   timeout: 10000,
@@ -58,4 +87,11 @@ const jadwalDokterMobile = axios.create({
   },
 });
 
-export { generateNoAntrian, jadwalDokter, jadwalDokterMobile, antrianCall };
+export { 
+  generateNoAntrian, 
+  jadwalDokter, 
+  jadwalDokterMobile, 
+  createAntrianCall,
+  getAllAntrianCall,
+  updateAntrianCall,
+};

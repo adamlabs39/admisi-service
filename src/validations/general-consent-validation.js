@@ -10,7 +10,7 @@ export default class GeneralConsentValidation{
                 address: z.string({ required_error: "Alamat perlu diisi" }).max(255).optional(),
             }),
             z.null(),
-        ]),
+        ]).optional(),
         name: z.string().max(255),
         general_consent: z.string(),
     });
