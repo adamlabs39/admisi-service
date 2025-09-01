@@ -24,7 +24,7 @@ import {InsuranceAdmissionModel, LogPelayananModel, RawatJalanModel} from "@adam
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import { generateNoAntrian } from "../configurations/axios-instance.js";
+import { antrianCall, generateNoAntrian } from "../configurations/axios-instance.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 
 export default class RawatJalanRepository {
@@ -269,7 +269,7 @@ export default class RawatJalanRepository {
                 attributes: ["uuid", "start_time", "end_time"],
             },
             ],
-            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar", "tanggal_checkin"],
+            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar", "tanggal_checkin", "platform"],
             });
             if (!result) throw new NotfoundException("Data tidak ditemukan");
             if (result.dataValues.payment_method === 2) {
@@ -315,16 +315,12 @@ export default class RawatJalanRepository {
     }
 
     static async create(data) {
-        let createPatient;
-        let createRj;
-        let createNoReg;
 
         const create = await sequelizeInstace.transaction(async (t) => {
             const { faskesUuid } = Ctx.get(CTX_AUTHOR);
 
             const patient = await PatientRepository.registPatient(data.patient_data, t);
             if (!patient) throw new Error("Failed to create patient");
-            createPatient = patient.uuid;
             data = convertSnakeToCamel(data);
             
             //* GET JADWAL DOKTER
@@ -342,18 +338,49 @@ export default class RawatJalanRepository {
                 note: data.note,
                 lokasiUuid: jadwalDokter.lokasiUuid,
                 complaint: data.complaint,
-                platform: data.platform,
+                platform: "ADMISI",
                 paymentMethod: data.paymentMethod === 'TUNAI' ? 1 : 2,
                 tanggalDaftar: moment().unix(),
+                tanggalCheckin: moment().unix(),
                 statusRj: 3,
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(),
                 noPelayanan: await generateNoPelayanan('RJ'),
             };
 
+            //* GENERATE NO ANTRIAN
+            try {
+                const response = await generateNoAntrian.post("/", {
+                    jadwal_dokter_uuid: dataRJ.jadwalDokterUuid,
+                });
+
+                dataRJ.noAntrianPoli = response.data.payload.no_antrian_poli;
+                dataRJ.kodeBooking = response.data.payload.kode_booking;
+                
+            } catch (error) {
+                console.error("Error membuat no antrian:", error);
+                if (error.response) {
+                    throw new DuplicateException(error.response.data.errors?.[0].message || "Kuota jadwal dokter sudah penuh");
+                }
+            }
+
             const regist = await RawatJalanModel.create(dataRJ, { transaction: t });
-            createRj = regist.uuid;
-            createNoReg = regist.noReg;
+
+            const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
+            const pasienBaru = data.patientData.patient_uuid == null;
+
+            try {
+                await antrianCall.post("/", {
+                    patient_uuid: patient.uuid,
+                    rawat_jalan_uuid: regist.dataValues.uuid,
+                    pelayanan: "poli",
+                    jenis_pasien: jenisPasien,
+                    pasien_baru: pasienBaru
+                });
+            }catch (error){
+                console.error("Error membuat no antrian:", error);
+                throw error;
+            }
 
             if (data.paymentMethod === 'ASURANSI') {
                 await InsuranceAdmissionRepository.AsuransiPelayanan({
@@ -379,25 +406,6 @@ export default class RawatJalanRepository {
 
             return regist.dataValues.uuid;
         });
-
-        //* GENERATE NO ANTRIAN
-        try {
-            await generateNoAntrian.post("/", {
-                rawat_jalan_uuid: create,
-                jadwal_dokter_uuid: data.jadwal_dokter_uuid,
-                platform: "ADMISI"
-            });
-        } catch (error) {
-            if (error.response) {
-                console.error("API error:", error.response.data);
-                    await RawatJalanModel.update({ deletedAt: moment().unix() }, { where: { uuid: createRj } });
-                    await PatientModel.update({ deletedAt: moment().unix() }, { where: { uuid: createPatient } });
-                    await InsuranceAdmissionModel.update({ deletedAt: moment().unix() }, { where: { noReg: createNoReg } });
-                    await LogPelayananModel.update({ deletedAt: moment().unix() }, { where: { noreg: createNoReg } });
-                throw new DuplicateException(error.response.data.errors?.[0].message || "Kuota jadwal dokter sudah penuh");
-        }
-        console.error("Error membuat no antrian:", error);
-        }
 
         return await this.getOne(create);
     }

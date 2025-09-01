@@ -12,6 +12,18 @@ const authInterceptor = (config) => {
   return config;
 };
 
+const antrianCall = axios.create({
+  baseURL: `${BASE_URL_ANTRIAN}/admisi-antrian`,
+  timeout: 10000,
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${Ctx.get(CTX_TOKEN)}`,
+  },
+});
+
+antrianCall.interceptors.request.use(authInterceptor);
+
 //* Modul Antrian
 const generateNoAntrian = axios.create({
   baseURL: `${BASE_URL_ANTRIAN}/data-antrian/admisi-registration`,
@@ -46,4 +58,4 @@ const jadwalDokterMobile = axios.create({
   },
 });
 
-export { generateNoAntrian, jadwalDokter, jadwalDokterMobile };
+export { generateNoAntrian, jadwalDokter, jadwalDokterMobile, antrianCall };
