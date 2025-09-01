@@ -17,7 +17,7 @@ export default class RawatJalanValidation {
         kode_booking: z.string().max(255).optional(),
         note: z.string().max(255),
         maternity: z.boolean().default(false),
-        platform: z.enum(["ADMISI", "APM", "MOBILE"]).default("ADMISI").optional(),
+        platform: z.enum(["ADMISI", "APM", "MOBILE"]).optional(),
         insurance: AsuransiValidator.ASURANSI_VALIDATOR.optional(),
     }).refine((data) => {
         if (data.payment_method === "ASURANSI" && !data.insurance) {
@@ -63,7 +63,7 @@ export default class RawatJalanValidation {
     })
 
     static cancelVisit = z.object({
-        list_uuid: z.array(z.string().max(255)),
-        cancel_reason: z.string().max(255)
+        list_uuid: z.array(z.string({ required_error: "Pembatalan Rawat Jalan perlu diisi" }).max(255)),
+        cancel_reason: z.string({ required_error: "Alasan Pembatalan perlu diisi" }).max(255)
     })
 }

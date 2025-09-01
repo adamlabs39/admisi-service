@@ -41,14 +41,14 @@ export default class InstallasiGawatDaruratRepository {
         try {
             if(data.isNewborn){
                 const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
-                if (!mom) throw new NotfoundException("Identity Mom not found! please regist the mother first");
+                if (!mom) throw new NotfoundException("Identitas Ibu tidak ditemukan! Pastikan Ibu sudah terdaftar sebagai pasien");
                 data.patientData.isNewBorn = true;
             }
             const patient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!patient) throw new Error("Failed to process patient data");
 
-            // const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
-            // if (!practitioner) throw new NotfoundException('Practitioner not found');
+            const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
+            if (!practitioner) throw new NotfoundException('Data dokter tidak ditemukan');
 
             const commonIgdData = {
                 faskesUuid,
@@ -209,7 +209,7 @@ export default class InstallasiGawatDaruratRepository {
                         birth_detail_uuid: patient.birthDetailUuid,
                         birth_time_baby: data.patientData.birth_time_baby,
                         gender_baby: patient.gender,
-                        multiple_birth: data.multipleBirth,
+                        multiple_birth: resultIgd.multipleBirth,
                         address_uuid: patient.address.uuid,
                         tanggal_daftar: moment().format('YYYY-MM-DD'),
                         status: true,
@@ -232,7 +232,6 @@ export default class InstallasiGawatDaruratRepository {
         } catch (e) {
             console.error("Error updating IGD", e);
             throw e;
-
         }
     }
 

@@ -64,8 +64,8 @@ export default class InstallasiGawatDaruratValidation {
     });
 
     static CANCELVISIT = z.object({
-        list_uuid: z.array(z.string().max(255)),
-        cancel_reason: z.string().max(255)
+        list_uuid: z.array(z.string({ required_error: "Pembatalan IGD perlu diisi" }).max(255)),
+        cancel_reason: z.string({ required_error: "Alasan pembatalan perlu diisi" }).max(255)
     });
 
 }

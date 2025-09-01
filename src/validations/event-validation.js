@@ -27,8 +27,6 @@ export default class EventValidation{
         payment_method: z.union([z.literal(1), z.literal(2)]).default(1),
     });
 
-
-
     static CANCELLOGPELAYANAN = z.object({
         list_no_pelayanan: z.array(z.string().max(255)),
         cancel_reason: z.string().max(255),
