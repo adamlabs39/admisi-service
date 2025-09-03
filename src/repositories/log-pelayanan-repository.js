@@ -138,7 +138,6 @@ export default class LogPelayananRepository {
           sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }), // Find By Rm patient
         ],
         dischargeDate: {
-          [Op.not]: null,
           [Op.between]: [args.start_date, args.end_date],
         },
       };
@@ -180,7 +179,7 @@ export default class LogPelayananRepository {
               {
                 model: InsuranceAccountModel,
                 as: "insurance",
-                required: true,
+                required: args.penjamin ? true : false,
                 where: { deletedAt: { [Op.is]: null }, ...(args.penjamin && { name: { [Op.iLike]: `%${args.penjamin}%` } }) },
                 attributes: ["name", "account_number"],
               },

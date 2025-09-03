@@ -255,7 +255,8 @@ const checkExistData = async (model, value, column = 'uuid') => {
     const result = await model.findOne({
         where: {
             [column]: value,
-            faskesUuid: user.faskesUuid
+            faskesUuid: user.faskesUuid,
+            deletedAt: null
         },
         attributes: [column]
     });

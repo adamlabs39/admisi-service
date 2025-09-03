@@ -275,6 +275,7 @@ export default class RawatInapRepository {
             const {faskesUuid} = Context.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
             console.log("Update Rawat Inap Data:", data);
+
             const rawatInap = await RawatInapModel.findOne({
                 where: {
                     uuid: uuid,
@@ -284,15 +285,18 @@ export default class RawatInapRepository {
                 transaction
             });
             if (!rawatInap) throw new NotfoundException("Rawat Inap tidak ditemukan");
+
             const patient = await PatientRepository.getOnePatientBy('uuid', rawatInap.patientUuid);
             if (!patient) throw new NotfoundException("Patient tidak ditemukan");
 
             const practitioner = await PractitionerRepository.getPractitionerBy('uuid', data.practitionerUuid);
             if (!practitioner) throw new NotfoundException("Dokter tidak ditemukan");
+
             data.patientData.patient_uuid = rawatInap.dataValues.patientUuid;
             data.patientData.is_new_born = patient.isNewBorn || false;
             const updatedPatient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!updatedPatient) throw new Error("Gagal memperbarui pasien");
+
             if (data.monitoringRoomUuid && rawatInap.statusRi === 1) {
                 const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
                 await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, updatedPatient.uuid, transaction);
@@ -351,7 +355,6 @@ export default class RawatInapRepository {
                 gender_baby: patient.gender,
                 multiple_birth: data.multipleBirth,
                 address_uuid: updatedPatient.address.uuid,
-                tanggal_daftar: moment().format("YYYY-MM-DD"),
                 status: true,
               },
               transaction
@@ -443,6 +446,22 @@ export default class RawatInapRepository {
                     },
                   ],
                 },
+                {
+                model: PractitionerModel,
+                as: "practitioner",
+                required: true,
+                where: {deletedAt: {[Op.is]: null}},
+                attributes: ["uuid"],
+                include: [
+                    {
+                        model: PegawaiModel,
+                        as: "pegawai",
+                        required: true,
+                        where: {deletedAt: {[Op.is]: null}},
+                        attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
+                    }
+                ]
+                }
               ],
               attributes: [
                 "uuid",
@@ -622,7 +641,7 @@ export default class RawatInapRepository {
                 }
             };
 
-            if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col('monitoring_room.room.uuid'), { [Op.iLike]: `${args.room}` });
+            if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col('monitoring_room.room.name'), { [Op.iLike]: `${args.room}` });
 
             const options = {
               include: [

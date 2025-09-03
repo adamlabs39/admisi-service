@@ -24,7 +24,7 @@ import {InsuranceAdmissionModel, LogPelayananModel, RawatJalanModel} from "@adam
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import { generateNoAntrian } from "../configurations/axios-instance.js";
+import { generateNoAntrian, getAppointmentMobile, updateAppointmentMobile } from "../configurations/axios-instance.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 import AntrianCallRepository from "./antrian-call-repository.js";
 
@@ -259,15 +259,47 @@ export default class RawatJalanRepository {
                     where: { deletedAt: { [Op.is]: null } },
                     attributes: ["birth_place", "birth_date", "age_year", "age_day", "age_month"],
                 },
+                {
+                    model: InsuranceAccountModel,
+                    as: "insurance",
+                    required: false,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["name", "account_number"],
+                },
                 ],
                 attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status"],
+            },
+            {
+                model: PractitionerModel,
+                as: "practitioner",
+                required: true,
+                where: {deletedAt: {[Op.is]: null}},
+                attributes: ["uuid"],
+                include: [
+                    {
+                        model: PegawaiModel,
+                        as: "pegawai",
+                        required: true,
+                        where: {deletedAt: {[Op.is]: null}},
+                        attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
+                    }
+                ]
+            },
+            {
+                model: LokasiModel,
+                as: "lokasi",
+                required: true,
+                where: {deletedAt: {[Op.is]: null}},
+                attributes: [
+                    "uuid", "name", "code"
+                ]
             },
             {
                 model: JadwalDokterModel,
                 as: "jadwal_dokter",
                 required: true,
                 // where: { deletedAt: { [Op.is]: null } },
-                attributes: ["uuid", "start_time", "end_time"],
+                attributes: ["uuid", "start_time", "end_time", "kuota"],
             },
             ],
             attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar", "tanggal_checkin", "platform"],
@@ -489,7 +521,7 @@ export default class RawatJalanRepository {
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
             //* Buat Pemanggilan antrian
-            await AntrianCallRepository.createAntrianCall(data, patient, regist);
+            await AntrianCallRepository.createAntrianCallMobile(data, patient, regist, faskesUuid);
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: regist.tanggalDaftar,
@@ -671,8 +703,22 @@ export default class RawatJalanRepository {
 
             if (statusRj === 1 || statusRj === 2) dataRJ.statusRj = 3;
 
-            if (data.platform === "MOBILE"){
+            if (existingRegist.platform === "MOBILE") {
                 dataRJ.tanggalCheckin = moment().unix();
+            }
+
+            //* Update Status Appointment Mobile
+            try {
+                const appointment = await getAppointmentMobile.get('/');
+                const data = appointment.data.payload;
+
+                const result = data.find(item => item.no_rm === patient.noRm && item.faskes_uuid === faskesUuid);
+
+                await updateAppointmentMobile.put(`/${result.uuid}`, {
+                    status: 2
+                });
+            }catch(error){
+                console.error("Error membuat appointment:", error);
             }
             
             const updatedRegist = await existingRegist.update(dataRJ, { transaction: t });
@@ -708,6 +754,21 @@ export default class RawatJalanRepository {
         return await this.getOne(update);
     }
 
+    static async updateFarmasi(uuid, data) {
+        const user = Context.get(CTX_AUTHOR);
+        console.log("Updating farmasi:", data);
+
+        return await RawatJalanModel.update({
+            noAntrianFarmasi: data.no_antrian_farmasi
+        }, 
+        {
+            where: {
+                uuid,
+                faskesUuid: user.faskesUuid
+            }
+        });
+    }
+
     /**
      * Cancel visit
      * @param data
@@ -726,6 +787,11 @@ export default class RawatJalanRepository {
                         faskesUuid: user.faskesUuid,
                         statusRj: {[Op.not]: 0}
                     },
+                    include: {
+                        model: PatientModel,
+                        as: 'patient',
+                        attributes: ['uuid', 'no_rm', 'name']
+                    },
                     transaction: t
                 });
 
@@ -742,6 +808,28 @@ export default class RawatJalanRepository {
                     {statusRj: 0, cancelReason: data.cancelReason},
                     {where: {uuid: data.listUuid, faskesUuid: user.faskesUuid}, transaction: t}
                 );
+
+                //* Update Status Appointment Mobile
+                try {
+                    const appointment = await getAppointmentMobile.get('/');
+                    const data = appointment.data.payload;
+
+                    for (const rj of rawatJalan) {
+                        let patient = rj.patient.dataValues;
+                        console.log("patient:", patient);
+
+                        const result = data.find(item => item.no_rm === patient.no_rm && item.faskes_uuid === user.faskesUuid);
+
+                        await updateAppointmentMobile.put(`/${result.uuid}`, {
+                            status: 0
+                        });
+                    }
+
+                    console.log("Rawat jalan:", rawatJalan[0].dataValues.noRm);
+                    
+                }catch(error){
+                    console.error("Error membuat appointment:", error);
+                }
 
                 eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
                     list_no_pelayanan: rawatJalan.map(rj => rj.noPelayanan),

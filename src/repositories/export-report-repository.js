@@ -134,7 +134,6 @@ export default class ExportReportRepository {
         const filter = {
             faskesUuid,
             status: false,
-            deletedAt: { [Op.is]: null },
             [Op.or]: [
                 //* Filter No Rm Layanan
             { noreg: { [Op.iLike]: `%${args.q || ""}%` } },
@@ -255,7 +254,7 @@ export default class ExportReportRepository {
         };
 
             //* Filter Jenis Kunjungan
-        if (args.room) filter.room_uuid = args.room;
+        if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col("room.name"), args.room);
 
         return await RoomMonitoringModel.findAll({
             where: { 
@@ -321,7 +320,7 @@ export default class ExportReportRepository {
             }
         };
 
-        if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col("monitoring_room.room.uuid"), { [Op.iLike]: `${args.room}` });
+        if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col("monitoring_room.room.name"), { [Op.iLike]: `${args.room}` });
 
         return await RawatInapModel.findAll({
             where: {
