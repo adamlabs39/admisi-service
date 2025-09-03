@@ -82,6 +82,15 @@ export default class RawatJalanController {
         }
     }
 
+    static async updateFarmasi(request, response, nextFunction) {
+        try{
+            const data = await RawatJalanService.updateFarmasi(request.params.uuid, request.body);
+            return response.status(200).json(successResponse("Data Farmasi Berhasil Diupdate", data));
+        }catch (error){
+            nextFunction(error);
+        }
+    }
+
     static async cancelVisitRawatJalan(request, response, nextFunction) {
         try {
             const data = await RawatJalanService.cancelVisit(request.body);

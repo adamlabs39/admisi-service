@@ -40,6 +40,7 @@ routes.post("/rawat-jalan/apm", RawatJalanController.registRawatJalanApm);
 routes.get("/rawat-jalan/jadwal-dokter", RawatJalanController.getAllJadwalDokter);
 routes.get("/rawat-jalan/:uuid", RawatJalanController.getDetail);
 routes.put("/rawat-jalan/:uuid", RawatJalanController.updateRawatJalan);
+routes.put("/rawat-jalan/farmasi/:uuid", RawatJalanController.updateFarmasi);
 routes.post("/rawat-jalan/check-booking", RawatJalanController.checkBookingRajal);
 routes.post("/rawat-jalan/print-booking", RawatJalanController.getRajalBooking);
 routes.delete("/rawat-jalan/cancel", RawatJalanController.cancelVisitRawatJalan);

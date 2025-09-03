@@ -85,6 +85,16 @@ export class RawatJalanService {
         return result;
     }
 
+    static async updateFarmasi(uuid, data){
+        const checkExist = await checkExistData(RawatJalanModel, uuid);
+        if(!checkExist) throw new NotfoundException('Data tidak ditemukan');
+
+        const result = await RawatJalanRepository.updateFarmasi(uuid, data);
+        if (!result) throw new Error("Failed to update farmasi");
+
+        return result;
+    }
+
 
     static async cancelVisit(data){
         const validData = ZodValidator.validate(RawatJalanValidation.cancelVisit, data);

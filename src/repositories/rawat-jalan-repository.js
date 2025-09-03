@@ -754,6 +754,21 @@ export default class RawatJalanRepository {
         return await this.getOne(update);
     }
 
+    static async updateFarmasi(uuid, data) {
+        const user = Context.get(CTX_AUTHOR);
+        console.log("Updating farmasi:", data);
+
+        return await RawatJalanModel.update({
+            noAntrianFarmasi: data.no_antrian_farmasi
+        }, 
+        {
+            where: {
+                uuid,
+                faskesUuid: user.faskesUuid
+            }
+        });
+    }
+
     /**
      * Cancel visit
      * @param data
