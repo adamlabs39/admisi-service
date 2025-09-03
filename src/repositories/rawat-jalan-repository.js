@@ -259,6 +259,13 @@ export default class RawatJalanRepository {
                     where: { deletedAt: { [Op.is]: null } },
                     attributes: ["birth_place", "birth_date", "age_year", "age_day", "age_month"],
                 },
+                {
+                    model: InsuranceAccountModel,
+                    as: "insurance",
+                    required: false,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["name", "account_number"],
+                },
                 ],
                 attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status"],
             },
