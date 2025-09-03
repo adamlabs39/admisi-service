@@ -446,6 +446,22 @@ export default class RawatInapRepository {
                     },
                   ],
                 },
+                {
+                model: PractitionerModel,
+                as: "practitioner",
+                required: true,
+                where: {deletedAt: {[Op.is]: null}},
+                attributes: ["uuid"],
+                include: [
+                    {
+                        model: PegawaiModel,
+                        as: "pegawai",
+                        required: true,
+                        where: {deletedAt: {[Op.is]: null}},
+                        attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
+                    }
+                ]
+                }
               ],
               attributes: [
                 "uuid",
