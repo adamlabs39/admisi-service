@@ -24,7 +24,7 @@ import {InsuranceAdmissionModel, LogPelayananModel, RawatJalanModel} from "@adam
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import { generateNoAntrian } from "../configurations/axios-instance.js";
+import { generateNoAntrian, getAppointmentMobile, updateAppointmentMobile } from "../configurations/axios-instance.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 import AntrianCallRepository from "./antrian-call-repository.js";
 
@@ -489,7 +489,7 @@ export default class RawatJalanRepository {
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
             //* Buat Pemanggilan antrian
-            await AntrianCallRepository.createAntrianCall(data, patient, regist);
+            await AntrianCallRepository.createAntrianCallMobile(data, patient, regist, faskesUuid);
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: regist.tanggalDaftar,
