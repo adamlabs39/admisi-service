@@ -322,13 +322,36 @@ export default class PatientRepository{
                 let i = 0;
 
                 let patientCount = await PatientModel.unscoped().count({
-                where: { faskesUuid },
-                transaction: t,
+                    where: { faskesUuid },
+                    transaction: t,
                 });
+
+                const seenIdentities = new Set();
 
                 for (let item of data){
                     item = convertSnakeToCamel(item);
-                    console.log("Item :", item);
+                
+                    //* CHECK NO IDENTITAS DI EXCEL
+                    if (seenIdentities.has(item.noIdentity)) {
+                        throw new DuplicateException(`Data no identitas ${item.noIdentity} sudah ada di Excel`);
+                    }
+                    seenIdentities.add(item.noIdentity);
+
+                     //* CHECK NO IDENTITAS PASIEN
+                    const checkPatient =
+                        await PatientModel.findOne({
+                            where: {
+                                [Op.or]: [
+                                    { no_identity: item.noIdentity },
+                                ]
+                            },
+                            transaction: t
+                        });
+                        
+                    if(checkPatient){
+                        throw new DuplicateException(`Data no identitas ${item.noIdentity} sudah terdaftar`);
+                    }
+
                     const address = await AddressModel.create({
                         faskesUuid: faskesUuid,
                         fullAddress: item.address.full_address,
@@ -342,18 +365,6 @@ export default class PatientRepository{
                         ...infoAge,
                         faskesUuid: faskesUuid
                     }, {transaction: t});
-
-                    //* CHECK NO IDENTITAS PASIEN
-                    const checkPatient =
-                        await PatientModel.findOne({
-                            where: {
-                                [Op.or]: [
-                                    { no_identity: item.noIdentity },
-                                ]
-                            }
-                        });
-                        
-                    if(checkPatient) throw new DuplicateException("Data No Identitas pada baris ke " + (currentInsert) + " sudah ada");
 
                     //* Generate NoRM Khusus untuk Import
                     const currentCount = patientCount + i + 1;
