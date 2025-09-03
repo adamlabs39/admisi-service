@@ -37,7 +37,7 @@ export default class PatientValidation{
 
     static PATIENT_UPLOAD_VALIDATOR = z.object({
         unggah_berkas: z.any().refine(file => file && file.size <= (1 * 1024 * 1024), {
-            message: "Size file harus dibawah 1MB"
+            message: "Ukuran file maksimal 1MB"
         }).refine(file => file.mimetype === 'application/pdf', {
             message: "Format file tidak didukung. Silakan unggah file dengan format .pdf."
         }),
