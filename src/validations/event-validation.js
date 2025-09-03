@@ -6,7 +6,7 @@ export default class EventValidation{
         name_baby: z.string().max(255),
         no_rm_baby: z.string().max(150),
         birth_detail_uuid: z.string().max(255),
-        birth_time_baby: z.string().regex(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, {
+        birth_time: z.string().regex(/^([0-1]\d|2[0-3]):([0-5]\d):([0-5]\d)$/, {
             message: "Invalid time format, expected HH:mm:ss"
         }),
         gender_baby: z.string().max(15),

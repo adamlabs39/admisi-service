@@ -9,7 +9,7 @@ export default class PatientValidation{
         birth_detail: z.object({
             birth_place: z.string({ required_error: "Tempat Lahir perlu diisi"}).max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
-                message: "Invalid date format"
+                message: "Tanggal Lahir tidak sesuai format"
             }).transform(value => new Date(value)),
         }),
         gender: z.string({ required_error: "Jenis Kelamin perlu diisi"}).max(15),
@@ -37,7 +37,7 @@ export default class PatientValidation{
 
     static PATIENT_UPLOAD_VALIDATOR = z.object({
         unggah_berkas: z.any().refine(file => file && file.size <= (1 * 1024 * 1024), {
-            message: "Size file harus dibawah 1MB"
+            message: "Ukuran file maksimal 1MB"
         }).refine(file => file.mimetype === 'application/pdf', {
             message: "Format file tidak didukung. Silakan unggah file dengan format .pdf."
         }),
@@ -51,13 +51,13 @@ export default class PatientValidation{
         birth_detail: z.object({
             birth_place: z.string({ required_error: "Tempat Lahir perlu diisi"}).max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
-                message: "Invalid date format"
+                message: "Tanggal Lahir tidak sesuai format"
             }).transform(value => new Date(value)),
         }),
         gender: z.string({ required_error: "Jenis Kelamin Perlu diisi sesuai format Excel" }).max(15),
         phone: z.string({ required_error: "No HP Perlu diisi sesuai format Excel" }).max(15),
-        religion: z.string().max(25),
-        language: z.string().max(50),
+        religion: z.string({ required_error: "Agama Perlu diisi sesuai format Excel" }).max(25),
+        language: z.string({ required_error: "Bahasa Perlu diisi sesuai format Excel"}).max(50),
         maritial_status: z.string({ required_error: "Status Pernikahan Perlu diisi sesuai format Excel" }).max(50),
         mother_name: z.string().max(255),
         address: z.object({
@@ -81,11 +81,11 @@ export default class PatientValidation{
         birth_detail: z.object({
             birth_place: z.string({ required_error: "Tempat Lahir perlu diisi"}).max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
-                message: "Invalid date format"
+                message: "Tanggal Lahir tidak sesuai format"
             }).transform(value => new Date(value)),
         }),
         multiple_birth: z.boolean().default(false).optional(),
-        birth_time_baby: z.string().max(255).optional(),
+        birth_time: z.string().max(255).optional(),
         gender: z.string({ required_error: "Jenis Kelamin Perlu diisi" }).max(15),
         phone: z.nullable(z.string().max(15)),
         religion: z.nullable(z.string().max(25)),
@@ -109,7 +109,7 @@ export default class PatientValidation{
         birth_detail: z.object({
             birth_place: z.string({ required_error: "Tempat Lahir Perlu diisi" }).max(150),
             birth_date: z.string().refine(value => !isNaN(Date.parse(value)), {
-                message: "Invalid date format"
+                message: "Tanggal Lahir tidak sesuai format"
             }).transform(value => new Date(value)),
         }),
         identity: z.string({ required_error: "Identitas Perlu diisi" }).max(255),

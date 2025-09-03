@@ -1,6 +1,5 @@
 import {Op} from "sequelize";
 import Pagination from "../helper/pagination.js";
-import sequelizeInstace from "../configurations/sequelize-instance.js";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
 import {Context, Context as Ctx} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
@@ -432,7 +431,7 @@ export default class RawatJalanRepository {
 
 
     static async createApm(data) {
-        const create = await sequelizeInstace.transaction(async (t) => {
+        const create = await sequelizeInstance.transaction(async (t) => {
             const {faskesUuid} = Ctx.get(CTX_AUTHOR);
             const patient = await PatientRepository.registPatientApm(data.patient_data, t);
             if (!patient) throw new Error("Failed to create patient");
@@ -447,25 +446,23 @@ export default class RawatJalanRepository {
                 patientUuid: patient.uuid,
                 name: patient.name,
                 noRm: patient.noRm,
+                birthDetailUuid: patient.birthDetailUuid,
                 gender: patient.gender,
                 practitionerUuid: jadwalDokter.practitionerUuid,
-                birthDetailUuid: patient.birthDetailUuid,
+                maternity: data.maternity,
+                note: data.note,
                 lokasiUuid: jadwalDokter.lokasiUuid,
-                platform: data.platform,
-                noAntrianAdmisi: data.noAntrianAdmisi,
-                noAntrianPoli: data.noAntrianPoli,
-                noAntrianFarmasi: data.noAntrianFarmasi,
-                kodeBooking: data.kodeBooking,
-                tanggalCheckin: moment().unix(),
+                complaint: data.complaint,
+                platform: "ADMISI",
+                paymentMethod: 1,
                 tanggalDaftar: moment().unix(),
+                tanggalCheckin: moment().unix(),
+                statusRj: 2,
+                jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
+                noReg: await generateNoReg(),
+                noPelayanan: await generateNoPelayanan('RJ'),
             };
 
-            dataRJ.tanggalDaftar = moment().unix();
-            dataRJ.tanggalCheckin = moment().unix();
-            dataRJ.statusRj = 2;
-            dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
-            dataRJ.noReg = await generateNoReg();
-            dataRJ.noPelayanan = await generateNoPelayanan('RJ');
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
             //* Buat Pemanggilan antrian
@@ -479,7 +476,7 @@ export default class RawatJalanRepository {
                 practitioner_uuid: regist.practitionerUuid,
                 patient_uuid: patient.uuid,
                 lokasi_uuid: regist.lokasiUuid,
-                payment_method: data.paymentMethod === "TUNAI" ? 1 : 2,
+                payment_method: 1,
             });
             return regist.dataValues.uuid;
         });
@@ -488,7 +485,7 @@ export default class RawatJalanRepository {
     }
 
     static async createMobile(data, faskesUuid) {
-        const create = await sequelizeInstace.transaction(async (t) => {
+        const create = await sequelizeInstance.transaction(async (t) => {
             const patient = await PatientRepository.registPatientMobile(data.patient_data, faskesUuid, t);
             if (!patient) throw new Error("Failed to create patient");
             data = convertSnakeToCamel(data);
@@ -501,23 +498,22 @@ export default class RawatJalanRepository {
                 patientUuid: patient.uuid,
                 name: patient.name,
                 noRm: patient.noRm,
+                birthDetailUuid: patient.birthDetailUuid,
                 gender: patient.gender,
                 practitionerUuid: jadwalDokter.practitionerUuid,
-                birthDetailUuid: patient.birthDetailUuid,
+                maternity: data.maternity,
+                note: data.note,
                 lokasiUuid: jadwalDokter.lokasiUuid,
-                platform: data.platform,
-                noAntrianAdmisi: data.noAntrianAdmisi,
-                noAntrianPoli: data.noAntrianPoli,
-                noAntrianFarmasi: data.noAntrianFarmasi,
-                kodeBooking: data.kodeBooking,
+                complaint: data.complaint,
+                platform: "ADMISI",
+                paymentMethod: 1,
                 tanggalDaftar: moment().unix(),
+                statusRj: 1,
+                jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
+                noReg: await generateNoReg(faskesUuid),
+                noPelayanan: await generateNoPelayanan('RJ', faskesUuid),
             };
 
-            dataRJ.tanggalDaftar = moment().unix();
-            dataRJ.statusRj = 1;
-            dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
-            dataRJ.noReg = await generateNoReg(faskesUuid);
-            dataRJ.noPelayanan = await generateNoPelayanan('RJ', faskesUuid);
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
             //* Buat Pemanggilan antrian
@@ -531,7 +527,7 @@ export default class RawatJalanRepository {
                 practitioner_uuid: regist.practitionerUuid,
                 patient_uuid: patient.uuid,
                 lokasi_uuid: regist.lokasiUuid,
-                payment_method: data.paymentMethod === "TUNAI" ? 1 : 2,
+                payment_method: 1,
             });
             return regist.dataValues.uuid;
         });
