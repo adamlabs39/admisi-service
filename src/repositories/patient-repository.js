@@ -320,8 +320,6 @@ export default class PatientRepository{
             return await sequelizeInstace.transaction(async (t) => {
                 let currentInsert = 1;
                 let i = 0;
-                let successCount = 0;
-                let failedImport = [];
 
                 let patientCount = await PatientModel.unscoped().count({
                     where: { faskesUuid },
@@ -335,9 +333,9 @@ export default class PatientRepository{
                 
                     //* CHECK NO IDENTITAS DI EXCEL
                     if (seenIdentities.has(item.noIdentity)) {
-                        // throw new DuplicateException(`Data no identitas ${item.noIdentity} sudah ada di Excel`);
-                        failedImport.push(item.noIdentity);
-                        continue;
+                        throw new DuplicateException(`Data no identitas ${item.noIdentity} sudah ada di Excel`);
+                        // failedImport.push(item.noIdentity);
+                        // continue;
                     }
                     seenIdentities.add(item.noIdentity);
 
@@ -353,9 +351,9 @@ export default class PatientRepository{
                         });
                         
                     if(checkPatient){
-                        // throw new DuplicateException(`Data no identitas ${item.noIdentity} sudah terdaftar`);
-                        failedImport.push(checkPatient.noIdentity);
-                        continue;
+                        throw new DuplicateException(`Data no identitas ${item.noIdentity} sudah terdaftar`);
+                        // failedImport.push(checkPatient.noIdentity);
+                        // continue;
                     }
 
                     const address = await AddressModel.create({
@@ -386,14 +384,13 @@ export default class PatientRepository{
                     }, {transaction: t});
                     currentInsert++;
                     i++;
-                    successCount++;
                 }
 
                 if (data.length === 0) {
                     throw new BadRequestException("File kosong, tidak ada data pasien untuk diimpor");
                 }
 
-                return { message: `Berhasil import : ${successCount} data pasien`, failed: `Data pasien dengan no identitas ${failedImport.join(", ")} gagal diimpor` };
+                return { message: `Berhasil import : ${data.length} data pasien` };
             });
         }catch (error){
             console.log(error);

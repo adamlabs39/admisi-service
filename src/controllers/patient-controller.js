@@ -115,7 +115,7 @@ export default class PatientController {
             const data = XLSX.utils.sheet_to_json(sheet, {raw: true, defval: null});
             const result = await PatientService.import(data);
 
-            return res.status(200).json(successResponse(result));
+            return res.status(200).json(successResponse(result.message));
         }catch (error) {
             next(error);
         }

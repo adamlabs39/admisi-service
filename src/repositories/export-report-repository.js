@@ -1,6 +1,6 @@
 import { BirthDetailModel, NewBornModel, PatientModel, RoomMonitoringModel } from "@adameds/model-sdk/admisi";
 import { PegawaiModel, PractitionerModel, LokasiModel, KategoriRuanganModel } from "@adameds/model-sdk/datamaster";
-import { LogPelayananModel, RawatInapModel } from "@adameds/model-sdk/pelayanan";
+import { InsuranceAdmissionModel, LogPelayananModel, RawatInapModel } from "@adameds/model-sdk/pelayanan";
 import { AddressModel } from "@adameds/model-sdk/setting";
 import { InsuranceAccountModel } from "@adameds/model-sdk/admisi";
 import { Context } from "../middlewares/context.js";
@@ -12,6 +12,11 @@ import sequelizeInstance from "../configurations/sequelize-instance.js";
 //     foreignKey: "monitoring_room_uuid",
 //     as: "rawat_inap",
 // });
+
+InsuranceAccountModel.hasMany(InsuranceAdmissionModel, {
+    foreignKey: 'insurance_account_uuid',
+    as: 'insurance_admissions',
+});
 
 export default class ExportReportRepository {
     static async getExportKunjungan(args) {
@@ -86,8 +91,19 @@ export default class ExportReportRepository {
                             model: InsuranceAccountModel,
                             as: "insurance",
                             required: false,
-                            where: { deletedAt: { [Op.is]: null } },
                             attributes: ["name", "account_number"],
+                            include: [
+                                {
+                                    model: InsuranceAdmissionModel,
+                                    as: "insurance_admissions",
+                                    required: false,
+                                    where: sequelizeInstance.where(
+                                        sequelizeInstance.col("patient.insurance.insurance_admissions.no_reg"),
+                                        { [Op.eq]: sequelizeInstance.col("noreg") }
+                                    ),
+                                    attributes: []
+                                }
+                            ]
                         },
                     ],
                     attributes: ["uuid", "title", "name", "identity", "no_identity", "phone", "gender", "no_rm"],

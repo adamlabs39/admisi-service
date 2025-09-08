@@ -39,8 +39,8 @@ import {
 } from "@adameds/model-sdk/datamaster";
 import Pagination from "../helper/pagination.js";
 import newBornRepository from "./newborn-repository.js";
-import { rawatInapFilter } from "../helper/filter.js";
-import { rawatInapInclude } from "../helper/include.js";
+import rawatInapFilter from "./filters/rawat-inap-filter.js";
+import { rawatInapInclude } from "./include/rawat-inap-include.js";
 
 export default class RawatInapRepository {
     static async getAll(args) {
@@ -53,8 +53,8 @@ export default class RawatInapRepository {
         });
 
         const options = {
-          include: rawatInapInclude,
-          attributes: ["uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method", "status_ri", "rekam_medis_uuid", "no_pelayanan"],
+            include: rawatInapInclude,
+            attributes: ["uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method", "status_ri", "rekam_medis_uuid", "no_pelayanan"],
         };
 
         const transform = {
@@ -92,7 +92,7 @@ export default class RawatInapRepository {
             //* Validasi untuk jam lahir bayi tidak boleh lebih dari saat ini
             if (moment(data.patientData.birth_detail.birth_date).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD") && 
             data.patientData.birth_time > moment().format("HH:mm:ss")) {
-              throw new Error("jam lahir bayi tidak boleh lebih dari saat ini");
+                throw new Error("jam lahir bayi tidak boleh lebih dari saat ini");
             }
 
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
@@ -287,66 +287,66 @@ export default class RawatInapRepository {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         try {
             const rawatInap = await RawatInapModel.findOne({
-              where: {
-                uuid: uuid,
-                faskesUuid,
-                deletedAt: null,
-              },
-              include: [
+            where: {
+            uuid: uuid,
+            faskesUuid,
+            deletedAt: null,
+            },
+            include: [
+            {
+                model: PatientModel,
+                as: "patient",
+                required: true,
+                where: { deletedAt: { [Op.is]: null } },
+                include: [
                 {
-                  model: PatientModel,
-                  as: "patient",
-                  required: true,
-                  where: { deletedAt: { [Op.is]: null } },
-                  include: [
-                    {
-                      model: AddressModel,
-                      as: "address",
-                      required: true,
-                      where: { deletedAt: { [Op.is]: null } },
-                      attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"],
-                    },
-                    {
-                      model: BirthDetailModel,
-                      as: "birth_detail",
-                      required: true,
-                      where: { deletedAt: { [Op.is]: null } },
-                      attributes: ["birth_place", "birth_date", "age_year", "age_month", "age_day"],
-                    },
-                  ],
-                  attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status", "is_new_born"],
+                    model: AddressModel,
+                    as: "address",
+                    required: true,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"],
                 },
                 {
-                  model: RoomMonitoringModel,
-                  as: "monitoring_room",
-                  required: true,
-                  where: { deletedAt: { [Op.is]: null } },
-                  attributes: ["uuid", "room_uuid", "no_bed"],
-                  include: [
+                    model: BirthDetailModel,
+                    as: "birth_detail",
+                    required: true,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["birth_place", "birth_date", "age_year", "age_month", "age_day"],
+                },
+                ],
+                attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status", "is_new_born"],
+            },
+            {
+                model: RoomMonitoringModel,
+                as: "monitoring_room",
+                required: true,
+                where: { deletedAt: { [Op.is]: null } },
+                attributes: ["uuid", "room_uuid", "no_bed"],
+                include: [
+                {
+                    model: LokasiModel,
+                    as: "bed_lokasi",
+                    required: true,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                },
+                {
+                    model: LokasiModel,
+                    as: "room",
+                    required: true,
+                    where: { deletedAt: { [Op.is]: null } },
+                    attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                    include: [
                     {
-                      model: LokasiModel,
-                      as: "bed_lokasi",
-                      required: true,
-                      where: { deletedAt: { [Op.is]: null } },
-                      attributes: ["uuid", "code", "name", "class_code", "class_name"],
+                        model: KategoriRuanganModel,
+                        as: "kategori_ruangan",
+                        required: true,
+                        where: { deletedAt: { [Op.is]: null } },
+                        attributes: ["uuid", "code", "name"],
                     },
-                    {
-                      model: LokasiModel,
-                      as: "room",
-                      required: true,
-                      where: { deletedAt: { [Op.is]: null } },
-                      attributes: ["uuid", "code", "name", "class_code", "class_name"],
-                      include: [
-                        {
-                          model: KategoriRuanganModel,
-                          as: "kategori_ruangan",
-                          required: true,
-                          where: { deletedAt: { [Op.is]: null } },
-                          attributes: ["uuid", "code", "name"],
-                        },
-                      ],
-                    },
-                  ],
+                    ],
+                },
+                ],
                 },
                 {
                 model: PractitionerModel,
@@ -364,30 +364,30 @@ export default class RawatInapRepository {
                     }
                 ]
                 }
-              ],
-              attributes: [
-                "uuid",
-                "no_reg",
-                "tanggal_daftar",
-                "payment_method",
-                "maternity",
-                "note",
-                "complaint",
-                "practitioner_uuid",
-                "status_ri",
-                "multiple_birth",
-                "entrusted_patient",
-                "upgrade_class",
-                "join_bill",
-                "previous_bill",
-                "family_bill",
-                "spare_bed",
-                "box_baby",
-                "monitoring_room_uuid",
-                "no_spri",
-                "no_pelayanan",
-                "tanggal_dirawat"
-              ],
+            ],
+            attributes: [
+            "uuid",
+            "no_reg",
+            "tanggal_daftar",
+            "payment_method",
+            "maternity",
+            "note",
+            "complaint",
+            "practitioner_uuid",
+            "status_ri",
+            "multiple_birth",
+            "entrusted_patient",
+            "upgrade_class",
+            "join_bill",
+            "previous_bill",
+            "family_bill",
+            "spare_bed",
+            "box_baby",
+            "monitoring_room_uuid",
+            "no_spri",
+            "no_pelayanan",
+            "tanggal_dirawat"
+            ],
             });
 
             if (!rawatInap) throw new NotfoundException("Rawat Inap tidak ditemukan");
@@ -488,21 +488,21 @@ export default class RawatInapRepository {
 
                 //* MENGHAPUS PASIEN DARI ROOM MONITORING
                 for (const riModel of rawatInap) {
-                  if (riModel.monitoringRoomUuid) {
-                    await RoomMonitoringModel.update(
-                      {
-                        patientUuid: null,
-                        status_operasional: "Tersedia"
-                      },
-                      {
-                        where: {
-                          uuid: riModel.monitoringRoomUuid,
-                          faskesUuid
+                    if (riModel.monitoringRoomUuid) {
+                        await RoomMonitoringModel.update(
+                        {
+                            patientUuid: null,
+                            status_operasional: "Tersedia"
                         },
-                        transaction: t
-                      }
-                    );
-                  }
+                        {
+                            where: {
+                            uuid: riModel.monitoringRoomUuid,
+                            faskesUuid
+                            },
+                            transaction: t
+                        }
+                        );
+                    }
                 }
                 
                 eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
