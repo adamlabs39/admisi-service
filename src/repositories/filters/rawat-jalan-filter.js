@@ -1,16 +1,12 @@
 import { Op } from "sequelize";
-import commonFilter from "./common-filter.js";
+import { commonFilterPelayanan } from "./common-filter.js";
 
 export default function rawatJalanFilter({faskesUuid, args = {}, options = {}}) {
-    const filter = commonFilter({
+    const filter = commonFilterPelayanan({
         faskesUuid,
         args,
         options: {
             ...options,
-            [Op.or]: [
-                //* Filter No Rm Layanan
-                { no_rm: { [Op.iLike]: `%${args.q || ""}%` } },
-            ],
             deletedAt: { [Op.is]: null },
             statusRj: { [Op.not]: 0 },
             tanggalDaftar: {

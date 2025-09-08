@@ -1,17 +1,13 @@
 import { Op } from "sequelize";
-import commonFilter from "./common-filter.js";
+import { commonFilterPelayanan } from "./common-filter.js";
 import sequelizeInstance from "../../configurations/sequelize-instance.js";
 
 export default function rawatInapFilter({faskesUuid, args = {}, options = {}}) {
-    const filter = commonFilter({
+    const filter = commonFilterPelayanan({
         faskesUuid,
         args,
         options: {
             ...options,
-            [Op.or]: [
-                //* Filter No Rm Layanan
-                { no_rm: { [Op.iLike]: `%${args.q || ""}%` } },
-            ],
             status_ri: { [Op.not]: 0 },
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date],

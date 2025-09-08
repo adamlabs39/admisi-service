@@ -3,13 +3,15 @@ import { CTX_AUTHOR } from "../constant/context-constant.js";
 import { convertSnakeToCamel, getInfoInsurance } from "../helper/utility.js";
 import { Op } from "sequelize";
 import sequelizeInstance from "../configurations/sequelize-instance.js";
-import { LogPelayananModel, RawatInapModel } from "@adameds/model-sdk/pelayanan";
+import { InsuranceAdmissionModel, LogPelayananModel, RawatInapModel } from "@adameds/model-sdk/pelayanan";
 import { PatientModel, BirthDetailModel, InsuranceAccountModel, RoomMonitoringModel } from "@adameds/model-sdk/admisi";
 import { AddressModel } from "@adameds/model-sdk/setting";
 import { PractitionerModel, PegawaiModel, LokasiModel, KategoriRuanganModel } from "@adameds/model-sdk/datamaster";
 
 import Pagination from "../helper/pagination.js";
 import moment from "moment";
+import { kunjunganReportFilter } from "./filters/report-filter.js";
+import { kunjunganReportInclude } from "./include/report-include.js";
 
 RoomMonitoringModel.hasOne(RawatInapModel, {
   foreignKey: "monitoring_room_uuid",
@@ -128,88 +130,11 @@ export default class LogPelayananRepository {
   static async getAllLogPelayanan(args) {
     const { faskesUuid } = Context.get(CTX_AUTHOR);
     try {
-      const filter = {
-        faskesUuid,
-        status: true,
-        [Op.or]: [
-          { noreg: { [Op.iLike]: `%${args.q || ""}%` } }, // Find by no_rm
-          sequelizeInstance.where(sequelizeInstance.fn("concat", sequelizeInstance.col("patient.title"), " ", sequelizeInstance.col("patient.name")), { [Op.iLike]: `%${args.q || ""}%` }), // Find by title and name
-          sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }), // Find by address0198cb04-f643-7535-90b6-4bce75afd7ab
-          sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }), // Find By Rm patient
-        ],
-        dischargeDate: {
-          [Op.between]: [args.start_date, args.end_date],
-        },
-      };
-
-      //* Filter Jenis Kunjungan
-      if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
-
-      //* Filter Dokter
-      if (args.practitioner_uuid) filter.practitionerUuid = args.practitioner_uuid;
-
-      // if (args.penjamin) filter.penjamin = sequelizeInstance.where(sequelizeInstance.col("patient.insurance.uuid"), { [Op.iLike]: `%${args.penjamin}%` });
+      
+      const filter = kunjunganReportFilter({ faskesUuid, args, options: {} });
 
       const options = {
-        include: [
-          {
-            model: PatientModel,
-            as: "patient",
-            required: true,
-            where: {
-              deletedAt: { [Op.is]: null },
-            },
-            include: [
-              {
-                model: AddressModel,
-                as: "address",
-                required: true,
-                where: {
-                  deletedAt: { [Op.is]: null },
-                },
-                attributes: ["prov", "city", "district", "rt", "rw", "full_address", "country", "village"],
-              },
-              {
-                model: BirthDetailModel,
-                as: "birth_detail",
-                required: true,
-                where: { deletedAt: { [Op.is]: null } },
-                attributes: ["age_year", "age_month", "age_day", "birth_date"],
-              },
-              {
-                model: InsuranceAccountModel,
-                as: "insurance",
-                required: args.penjamin ? true : false,
-                where: { deletedAt: { [Op.is]: null }, ...(args.penjamin && { name: { [Op.iLike]: `%${args.penjamin}%` } }) },
-                attributes: ["name", "account_number"],
-              },
-            ],
-            attributes: ["uuid", "title", "name", "identity", "no_identity", "phone", "gender", "no_rm"],
-          },
-          {
-            model: PractitionerModel,
-            as: "practitioner",
-            required: true,
-            where: { deletedAt: { [Op.is]: null } },
-            attributes: ["uuid"],
-            include: [
-              {
-                model: PegawaiModel,
-                as: "pegawai",
-                required: true,
-                where: { deletedAt: { [Op.is]: null } },
-                attributes: ["first_title", "last_title", ["name", "nama"], "gender"],
-              },
-            ],
-          },
-          {
-            model: LokasiModel,
-            as: "lokasi",
-            required: false,
-            where: { deletedAt: { [Op.is]: null } },
-            attributes: ["name"],
-          },
-        ],
+        include: kunjunganReportInclude(args),
         attributes: ["tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "discharge_date"],
       };
 
