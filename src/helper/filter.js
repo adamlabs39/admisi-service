@@ -22,17 +22,19 @@ export function commonFilter({faskesUuid, args = {}, options = {}}) {
 
 export function rawatJalanFilter({faskesUuid, args = {}, options = {}}) {
     const filter = commonFilter({
-        faskesUuid, 
-        args, 
-        ...options, 
-        deletedAt: { [Op.is]: null },
-        statusRj: { [Op.not]: 0 },
-        tanggalDaftar: {
-            [Op.between]: [args.start_date, args.end_date]
+        faskesUuid,
+        args,
+        options: {
+            ...options,
+            deletedAt: { [Op.is]: null },
+            statusRj: { [Op.not]: 0 },
+            tanggalDaftar: {
+                [Op.between]: [args.start_date, args.end_date],
+            },
+            dischargeDate: {
+                [Op.is]: null,
+            },
         },
-        dischargeDate: {
-            [Op.is]: null
-        }
     });
 
     if (args.poly) {
@@ -87,13 +89,15 @@ export function rawatInapFilter({faskesUuid, args = {}, options = {}}) {
     const filter = commonFilter({
         faskesUuid,
         args,
-        ...options,
-        status_ri: {[Op.not]: 0},
-        tanggalDaftar: {
-            [Op.between]: [args.start_date, args.end_date]
+        options: {
+            ...options,
+            status_ri: { [Op.not]: 0 },
+            tanggalDaftar: {
+                [Op.between]: [args.start_date, args.end_date],
+            },
+            dischargeDate: { [Op.is]: null },
+            deletedAt: { [Op.is]: null },
         },
-        dischargeDate: {[Op.is]: null},
-        deletedAt: {[Op.is]: null}
     });
 
     if (args.payment_method) filter.paymentMethod = args.payment_method;
