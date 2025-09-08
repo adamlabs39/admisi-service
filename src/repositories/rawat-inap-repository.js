@@ -39,123 +39,21 @@ import {
 } from "@adameds/model-sdk/datamaster";
 import Pagination from "../helper/pagination.js";
 import newBornRepository from "./newborn-repository.js";
+import { rawatInapFilter } from "../helper/filter.js";
+import { rawatInapInclude } from "../helper/include.js";
 
 export default class RawatInapRepository {
     static async getAll(args) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
 
-        const filter = {
-            faskesUuid,
-            [Op.or]: [
-                {no_rm: {[Op.iLike]: `%${args.q || ''}%`}}, // Find by no_rm
-                sequelizeInstance.where(
-                    sequelizeInstance.fn('concat', sequelizeInstance.col('patient.title'), ' ', sequelizeInstance.col('patient.name')),
-                    {[Op.iLike]: `%${args.q || ''}%`}
-                ), // Find by title and name
-                sequelizeInstance.where(
-                    sequelizeInstance.col('patient.address.full_address'),
-                    {[Op.iLike]: `%${args.q || ''}%`}
-                ) // Find by address
-            ],
-            status_ri: {[Op.not]: 0},
-            tanggalDaftar: {
-                [Op.between]: [args.start_date, args.end_date]
-            },
-            dischargeDate: {[Op.is]: null},
-            deletedAt: {[Op.is]: null} 
-        }
+        const filter = rawatInapFilter({
+            faskesUuid, 
+            args, 
+            options: {} 
+        });
 
-        if (args.payment_method) filter.paymentMethod = args.payment_method;
-        if (args.dpjp) filter.practitionerUuid = args.dpjp;
-        if (args.room) {
-            const roomArray = args.room.split(',').map(item => item.trim());
-            filter[Op.and] = {
-                [Op.or]: roomArray.map(room =>
-                    sequelizeInstance.where(
-                        sequelizeInstance.col('monitoring_room.room.name'),
-                        { [Op.iLike]: `%${room}%` }
-                    )
-                )
-            };
-        }
         const options = {
-          include: [
-            {
-              model: PatientModel,
-              as: "patient",
-              required: true,
-              where: {
-                deletedAt: { [Op.is]: null },
-              },
-              include: [
-                {
-                  model: AddressModel,
-                  as: "address",
-                  required: true,
-                  where: {
-                    deletedAt: { [Op.is]: null },
-                  },
-                  attributes: ["prov", "city", "district", "rt", "rw", "full_address", "country", "village"],
-                },
-              ],
-              attributes: ["uuid", "title", "name", "identity", "no_identity", "phone", "gender", "is_new_born"],
-            },
-            {
-              model: BirthDetailModel,
-              as: "birth_detail",
-              required: true,
-              where: { deletedAt: { [Op.is]: null } },
-              attributes: ["age_year", "age_month", "age_day"],
-            },
-            {
-              model: PractitionerModel,
-              as: "practitioner",
-              required: true,
-              where: { deletedAt: { [Op.is]: null } },
-              attributes: ["uuid"],
-              include: [
-                {
-                  model: PegawaiModel,
-                  as: "pegawai",
-                  required: true,
-                  where: { deletedAt: { [Op.is]: null } },
-                  attributes: ["first_title", "last_title", ["name", "nama"], "gender"],
-                },
-              ],
-            },
-            {
-              model: RoomMonitoringModel,
-              as: "monitoring_room",
-              required: true,
-              where: { deletedAt: { [Op.is]: null } },
-              attributes: ["uuid", "room_uuid", "no_bed"],
-              include: [
-                {
-                  model: LokasiModel,
-                  as: "bed_lokasi",
-                  required: true,
-                  where: { deletedAt: { [Op.is]: null } },
-                  attributes: ["uuid", "code", "name", "class_code", "class_name"],
-                },
-                {
-                  model: LokasiModel,
-                  as: "room",
-                  required: true,
-                  where: { deletedAt: { [Op.is]: null } },
-                  attributes: ["uuid", "code", "name", "class_code", "class_name"],
-                  include: [
-                    {
-                      model: KategoriRuanganModel,
-                      as: "kategori_ruangan",
-                      required: true,
-                      where: { deletedAt: { [Op.is]: null } },
-                      attributes: ["uuid", "code", "name"],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
+          include: rawatInapInclude,
           attributes: ["uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method", "status_ri", "rekam_medis_uuid", "no_pelayanan"],
         };
 
@@ -190,6 +88,12 @@ export default class RawatInapRepository {
             if (!patient) throw new Error("Gagal mendaftarkan pasien baru");
 
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
+
+            //* Validasi untuk jam lahir bayi tidak boleh lebih dari saat ini
+            if (moment(data.patientData.birth_detail.birth_date).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD") && 
+            data.patientData.birth_time > moment().format("HH:mm:ss")) {
+              throw new Error("jam lahir bayi tidak boleh lebih dari saat ini");
+            }
 
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
 
@@ -343,7 +247,6 @@ export default class RawatInapRepository {
                 }, transaction)
             }
 
-            console.log("address:", patient.address);
             await newBornRepository.upsertNewBorn(
               {
                 identifier_mom: patient.identity,
@@ -381,7 +284,6 @@ export default class RawatInapRepository {
     }
 
     static async getDetail(uuid) {
-        console.log("Get Detail Rawat Inap", uuid);
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         try {
             const rawatInap = await RawatInapModel.findOne({
@@ -511,7 +413,6 @@ export default class RawatInapRepository {
 
                 if (detailRuangan) {
                     rawatInap.monitoring_room.dataValues.kategori_ruangan_uuid = detailRuangan.kategori_ruangan_uuid;
-                console.log("Monitoring Room Data:", rawatInap.monitoring_room);
                 }
 
             }
