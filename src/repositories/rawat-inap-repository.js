@@ -191,6 +191,11 @@ export default class RawatInapRepository {
 
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
 
+            //* Validasi untuk jam lahir bayi tidak boleh lebih dari saat ini
+            if (moment(data.patientData.birth_detail.birth_date).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD") && data.patientData.birth_time > moment().format("HH:mm:ss")) {
+              throw new Error("jam lahir bayi tidak boleh lebih dari saat ini");
+            }
+
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
 
             const registRI = await RawatInapModel.create({
@@ -343,7 +348,6 @@ export default class RawatInapRepository {
                 }, transaction)
             }
 
-            console.log("address:", patient.address);
             await newBornRepository.upsertNewBorn(
               {
                 identifier_mom: patient.identity,
@@ -381,7 +385,6 @@ export default class RawatInapRepository {
     }
 
     static async getDetail(uuid) {
-        console.log("Get Detail Rawat Inap", uuid);
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         try {
             const rawatInap = await RawatInapModel.findOne({
@@ -511,7 +514,6 @@ export default class RawatInapRepository {
 
                 if (detailRuangan) {
                     rawatInap.monitoring_room.dataValues.kategori_ruangan_uuid = detailRuangan.kategori_ruangan_uuid;
-                console.log("Monitoring Room Data:", rawatInap.monitoring_room);
                 }
 
             }
