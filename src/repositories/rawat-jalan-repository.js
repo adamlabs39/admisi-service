@@ -5,8 +5,6 @@ import {Context, Context as Ctx} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import {
     convertSnakeToCamel,
-    generateAntrianPoli,
-    generateBookingCode,
     generateNoPelayanan,
     generateNoReg,
 } from "../helper/utility.js";
@@ -26,6 +24,8 @@ import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/e
 import { generateNoAntrian, getAppointmentMobile, updateAppointmentMobile } from "../configurations/axios-instance.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 import AntrianCallRepository from "./antrian-call-repository.js";
+import { rawatJalanFilter } from "../helper/filter.js";
+import { rawatJalanInclude } from "../helper/include.js";
 
 export default class RawatJalanRepository {
     /**
@@ -35,141 +35,15 @@ export default class RawatJalanRepository {
      */
     static async getAll(args, faskesUuidMobile) {
         let faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR).faskesUuid;
-        const filter = {
-            faskesUuid,
-            [Op.or]: [
-                {no_rm: {[Op.iLike]: `%${args.q || ''}%`}}, // Find by no_rm
-                sequelizeInstance.where(
-                    sequelizeInstance.fn('concat', sequelizeInstance.col('patient.title'), ' ', sequelizeInstance.col('patient.name')),
-                    {[Op.iLike]: `%${args.q || ''}%`}
-                ), // Find by title and name
-                sequelizeInstance.where(
-                    sequelizeInstance.col('patient.address.full_address'),
-                    {[Op.iLike]: `%${args.q || ''}%`}
-                ) // Find by address
-            ],
-            deletedAt: {[Op.is]: null},
-            statusRj: {[Op.not]: 0},
-            tanggalDaftar: {
-                [Op.between]: [args.start_date, args.end_date]
-            },
-            dischargeDate: {
-                [Op.is]: null
-            }
-        };
 
-        if (args.poly) {
-            const polyArray = args.poly.split(',').map(item => item.trim());
-            filter.lokasiUuid = {[Op.in]: polyArray};
-        }
-
-        if (args.platform) {
-            const platformArray = args.platform.split(',').map(item => item.trim());
-            filter.platform = {[Op.in]: platformArray};
-        }
-
-        if (args.payment_method) {
-            const paymentMethodArray = args.payment_method.split(',').map(item => item.trim());
-            filter.paymentMethod = {[Op.in]: paymentMethodArray};
-        }
-
-        if(args.status){
-            if(parseInt(args.status) === 1){
-                filter.statusRj = {[Op.in]: [1, 2, 3, 4]};
-            }else{
-                filter.statusRj = {[Op.in]: [5]};
-            }
-        }
-
-        if (args.status_antrian) {
-            const statusAntrianArray = args.status_antrian.split(',').map(item => item.trim());
-            let statusAntrian = [];
-            
-            statusAntrianArray.forEach(status => {
-                if (status === "antri") {
-                    statusAntrian.push(1, 2, 3);
-                } else if (status === "proses") {
-                    statusAntrian.push(4);
-                } else if (status === "selesai") {
-                    statusAntrian.push(5);
-                }
-            });
-
-            if (statusAntrian.length > 0) {
-                filter.statusRj = { [Op.in]: statusAntrian };
-            }
-        }
-
-        if (args.dpjp) filter.practitionerUuid = args.dpjp;
+        const filter = rawatJalanFilter({
+            faskesUuid, 
+            args, 
+            options: {}
+        });
 
         const options = {
-            include: [
-                {
-                    model: PatientModel,
-                    as: "patient",
-                    required: false,
-                    where: {
-                        deletedAt: {[Op.is]: null}
-                    },
-                    include: [
-                        {
-                            model: AddressModel,
-                            as: "address",
-                            required: false,
-                            where: {
-                                deletedAt: {[Op.is]: null}
-                            },
-                            attributes: [
-                                "prov", "city", "district", "rt", "rw", "full_address", "country", "village"
-                            ],
-                        },
-                    ],
-                    attributes: [
-                        "uuid", "title", "name", "identity", "no_identity", "phone", "gender",
-                    ]
-                },
-                {
-                    model: BirthDetailModel,
-                    as: "birth_detail",
-                    required: true,
-                    where: {deletedAt: {[Op.is]: null}},
-                    attributes: [
-                        'age_year', 'age_month', 'age_day'
-                    ]
-                },
-                {
-                    model: PractitionerModel,
-                    as: "practitioner",
-                    required: true,
-                    where: {deletedAt: {[Op.is]: null}},
-                    attributes: ["uuid"],
-                    include: [
-                        {
-                            model: PegawaiModel,
-                            as: "pegawai",
-                            required: true,
-                            where: {deletedAt: {[Op.is]: null}},
-                            attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
-                        }
-                    ]
-                },
-                {
-                    model: LokasiModel,
-                    as: "lokasi",
-                    required: true,
-                    where: {deletedAt: {[Op.is]: null}},
-                    attributes: [
-                        "uuid", "name", "code"
-                    ]
-                },
-                {
-                    model: JadwalDokterModel,
-                    as: "jadwal_dokter",
-                    required: true,
-                    where: {deletedAt: {[Op.is]: null}},
-                    attributes: ["uuid","start_time", "end_time",],
-                }
-            ],
+            include: rawatJalanInclude,
             attributes: [
                 "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "no_antrian_farmasi", "kode_booking", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
             ],
@@ -179,7 +53,7 @@ export default class RawatJalanRepository {
 
         const transform = {
             practitioner: (row) => ({
-                uuid: undefined, // delete practitioner uuid
+                uuid: undefined, // delete practitioner uuids
                 ...row.practitioner.pegawai.get(),
             }),
             polyclinic: (row) => ({
@@ -205,13 +79,7 @@ export default class RawatJalanRepository {
             };
         }
 
-        return await Pagination.init(
-            RawatJalanModel,
-            args,
-            filter,
-            options,
-            transform
-        );
+        return await Pagination.init(RawatJalanModel, args, filter, options, transform);
     }
 
     static async getRawatJalanToday(faskesUuidMobile) {
@@ -236,73 +104,16 @@ export default class RawatJalanRepository {
     static async getOne(uuid) {
         try {
         const result = await RawatJalanModel.findOne({
-            where: { [Op.and]: [{ uuid }, { deletedAt: { [Op.is]: null } }] },
-            include: [
-            {
-                model: PatientModel,
-                as: "patient",
-                required: false,
-                where: { deletedAt: { [Op.is]: null } },
-                include: [
-                {
-                    model: AddressModel,
-                    as: "address",
-                    required: false,
-                    where: { deletedAt: { [Op.is]: null } },
-                    attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"],
-                },
-                {
-                    model: BirthDetailModel,
-                    as: "birth_detail",
-                    required: false,
-                    where: { deletedAt: { [Op.is]: null } },
-                    attributes: ["birth_place", "birth_date", "age_year", "age_day", "age_month"],
-                },
-                {
-                    model: InsuranceAccountModel,
-                    as: "insurance",
-                    required: false,
-                    where: { deletedAt: { [Op.is]: null } },
-                    attributes: ["name", "account_number"],
-                },
-                ],
-                attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status"],
-            },
-            {
-                model: PractitionerModel,
-                as: "practitioner",
-                required: true,
-                where: {deletedAt: {[Op.is]: null}},
-                attributes: ["uuid"],
-                include: [
-                    {
-                        model: PegawaiModel,
-                        as: "pegawai",
-                        required: true,
-                        where: {deletedAt: {[Op.is]: null}},
-                        attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
-                    }
+            where: { 
+                [Op.and]: [
+                    { uuid }, 
+                    { deletedAt: { [Op.is]: null } }
                 ]
             },
-            {
-                model: LokasiModel,
-                as: "lokasi",
-                required: true,
-                where: {deletedAt: {[Op.is]: null}},
-                attributes: [
-                    "uuid", "name", "code"
-                ]
-            },
-            {
-                model: JadwalDokterModel,
-                as: "jadwal_dokter",
-                required: true,
-                // where: { deletedAt: { [Op.is]: null } },
-                attributes: ["uuid", "start_time", "end_time", "kuota"],
-            },
-            ],
+            include: rawatJalanInclude,
             attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar", "tanggal_checkin", "platform"],
             });
+
             if (!result) throw new NotfoundException("Data tidak ditemukan");
             if (result.dataValues.payment_method === 2) {
                 const insuranceData = await InsuranceAdmissionModel.findOne({
@@ -336,7 +147,6 @@ export default class RawatJalanRepository {
                 };
             }
 
-
             return {
                 ...result.get(),
                 patient: result.patient.get()
@@ -348,9 +158,8 @@ export default class RawatJalanRepository {
 
     static async create(data) {
 
-        const create = await sequelizeInstace.transaction(async (t) => {
+        const create = await sequelizeInstance.transaction(async (t) => {
             const { faskesUuid } = Ctx.get(CTX_AUTHOR);
-
             const patient = await PatientRepository.registPatient(data.patient_data, t);
             if (!patient) throw new Error("Failed to create patient");
             data = convertSnakeToCamel(data);
@@ -398,7 +207,7 @@ export default class RawatJalanRepository {
 
             const regist = await RawatJalanModel.create(dataRJ, { transaction: t });
 
-            //* Buat Pemanggilan antrian
+            //* Buat data Pemanggilan antrian
             await AntrianCallRepository.createAntrianCall(data, patient, regist);
 
             if (data.paymentMethod === 'ASURANSI') {
@@ -435,7 +244,6 @@ export default class RawatJalanRepository {
             const {faskesUuid} = Ctx.get(CTX_AUTHOR);
             const patient = await PatientRepository.registPatientApm(data.patient_data, t);
             if (!patient) throw new Error("Failed to create patient");
-            console.log("data patient", patient);
             data = convertSnakeToCamel(data);
 
             //* GET JADWAL DOKTER DARI ANTRIAN
@@ -453,7 +261,7 @@ export default class RawatJalanRepository {
                 note: data.note,
                 lokasiUuid: jadwalDokter.lokasiUuid,
                 complaint: data.complaint,
-                platform: "ADMISI",
+                platform: "APM",
                 paymentMethod: 1,
                 tanggalDaftar: moment().unix(),
                 tanggalCheckin: moment().unix(),
@@ -646,7 +454,7 @@ export default class RawatJalanRepository {
     }
 
     static async update(uuid, data) {
-        const update = await sequelizeInstace.transaction(async (t) => {
+        const update = await sequelizeInstance.transaction(async (t) => {
             const { faskesUuid } = Ctx.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
             const existingRegist = await RawatJalanModel.findOne({
@@ -776,7 +584,7 @@ export default class RawatJalanRepository {
             data = convertSnakeToCamel(data);
             console.log("user: ", user);
 
-            return await sequelizeInstace.transaction(async (t) => {
+            return await sequelizeInstance.transaction(async (t) => {
                 const rawatJalan = await RawatJalanModel.findAll({
                     where: {
                         uuid: data.listUuid,
