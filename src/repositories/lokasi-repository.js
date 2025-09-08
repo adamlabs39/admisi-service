@@ -90,6 +90,14 @@ export default class LokasiRepository {
         });
       }
 
+      if (args.filter_kelas && args.filter_kelas.trim() !== "") {
+        options.where[Op.and].push({
+          class_name: {
+            [Op.iLike]: `%${args.filter_kelas.trim()}%`,
+          },
+        });
+      }
+
       //* FILTER BERDASARKAN KATEGORI RUANGAN
       if (args.filter_kategori && args.filter_kategori.trim() !== "") {
         const kategoriRuangan = options.include.find((tabelKr) => tabelKr.as === "kategori_ruangan");
