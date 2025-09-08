@@ -8,6 +8,10 @@ export default function rawatInapFilter({faskesUuid, args = {}, options = {}}) {
         args,
         options: {
             ...options,
+            [Op.or]: [
+                //* Filter No Rm Layanan
+                { no_rm: { [Op.iLike]: `%${args.q || ""}%` } },
+            ],
             status_ri: { [Op.not]: 0 },
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date],

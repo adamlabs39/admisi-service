@@ -7,6 +7,10 @@ export default function rawatJalanFilter({faskesUuid, args = {}, options = {}}) 
         args,
         options: {
             ...options,
+            [Op.or]: [
+                //* Filter No Rm Layanan
+                { no_rm: { [Op.iLike]: `%${args.q || ""}%` } },
+            ],
             deletedAt: { [Op.is]: null },
             statusRj: { [Op.not]: 0 },
             tanggalDaftar: {
