@@ -14,6 +14,8 @@ import {
 } from "@adameds/model-sdk/setting";
 import Pagination from "../helper/pagination.js";
 import { LogPelayananModel } from "@adameds/model-sdk/pelayanan";
+import { newBornFilter } from "./filters/report-filter.js";
+import { newBornInclude } from "./include/report-include.js";
 
 BirthDetailModel.hasOne(PatientModel, {
     foreignKey: "birth_detail_uuid",
@@ -62,62 +64,10 @@ export default class newBornRepository {
     static async getReportNewBorn(args) {
         const {faskesUuid} = Context.get(CTX_AUTHOR);
         try {
-            const filter = {
-                faskesUuid,
-                deletedAt: null,
-                [Op.and]: [
-                    sequelizeInstance.where(
-                        sequelizeInstance.col("birth_detail.patient.log_pelayanan.discharge_date"), 
-                        { [Op.not]: null },
-                        { [Op.between]: [args.start_date, args.end_date] }
-                    ),
-                ],
-                [Op.or]: [
-                    {noRmBaby: {[Op.iLike]: `%${args.q}%`}},
-                    {nameBaby: {[Op.iLike]: `%${args.q}%`}},
-                    sequelizeInstance.where(
-                        sequelizeInstance.col('address.full_address'),
-                        {[Op.iLike]: `%${args.q || ''}%`}
-                    ),
-                ]
-            };
-
-            if (args.jenis_kunjungan) filter.jenis_kunjungan = sequelizeInstance.where(
-                sequelizeInstance.col('birth_detail.patient.log_pelayanan.jenis_kunjungan'),
-                { [Op.eq]: `${args.jenis_kunjungan}` }
-            );
+            const filter = newBornFilter({faskesUuid, args, options: {}});
 
             const options = {
-                include: [
-                    {
-                        model: AddressModel,
-                        as: 'address',
-                        required: true,
-                        attributes: ["full_address"]
-                    },
-                    {
-                        model: BirthDetailModel,
-                        as: 'birth_detail',
-                        required: true,
-                        attributes: ["birth_place", "birth_date"],
-                        include: [
-                            {
-                                model: PatientModel,
-                                as: 'patient',
-                                required: true,
-                                attributes: ["uuid", "no_identity"],
-                                include: [
-                                    {
-                                        model: LogPelayananModel,
-                                        required: true,
-                                        as: 'log_pelayanan',
-                                        attributes: ["uuid", "jenis_kunjungan", "discharge_date"],
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ],
+                include: newBornInclude,
                 attributes: [
                     "uuid", "identifier_mom", "name_mom", "name_baby", "no_rm_baby", "birth_time_baby", "gender_baby", "multiple_birth", "tanggal_daftar"
                 ],
