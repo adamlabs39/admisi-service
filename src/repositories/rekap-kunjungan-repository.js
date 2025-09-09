@@ -186,9 +186,6 @@ export default class RekapKunjunganRepository{
         const total_keseluruhan = await LogPelayananModel.count({
             where: {
                 ...filter,
-                [Op.and]: [
-                    sequelizeInstace.where(sequelizeInstace.col("patient.insurance.uuid"), { [Op.not]: null }),
-                ]
             }, include: [
                 {
                     model: PatientModel,

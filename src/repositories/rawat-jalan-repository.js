@@ -24,8 +24,8 @@ import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/e
 import { generateNoAntrian, getAppointmentMobile, updateAppointmentMobile } from "../configurations/axios-instance.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 import AntrianCallRepository from "./antrian-call-repository.js";
-import { rawatJalanFilter } from "../helper/filter.js";
-import { rawatJalanInclude } from "../helper/include.js";
+import rawatJalanFilter from "./filters/rawat-jalan-filter.js";
+import { rawatJalanInclude } from "./include/rawat-jalan-include.js";
 
 export default class RawatJalanRepository {
     /**
@@ -48,8 +48,6 @@ export default class RawatJalanRepository {
                 "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "no_antrian_farmasi", "kode_booking", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
             ],
         };
-
-        
 
         const transform = {
             practitioner: (row) => ({
@@ -249,6 +247,7 @@ export default class RawatJalanRepository {
             //* GET JADWAL DOKTER DARI ANTRIAN
             const jadwalDokter = await JadwalDokterRepository.findJadwalDokterByUuid(data.jadwalDokterUuid);
 
+            console.log("Data rawat jalan:", data);
             const dataRJ = {
                 faskesUuid,
                 patientUuid: patient.uuid,
@@ -269,6 +268,9 @@ export default class RawatJalanRepository {
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(),
                 noPelayanan: await generateNoPelayanan('RJ'),
+                noAntrianAdmisi: data.noAntrianAdmisi,
+                noAntrianPoli: data.noAntrianPoli,
+                kodeBooking: data.kodeBooking,
             };
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
@@ -301,6 +303,7 @@ export default class RawatJalanRepository {
             //* GET JADWAL DOKTER DARI ANTRIAN
             const jadwalDokter = await JadwalDokterRepository.findJadwalDokterUuidMobile(faskesUuid, data.jadwalDokterUuid);
 
+            console.log("Data rawat jalan:", data);
             const dataRJ = {
                 faskesUuid,
                 patientUuid: patient.uuid,
@@ -313,13 +316,16 @@ export default class RawatJalanRepository {
                 note: data.note,
                 lokasiUuid: jadwalDokter.lokasiUuid,
                 complaint: data.complaint,
-                platform: "ADMISI",
+                platform: "MOBILE",
                 paymentMethod: 1,
                 tanggalDaftar: moment().unix(),
                 statusRj: 1,
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(faskesUuid),
                 noPelayanan: await generateNoPelayanan('RJ', faskesUuid),
+                noAntrianAdmisi: data.noAntrianAdmisi,
+                noAntrianPoli: data.noAntrianPoli,
+                kodeBooking: data.kodeBooking,
             };
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
