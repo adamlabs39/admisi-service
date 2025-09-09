@@ -247,6 +247,7 @@ export default class RawatJalanRepository {
             //* GET JADWAL DOKTER DARI ANTRIAN
             const jadwalDokter = await JadwalDokterRepository.findJadwalDokterByUuid(data.jadwalDokterUuid);
 
+            console.log("Data rawat jalan:", data);
             const dataRJ = {
                 faskesUuid,
                 patientUuid: patient.uuid,
@@ -267,6 +268,9 @@ export default class RawatJalanRepository {
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(),
                 noPelayanan: await generateNoPelayanan('RJ'),
+                noAntrianAdmisi: data.noAntrianAdmisi,
+                noAntrianPoli: data.noAntrianPoli,
+                kodeBooking: data.kodeBooking,
             };
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
@@ -299,6 +303,7 @@ export default class RawatJalanRepository {
             //* GET JADWAL DOKTER DARI ANTRIAN
             const jadwalDokter = await JadwalDokterRepository.findJadwalDokterUuidMobile(faskesUuid, data.jadwalDokterUuid);
 
+            console.log("Data rawat jalan:", data);
             const dataRJ = {
                 faskesUuid,
                 patientUuid: patient.uuid,
@@ -311,13 +316,16 @@ export default class RawatJalanRepository {
                 note: data.note,
                 lokasiUuid: jadwalDokter.lokasiUuid,
                 complaint: data.complaint,
-                platform: "ADMISI",
+                platform: "MOBILE",
                 paymentMethod: 1,
                 tanggalDaftar: moment().unix(),
                 statusRj: 1,
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(faskesUuid),
                 noPelayanan: await generateNoPelayanan('RJ', faskesUuid),
+                noAntrianAdmisi: data.noAntrianAdmisi,
+                noAntrianPoli: data.noAntrianPoli,
+                kodeBooking: data.kodeBooking,
             };
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
