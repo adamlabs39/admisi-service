@@ -271,6 +271,7 @@ export default class RawatJalanRepository {
                 noAntrianAdmisi: data.noAntrianAdmisi,
                 noAntrianPoli: data.noAntrianPoli,
                 kodeBooking: data.kodeBooking,
+                jadwalPeriksa: data.jadwalPeriksa,
             };
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
@@ -300,10 +301,23 @@ export default class RawatJalanRepository {
             if (!patient) throw new Error("Failed to create patient");
             data = convertSnakeToCamel(data);
 
+            const bookingExist = await RawatJalanModel.findOne({
+                where: {
+                    faskesUuid,
+                    patientUuid: patient.uuid,
+                    deletedAt: null,
+                    jadwalPeriksa: data.jadwalPeriksa,
+                },
+                attributes: ["uuid", "jadwal_periksa"],
+            });
+
+            if (bookingExist && bookingExist.dataValues.jadwal_periksa == data.jadwalPeriksa) {
+                throw new DuplicateException("Jadwal periksa sudah terdaftar");
+            }
+
             //* GET JADWAL DOKTER DARI ANTRIAN
             const jadwalDokter = await JadwalDokterRepository.findJadwalDokterUuidMobile(faskesUuid, data.jadwalDokterUuid);
 
-            console.log("Data rawat jalan:", data);
             const dataRJ = {
                 faskesUuid,
                 patientUuid: patient.uuid,
@@ -326,6 +340,7 @@ export default class RawatJalanRepository {
                 noAntrianAdmisi: data.noAntrianAdmisi,
                 noAntrianPoli: data.noAntrianPoli,
                 kodeBooking: data.kodeBooking,
+                jadwalPeriksa: data.jadwalPeriksa,
             };
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
