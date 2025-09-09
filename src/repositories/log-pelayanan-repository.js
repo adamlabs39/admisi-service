@@ -10,8 +10,8 @@ import { PractitionerModel, PegawaiModel, LokasiModel, KategoriRuanganModel } fr
 
 import Pagination from "../helper/pagination.js";
 import moment from "moment";
-import { kunjunganReportFilter } from "./filters/report-filter.js";
-import { kunjunganReportInclude } from "./include/report-include.js";
+import { cancelReportFilter, kunjunganReportFilter, statusKamarFilter } from "./filters/report-filter.js";
+import { cancelReportInclude, kunjunganReportInclude, statusKamarInclude } from "./include/report-include.js";
 
 RoomMonitoringModel.hasOne(RawatInapModel, {
   foreignKey: "monitoring_room_uuid",
@@ -157,75 +157,11 @@ export default class LogPelayananRepository {
   static async getAllCancelVisitLogPelayanan(args) {
     const { faskesUuid } = Context.get(CTX_AUTHOR);
     try {
-      const filter = {
-        faskesUuid,
-        status: false,
-        [Op.or]: [
-          { noreg: { [Op.iLike]: `%${args.q || ""}%` } }, // Find by no_rm
-          sequelizeInstance.where(sequelizeInstance.fn("concat", sequelizeInstance.col("patient.title"), " ", sequelizeInstance.col("patient.name")), { [Op.iLike]: `%${args.q || ""}%` }), // Find by title and name
-          sequelizeInstance.where(sequelizeInstance.col("patient.address.full_address"), { [Op.iLike]: `%${args.q || ""}%` }), // Find by address
-          sequelizeInstance.where(sequelizeInstance.col("patient.no_rm"), { [Op.iLike]: `%${args.q || ""}%` }), // Find By Rm patient
-        ],
-        cancelDate: {
-          [Op.between]: [args.start_date, args.end_date],
-        },
-      };
 
-      if (args.jenis_kunjungan) filter.jenisKunjungan = args.jenis_kunjungan;
+      const filter = cancelReportFilter({ faskesUuid, args, options: {} });
       
       const options = {
-        include: [
-          {
-            model: PatientModel,
-            as: "patient",
-            required: true,
-            where: {
-              deletedAt: { [Op.is]: null },
-            },
-            include: [
-              {
-                model: AddressModel,
-                as: "address",
-                required: true,
-                where: {
-                  deletedAt: { [Op.is]: null },
-                },
-                attributes: ["prov", "city", "district", "rt", "rw", "full_address", "country", "village"],
-              },
-              {
-                model: BirthDetailModel,
-                as: "birth_detail",
-                required: true,
-                where: { deletedAt: { [Op.is]: null } },
-                attributes: ["age_year", "age_month", "age_day"],
-              },
-            ],
-            attributes: ["uuid", "title", "name", "identity", "no_identity", "phone", "no_rm"],
-          },
-          {
-            model: PractitionerModel,
-            as: "practitioner",
-            required: true,
-            where: { deletedAt: { [Op.is]: null } },
-            attributes: ["uuid"],
-            include: [
-              {
-                model: PegawaiModel,
-                as: "pegawai",
-                required: true,
-                where: { deletedAt: { [Op.is]: null } },
-                attributes: ["first_title", "last_title", ["name", "nama"], "gender"],
-              },
-            ],
-          },
-          {
-            model: LokasiModel,
-            as: "lokasi",
-            required: false,
-            where: { deletedAt: { [Op.is]: null } },
-            attributes: ["name"],
-          },
-        ],
+        include: cancelReportInclude,
         attributes: ["tgl_registrasi", "noreg", "no_pelayanan", "jenis_kunjungan", "patient_uuid", "lokasi_uuid", "cancel_reason", "cancel_date", "cancel_by"],
       };
 
@@ -244,47 +180,14 @@ export default class LogPelayananRepository {
     }
   }
 
-    static async getReportStatusKamar(args) {
-        const { faskesUuid } = Context.get(CTX_AUTHOR);
-        try {
-        const filter = {
-            faskesUuid,
-            deletedAt: { [Op.is]: null },
-            [Op.or]: [
-              sequelizeInstance.where(sequelizeInstance.col("rawat_inap.tanggal_daftar"), {
-                [Op.between]: [args.start_date, args.end_date],
-              }),
-            ]
-        };
-        if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col("room.name"), args.room);
+  static async getReportStatusKamar(args) {
+      const { faskesUuid } = Context.get(CTX_AUTHOR);
+      try {
 
+        const filter = statusKamarFilter({ faskesUuid, args, options: {} });
+        
         const options = {
-        include: [
-        {
-            model: LokasiModel,
-            as: "room",
-            required: true,
-            where: { deletedAt: { [Op.is]: null } },
-            attributes: ["uuid", "name", "class_name"],
-            include: [
-              {
-                  model: KategoriRuanganModel,
-                  as: "kategori_ruangan",
-                  required: false,
-                  attributes: ["uuid", "name"],
-              },
-            ],
-        },
-        {
-          model: RawatInapModel,
-          as: "rawat_inap",
-          required: false,
-          where: {
-            deletedAt: { [Op.is]: null },
-          },
-          attributes: [],
-        },
-        ],
+        include: statusKamarInclude,
         attributes: [
             "room_uuid",
             [sequelizeInstance.fn("COUNT", sequelizeInstance.col("RoomMonitoring.patient_uuid")), "jumlahPasien"]
@@ -299,9 +202,9 @@ export default class LogPelayananRepository {
         ],
         };
 
-        return await Pagination.initWithGroup(RoomMonitoringModel, args, filter, options);
-        } catch (error) {
-        throw error;
-        }
-    }
+      return await Pagination.initWithGroup(RoomMonitoringModel, args, filter, options);
+      } catch (error) {
+      throw error;
+      }
+  }
 }

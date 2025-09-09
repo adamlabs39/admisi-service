@@ -41,6 +41,8 @@ import Pagination from "../helper/pagination.js";
 import newBornRepository from "./newborn-repository.js";
 import rawatInapFilter from "./filters/rawat-inap-filter.js";
 import { rawatInapInclude } from "./include/rawat-inap-include.js";
+import { keperawatanInapFilter } from "./filters/report-filter.js";
+import { keperawatanInapInclude } from "./include/report-include.js";
 
 export default class RawatInapRepository {
     static async getAll(args) {
@@ -522,73 +524,11 @@ export default class RawatInapRepository {
     static async getReport(args) {
         const { faskesUuid } = Context.get(CTX_AUTHOR);
         try {
-            const filter = {
-                faskesUuid,
-                [Op.or]: [
-                    {no_rm: {[Op.iLike]: `%${args.q || ''}%`}}, // Find by no_rm
-                    sequelizeInstance.where(
-                        sequelizeInstance.fn('concat', sequelizeInstance.col('patient.title'), ' ', sequelizeInstance.col('patient.name')),
-                        {[Op.iLike]: `%${args.q || ''}%`}
-                    ), // Find by title and name
-                    sequelizeInstance.where(
-                        sequelizeInstance.col('patient.address.full_address'),
-                        {[Op.iLike]: `%${args.q || ''}%`}
-                    ) // Find by address
-                ],
-                status_ri: { [Op.not]: 0 },
-                dischargeDate: {
-                    [Op.not]: null,
-                    [Op.between]: [args.start_date, args.end_date]
-                }
-            };
-
-            if (args.room) filter.room = sequelizeInstance.where(sequelizeInstance.col('monitoring_room.room.name'), { [Op.iLike]: `${args.room}` });
+            const filter = keperawatanInapFilter({ faskesUuid, args, options: {} });
 
             const options = {
-              include: [
-                {
-                  model: PatientModel,
-                  as: "patient",
-                  required: true,
-                  where: { deletedAt: { [Op.is]: null } },
-                  include: [
-                    {
-                      model: AddressModel,
-                      as: "address",
-                      required: true,
-                      where: {
-                        deletedAt: { [Op.is]: null },
-                      },
-                      attributes: ["full_address"],
-                    },
-                  ],
-                  attributes: ["name"],
-                },
-                {
-                  model: RoomMonitoringModel,
-                  as: "monitoring_room",
-                  required: true,
-                  where: { deletedAt: { [Op.is]: null } },
-                  attributes: ["uuid", "room_uuid", "no_bed"],
-                  include: [
-                    {
-                      model: LokasiModel,
-                      as: "bed_lokasi",
-                      required: true,
-                      where: { deletedAt: { [Op.is]: null } },
-                      attributes: ["uuid", "code", "name", "class_code", "class_name"],
-                    },
-                    {
-                      model: LokasiModel,
-                      as: "room",
-                      required: true,
-                      where: { deletedAt: { [Op.is]: null } },
-                      attributes: ["uuid", "code", "name", "class_code", "class_name"],
-                    }
-                  ],
-                },
-              ],
-              attributes: ["no_rm", "tanggal_daftar", "tanggal_dirawat", "discharge_date"],
+                include: keperawatanInapInclude,
+                attributes: ["no_rm", "tanggal_daftar", "tanggal_dirawat", "discharge_date"],
             };
 
             return await Pagination.init(
