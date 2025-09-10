@@ -82,6 +82,16 @@ export default class RawatJalanController {
         }
     }
 
+    static async updateRawatJalanMobile(request, response, nextFunction) {
+        try{
+            const faskesUuid = request.headers["faskes-uuid"];
+            const data = await RawatJalanService.updateRawatJalanMobile(request.params.uuid, request.body, faskesUuid);
+            return response.status(200).json(successResponse("Data Rawat Jalan Mobile Berhasil Diupdate", data));
+        }catch (error){
+            nextFunction(error);
+        }
+    }
+
     static async updateFarmasi(request, response, nextFunction) {
         try{
             const data = await RawatJalanService.updateFarmasi(request.params.uuid, request.body);

@@ -14,7 +14,7 @@ export default class AntrianCallController {
     static async updateAntrianCall(req, res, next){
         try {
             const result = await AntrianCallService.updateAntrianCall(req.params.uuid, req.body);
-            return res.status(200).json(successResponse("Data Antrian berhasil diedit", result));
+            return res.status(200).json(successResponse(result.message));
         }catch(error){
             next(error);
         }

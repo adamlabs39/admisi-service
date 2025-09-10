@@ -4,7 +4,7 @@ export default class AntrianCallRepository {
     static async createAntrianCall(data, patient, rawatJalan){
         const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
         const pasienBaru = data.patientData.patient_uuid == null;
-        const pelayanan = rawatJalan.dataValues.platform === "ADMISI" ? "poli" : "admisi"
+        const pelayanan = pasienBaru == false ? "poli" : "admisi"
 
         try {
             await createAntrianCall.post("/", {
@@ -23,7 +23,7 @@ export default class AntrianCallRepository {
     static async createAntrianCallMobile(data, patient, rawatJalan, faskesUuid){
         const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
         const pasienBaru = data.patientData.patient_uuid == null;
-        const pelayanan = rawatJalan.dataValues.platform === "ADMISI" ? "poli" : "admisi"
+        const pelayanan = pasienBaru == false ? "poli" : "admisi";
         
         try {
             await createAntrianCallMobile.post("", {
@@ -46,8 +46,12 @@ export default class AntrianCallRepository {
     static async getAllAntrianCall(args){
         try {
             const result = await getAllAntrianCall.get("/all", { params: args });
-            return result.data.payload;
             
+            console.log("result antrian:", result.data.payload);
+            // const antrian = result.data.payload.filter((item) => item.created_at == moment().startOf("day").unix());
+
+            return result.data.payload;
+
         } catch (error) {
             console.error("Error fetching all antrian:", error);
             throw error;
@@ -56,11 +60,37 @@ export default class AntrianCallRepository {
 
     static async updateAntrianCall(uuid, data){
         try{
+            
+            const statusMessages = {
+                1: "Antrian berhasil dipanggil",
+                2: "Antrian berhasil dilewati",
+                3: "Antrian berhasil diproses",
+                4: "Antrian berhasil diselesaikan",
+            };
+
             const result = await updateAntrianCall.put(`/${uuid}`, {
                 status_panggilan: data.status_panggilan
             });
 
-            return result.data.payload;
+            const antrian = result.data.payload;
+
+            if (antrian.status_panggilan === 4){
+                try {
+                    await createAntrianCall.post("/", {
+                        patient_uuid: antrian.patient_data.patient_uuid,
+                        rawat_jalan_uuid: antrian.rawat_jalan_uuid,
+                        pelayanan: "poli",
+                        jenis_pasien: antrian.jenis_pasien,
+                        pasien_baru: antrian.pasien_baru,
+                    });
+                } catch (error) {
+                    console.error("Error membuat no antrian:", error);
+                    throw error;
+                }
+            }
+
+            return { message: statusMessages[antrian.status_panggilan] };
+
         }catch(error){
             console.error("Error updating antrian:", error);
             throw error;
