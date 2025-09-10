@@ -24,6 +24,7 @@ routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.chec
 routes.get("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.getAll);
 routes.get("/rawat-jalan/mobile/today", apiKeyCheckPatient, RawatJalanController.getRawatJalanToday);
 routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
+routes.put("/rawat-jalan/mobile/:uuid", apiKeyCheckPatient, RawatJalanController.updateRawatJalanMobile);
 
 //TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);

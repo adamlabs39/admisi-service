@@ -85,6 +85,16 @@ export class RawatJalanService {
         return result;
     }
 
+    static async updateRawatJalanMobile(uuid, data, faskesUuid) {
+        const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_MOBILE_VALIDATOR, data);
+        if (!validData) throw new BadRequestException("Bad Request");
+        
+        const result = await RawatJalanRepository.updateMobile(uuid, validData, faskesUuid);
+        if (!result) throw new Error("Gagal melakukan update rawat jalan mobile");
+
+        return result;
+    }
+
     static async updateFarmasi(uuid, data){
         const checkExist = await checkExistData(RawatJalanModel, uuid);
         if(!checkExist) throw new NotfoundException('Data tidak ditemukan');

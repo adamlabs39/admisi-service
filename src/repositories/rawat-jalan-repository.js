@@ -579,6 +579,72 @@ export default class RawatJalanRepository {
         return await this.getOne(update);
     }
 
+    static async updateMobile(uuid, data, faskesUuid) {
+    const update = await sequelizeInstance.transaction(async (t) => {
+        data = convertSnakeToCamel(data);
+
+        const existingRegist = await RawatJalanModel.findOne({
+            where: {
+                uuid,
+                faskesUuid,
+                deletedAt: null,
+            },
+            transaction: t,
+        });
+
+        if (!existingRegist) throw new NotfoundException("ID tidak ditemukan");
+
+        const jadwalDokter = await JadwalDokterRepository.findJadwalDokterUuidMobile(faskesUuid, data.jadwalDokterUuid);
+        
+        data.patientData.patient_uuid = existingRegist.dataValues.patientUuid;
+        const patient = await PatientRepository.registPatientMobile(data.patientData, faskesUuid, t);
+        if (!patient) throw new Error("Gagal mengupdate pasien");
+
+        const dataRJ = {
+            patientUuid: patient.uuid,
+            name: patient.name,
+            noRm: patient.noRm,
+            birthDetailUuid: patient.birthDetailUuid,
+            gender: patient.gender,
+            practitionerUuid: jadwalDokter.practitionerUuid,
+            maternity: data.maternity,
+            note: data.note,
+            lokasiUuid: jadwalDokter.lokasiUuid,
+            complaint: data.complaint,
+            platform: "MOBILE",
+            paymentMethod: data.paymentMethod === "TUNAI" ? 1 : 2,
+            jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
+            jadwalPeriksa: data.jadwalPeriksa,
+            noAntrianAdmisi: data.noAntrianAdmisi,
+            noAntrianPoli: data.noAntrianPoli,
+            kodeBooking: data.kodeBooking,
+        };
+
+        const { statusRj } = existingRegist;
+
+        if (statusRj === 0) throw new BadRequestException("Data sudah dibatalkan");
+        if (statusRj >= 4) throw new BadRequestException("Data telah diproses");
+
+        const updatedRegist = await existingRegist.update(dataRJ, { transaction: t });
+
+        eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
+            tgl_registrasi: updatedRegist.tanggalDaftar,
+            noreg: updatedRegist.noReg,
+            no_pelayanan: updatedRegist.noPelayanan,
+            practitioner_uuid: updatedRegist.practitionerUuid,
+            jenis_kunjungan: "RJ",
+            patient_uuid: patient.uuid,
+            lokasi_uuid: updatedRegist.lokasiUuid,
+            payment_method: data.paymentMethod === "TUNAI" ? 1 : 2,
+        });
+
+        return updatedRegist.dataValues.uuid;
+    });
+
+    return this.getOne(update);
+}
+
+
     static async updateFarmasi(uuid, data) {
         const user = Context.get(CTX_AUTHOR);
         console.log("Updating farmasi:", data);
