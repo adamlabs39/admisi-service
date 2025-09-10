@@ -603,7 +603,6 @@ export default class RawatJalanRepository {
         try {
             const user = Context.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
-            console.log("user: ", user);
 
             return await sequelizeInstance.transaction(async (t) => {
                 const rawatJalan = await RawatJalanModel.findAll({

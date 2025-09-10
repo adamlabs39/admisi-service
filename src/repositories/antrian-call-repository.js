@@ -4,7 +4,7 @@ export default class AntrianCallRepository {
     static async createAntrianCall(data, patient, rawatJalan){
         const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
         const pasienBaru = data.patientData.patient_uuid == null;
-        const pelayanan = rawatJalan.dataValues.platform === "ADMISI" ? "poli" : "admisi"
+        const pelayanan = pasienBaru == false ? "poli" : "admisi"
 
         try {
             await createAntrianCall.post("/", {
@@ -23,7 +23,7 @@ export default class AntrianCallRepository {
     static async createAntrianCallMobile(data, patient, rawatJalan, faskesUuid){
         const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
         const pasienBaru = data.patientData.patient_uuid == null;
-        const pelayanan = rawatJalan.dataValues.platform === "ADMISI" ? "poli" : "admisi"
+        const pelayanan = pasienBaru == false ? "poli" : "admisi";
         
         try {
             await createAntrianCallMobile.post("", {
@@ -46,8 +46,12 @@ export default class AntrianCallRepository {
     static async getAllAntrianCall(args){
         try {
             const result = await getAllAntrianCall.get("/all", { params: args });
-            return result.data.payload;
             
+            console.log("result antrian:", result.data.payload);
+            // const antrian = result.data.payload.filter((item) => item.created_at == moment().startOf("day").unix());
+
+            return result.data.payload;
+
         } catch (error) {
             console.error("Error fetching all antrian:", error);
             throw error;
