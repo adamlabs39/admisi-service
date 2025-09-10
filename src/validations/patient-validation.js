@@ -61,14 +61,14 @@ export default class PatientValidation{
         maritial_status: z.string({ required_error: "Status Pernikahan Perlu diisi sesuai format Excel" }).max(50),
         mother_name: z.string().max(255),
         address: z.object({
-            prov: z.string({ required_error: "Provinsi Perlu diisi sesuai format Excel" }).max(150),
-            city: z.string({ required_error: "Kota Perlu diisi sesuai format Excel" }).max(150),
-            district: z.string({ required_error: "Kecamatan Perlu diisi sesuai format Excel" }).max(150),
+            prov: z.number({ required_error: "Provinsi Perlu diisi sesuai format Excel" }).max(150),
+            city: z.number({ required_error: "Kota Perlu diisi sesuai format Excel" }),
+            district: z.number({ required_error: "Kecamatan Perlu diisi sesuai format Excel" }),
             rt: z.string({ required_error: "RT Perlu diisi sesuai format Excel" }).max(150),
             rw: z.string({ required_error: "RW Perlu diisi sesuai format Excel" }).max(150),
             full_address: z.string({ required_error: "Alamat Lengkap Perlu diisi sesuai format Excel" }).max(255),
             country: z.string({ required_error: "Negara Perlu diisi sesuai format Excel" }).max(150),
-            village: z.string({ required_error: "Desa Perlu diisi sesuai format Excel" }).max(150),
+            village: z.number({ required_error: "Desa Perlu diisi sesuai format Excel" }),
             postal_code: z.string({ required_error: "Kode Pos Perlu diisi sesuai format Excel" }).max(150),
         })
     })

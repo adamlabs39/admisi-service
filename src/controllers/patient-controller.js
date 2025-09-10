@@ -112,7 +112,7 @@ export default class PatientController {
             if(!file) throw new BadRequestException("Tidak ada file yang diupload");
             const wb = XLSX.read(file.data, {type: 'buffer'});
             const sheet = wb.Sheets[wb.SheetNames[0]];
-            const data = XLSX.utils.sheet_to_json(sheet, {raw: true, defval: null});
+            const data = XLSX.utils.sheet_to_json(sheet, {raw: true, defval: null, range: 12});
             const result = await PatientService.import(data);
 
             return res.status(200).json(successResponse(result.message));
@@ -122,7 +122,7 @@ export default class PatientController {
     }
 
     static downloadImportFile = (req, res) => {
-        const filename = "Format Import Pasien.xlsx";
+        const filename = "import_data_pasien_admisi.xlsx";
         const filePath = path.resolve(process.cwd(), "src", "templates", filename);
 
         fs.access(filePath, fs.constants.R_OK, (err) => {

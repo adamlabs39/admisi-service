@@ -56,11 +56,21 @@ export default class AntrianCallRepository {
 
     static async updateAntrianCall(uuid, data){
         try{
+            
+            const statusMessages = {
+                1: "Antrian berhasil dipanggil",
+                2: "Antrian berhasil dilewati",
+                3: "Antrian berhasil diproses",
+                4: "Antrian berhasil diselesaikan",
+            };
+
             const result = await updateAntrianCall.put(`/${uuid}`, {
                 status_panggilan: data.status_panggilan
             });
 
-            return result.data.payload;
+            
+            return { message: statusMessages[result.data.payload.status_panggilan] };
+            
         }catch(error){
             console.error("Error updating antrian:", error);
             throw error;
