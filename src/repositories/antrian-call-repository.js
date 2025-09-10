@@ -68,9 +68,25 @@ export default class AntrianCallRepository {
                 status_panggilan: data.status_panggilan
             });
 
-            
-            return { message: statusMessages[result.data.payload.status_panggilan] };
-            
+            const antrian = result.data.payload;
+
+            if (antrian.status_panggilan === 4){
+                try {
+                    await createAntrianCall.post("/", {
+                        patient_uuid: antrian.patient_data.patient_uuid,
+                        rawat_jalan_uuid: antrian.rawat_jalan_uuid,
+                        pelayanan: "poli",
+                        jenis_pasien: antrian.jenis_pasien,
+                        pasien_baru: antrian.pasien_baru,
+                    });
+                } catch (error) {
+                    console.error("Error membuat no antrian:", error);
+                    throw error;
+                }
+            }
+
+            return { message: statusMessages[antrian.status_panggilan] };
+
         }catch(error){
             console.error("Error updating antrian:", error);
             throw error;
