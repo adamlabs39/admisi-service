@@ -15,7 +15,8 @@ export default class RekapKunjunganRepository{
             faskesUuid,
             status: true,
             tglRegistrasi: {
-            [Op.between]: [args.start_date, args.end_date],
+                [Op.gte]: args.start_date,
+                [Op.lte]: args.end_date,
             },
         };
 

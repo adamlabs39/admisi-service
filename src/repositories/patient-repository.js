@@ -14,7 +14,7 @@ import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 import PatientService from "../services/patient-service.js";
-import { ca, fa } from "zod/v4/locales";
+import { ca, fa, no } from "zod/v4/locales";
 import NotfoundException from "../exception/notfound-exception.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 
@@ -399,10 +399,11 @@ export default class PatientRepository{
     }
 
     static async checkExistPatient(data){
+        convertSnakeToCamel(data);
         try {
             return await PatientModel.findOne({
             where: {
-                [Op.or]: [{ noIdentity: data.no_identity, faskesUuid: data.faskes_uuid }],
+                [Op.or]: [{no_rm: data.no_rm, identity: data.identity, noIdentity: data.no_identity, faskesUuid: data.faskes_uuid }],
                 [Op.and]: [{ deletedAt: { [Op.is]: null } }],
             },
             include: [
