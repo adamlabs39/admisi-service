@@ -5,7 +5,8 @@ import { Op } from "sequelize";
 import { PegawaiModel, PractitionerModel } from "@adameds/model-sdk/datamaster";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
 import { InsuranceAccountModel, PatientModel } from "@adameds/model-sdk/admisi";
-import { buildRekap, generateDateRange } from "../helper/rekap-helper.js";
+import { buildRekap, generateUnixRange } from "../helper/rekap-helper.js";
+import dayJs from "dayjs";
 
 export default class RekapKunjunganRepository{
     static async getRekapJenisKunjungan(args) {
@@ -26,24 +27,43 @@ export default class RekapKunjunganRepository{
         }
 
         const kunjunganRows = await LogPelayananModel.findAll({
-            where: {
-            ...filter,
-            },
+            where: { ...filter },
             attributes: [
                 "jenis_kunjungan",
                 [sequelizeInstace.fn("TO_CHAR",sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")),"YYYY-MM-DD"), "tanggal"],
                 [sequelizeInstace.fn("COUNT", sequelizeInstace.col("uuid")), "total_harian"],
             ],
-            group: [
-                "jenis_kunjungan",
-                sequelizeInstace.fn("TO_CHAR",sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")), "YYYY-MM-DD"),
+            group: ["jenis_kunjungan",  [sequelizeInstace.fn("TO_CHAR",sequelizeInstace.fn("TO_TIMESTAMP", sequelizeInstace.col("tgl_registrasi")),"YYYY-MM-DD")]],
+                order: [["jenis_kunjungan", "ASC"]],
+                raw: true,
+        });
+
+        function normalizeToDay(unixSeconds) {
+            return dayJs.unix(unixSeconds).startOf("day").unix();
+        }
+
+        const startUnix = normalizeToDay(args.start_date);
+        const endUnix = normalizeToDay(args.end_date);
+
+        const logMaster = await LogPelayananModel.findAll({
+            where: { deletedAt: null },
+            attributes: [
+                "jenis_kunjungan"
             ],
-            order: [["jenis_kunjungan", "ASC"]],
             raw: true,
         });
 
-        const allDates = generateDateRange(args.start_date, args.end_date);
-        const { dataByGroup: kunjungan, totalHarian, totalPerGroup } = buildRekap(kunjunganRows, "jenis_kunjungan", allDates);
+        //* Filter jenis Kunjungan untuk ditampilkan
+        let allLogKeys = logMaster.map((p) => p.jenis_kunjungan);
+
+        if (args.jenis_kunjungan) {
+            const filterKeys = args.jenis_kunjungan.split(",").map((x) => x.trim());
+            allLogKeys = logMaster.filter((p) => filterKeys.includes(p))
+        }
+
+        const allDates = generateUnixRange(startUnix, endUnix);
+
+        const { dataByGroup: kunjungan, totalHarian, totalPerGroup } = buildRekap(kunjunganRows, "jenis_kunjungan", allDates, allLogKeys);
 
         //* Total keseluruhan Log
         const total_keseluruhan = await LogPelayananModel.count({ where: { ...filter } });
@@ -101,8 +121,40 @@ export default class RekapKunjunganRepository{
             raw: true,
         });
 
-        const allDates = generateDateRange(args.start_date, args.end_date);
-        const { dataByGroup: dokter, totalHarian, totalPerGroup } = buildRekap(dokterRows, "nama_dokter", allDates);
+        function normalizeToDay(unixSeconds) {
+            return dayJs.unix(unixSeconds).startOf("day").unix();
+        }
+
+        const startUnix = normalizeToDay(args.start_date);
+        const endUnix = normalizeToDay(args.end_date);
+
+        const dokterMaster = await PractitionerModel.findAll({
+            where: { deletedAt: null },
+            include: {
+                model: PegawaiModel,
+                as: "pegawai",
+                required: true,
+                attributes: []
+            },
+            attributes: [
+                "uuid",
+                [sequelizeInstace.col("pegawai.name"), "nama_dokter"],
+            ],
+            raw: true,
+        });
+
+        //* Filter jenis dokter untuk ditampilkan
+        let allDokterKeys = dokterMaster.map((p) => p.nama_dokter);
+
+        if (args.practitioner_uuid) {
+            const filterKeys = args.practitioner_uuid.split(",").map((x) => x.trim());
+            allDokterKeys = dokterMaster
+            .filter((p) => filterKeys.includes(p.uuid))
+            .map((p) => p.nama_dokter);
+        }
+
+        const allDates = generateUnixRange(startUnix, endUnix);
+        const { dataByGroup: dokter, totalHarian, totalPerGroup } = buildRekap(dokterRows, "nama_dokter", allDates, allDokterKeys);
 
         //* Total keseluruhan Dokter
         const total_keseluruhan = await LogPelayananModel.count({
@@ -180,8 +232,28 @@ export default class RekapKunjunganRepository{
             raw: true,
         });
 
-        const allDates = generateDateRange(args.start_date, args.end_date);
-        const { dataByGroup: penjamin, totalHarian, totalPerGroup } = buildRekap(penjaminRows, "nama_penjamin", allDates);
+        function normalizeToDay(unixSeconds) {
+            return dayJs.unix(unixSeconds).startOf("day").unix();
+        }
+
+        const startUnix = normalizeToDay(args.start_date);
+        const endUnix = normalizeToDay(args.end_date);
+
+        const penjaminMaster = await InsuranceAccountModel.findAll({
+            where: { deletedAt: null },
+            attributes: ["name"],
+            raw: true,
+        });
+
+        //* Filter jenis penjamin untuk ditampilkan
+        let allPenjaminKeys = penjaminMaster.map((p) => p.name);
+        if (args.penjamin) {
+            const filterKeys = args.penjamin.split(",").map((x) => x.trim());
+            allPenjaminKeys = allPenjaminKeys.filter((p) => filterKeys.includes(p));
+        }
+
+        const allDates = generateUnixRange(startUnix, endUnix);
+        const { dataByGroup: penjamin, totalHarian, totalPerGroup } = buildRekap(penjaminRows, "nama_penjamin", allDates, allPenjaminKeys);
 
         //* Total Keselurhan penjamin
         const total_keseluruhan = await LogPelayananModel.count({

@@ -1,54 +1,51 @@
-import { differenceInDays, format, addDays } from "date-fns";
+import dayJs from "dayjs";
 
-//* Parse tanggal dari format Unix
-function parseUnixDate(unix) {
-    return unix.toString().length === 10 ? new Date(unix * 1000) : new Date(unix);
-}
 
-//* Generate rentang tanggal
-function generateDateRange(startUnix, endUnix) {
-    const start = parseUnixDate(startUnix);
-    const end = parseUnixDate(endUnix);
-    const days = differenceInDays(end, start) + 1;
-    const result = Array.from({ length: days }, (_, i) => format(addDays(start, i), "yyyy-MM-dd"));
+function generateUnixRange(startUnix, endUnix) {
+    const result = [];
+    for (let ts = startUnix; ts <= endUnix; ts += 86400) { 
+        result.push(ts);
+    }
     return result;
 }
 
-function buildRekap(rows, groupKey, allDates) {
 
-    //* Grouping data
-    const grouped = {};
-    rows.forEach((row) => {
-        const key = row[groupKey];
-        if (!grouped[key]) grouped[key] = {};
-        grouped[key][row.tanggal] = parseInt(row.total_harian);
-    });
+function buildRekap(rows, groupKey, allDates, allGroups = []) {
+  const grouped = {};
+  rows.forEach((row) => {
+    const key = row[groupKey];
+    if (!grouped[key]) grouped[key] = {};
 
-    //* Array per kategori data
-    const dataByGroup = {};
-    Object.keys(grouped).forEach((key) => {
-        dataByGroup[key] = allDates.map((tgl) => ({
-        tanggal: tgl,
-        total: grouped[key][tgl] || 0,
-        }));
-    });
+    const ts = dayJs(row.tanggal, "YYYY-MM-DD").startOf("day").unix();
+    grouped[key][ts] = parseInt(row.total_harian);
+  });
 
-    //* Total harian semua kategori
-    const totalHarian = allDates.map((tgl) => {
-        const total = Object.values(grouped).reduce((sum, kategori) => sum + (kategori[tgl] || 0), 0);
-        return { tanggal: tgl, total };
-    });
+  const dataByGroup = {};
+  const allKeys = [...new Set([...Object.keys(grouped), ...allGroups])];
 
-    //* Total per kategori
-    const totalPerGroup = Object.entries(grouped).map(([key, data]) => ({
-        [groupKey]: key,
-        total: Object.values(data).reduce((a, b) => a + b, 0),
+  allKeys.forEach((key) => {
+    dataByGroup[key] = allDates.map((ts) => ({
+      tanggal: dayJs.unix(ts).format("YYYY-MM-DD"),
+      total: grouped[key]?.[ts] || 0,
     }));
+  });
 
-    return { dataByGroup, totalHarian, totalPerGroup };
+  const totalHarian = allDates.map((ts) => {
+    const total = allKeys.reduce((sum, k) => sum + (grouped[k]?.[ts] || 0), 0);
+    return { tanggal: dayJs.unix(ts).format("YYYY-MM-DD"), total };
+  });
+
+  const totalPerGroup = allKeys.map((key) => ({
+    [groupKey]: key,
+    total: Object.values(grouped[key] || {}).reduce((a, b) => a + b, 0),
+  }));
+
+  return { dataByGroup, totalHarian, totalPerGroup };
 }
 
+
+
 export {
-    generateDateRange,
+    generateUnixRange,
     buildRekap
 };
