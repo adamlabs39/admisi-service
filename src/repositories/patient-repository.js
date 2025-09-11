@@ -401,12 +401,24 @@ export default class PatientRepository{
     static async checkExistPatient(data){
         convertSnakeToCamel(data);
         try {
+
+            let filter = {
+                deletedAt: { [Op.is]: null },
+                faskesUuid: data.faskes_uuid
+            };
+
+            if (data.no_rm) {
+                filter.no_rm = data.no_rm;
+            } else if (data.identity && data.no_identity) {
+                filter.identity = data.identity;
+                filter.no_identity = data.no_identity;
+            } else {
+                throw new BadRequestException("Parameter tidak lengkap");
+            }
+            
             return await PatientModel.findOne({
-            where: {
-                [Op.or]: [{no_rm: data.no_rm, identity: data.identity, noIdentity: data.no_identity, faskesUuid: data.faskes_uuid }],
-                [Op.and]: [{ deletedAt: { [Op.is]: null } }],
-            },
-            include: [
+                where: filter,
+                include: [
                     {
                         model: AddressModel,
                         required: false,
