@@ -120,7 +120,9 @@ export default class PatientValidation{
 
     static CHECK_IDENTITY_VALIDATOR = z.object({
         faskes_uuid: z.string().max(255),
-        no_identity: z.string().max(255),
+        no_rm: z.string().max(255).optional(),
+        identity: z.string().max(255).optional(),
+        no_identity: z.string().max(255).optional(),
     });
 
 }
