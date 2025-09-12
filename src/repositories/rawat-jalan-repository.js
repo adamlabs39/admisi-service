@@ -26,6 +26,7 @@ import DuplicateException from "../exception/duplicate-exception.js";
 import AntrianCallRepository from "./antrian-call-repository.js";
 import rawatJalanFilter from "./filters/rawat-jalan-filter.js";
 import { rawatJalanInclude } from "./include/rawat-jalan-include.js";
+import dayjs from "dayjs";
 
 export default class RawatJalanRepository {
     /**
@@ -370,6 +371,7 @@ export default class RawatJalanRepository {
                 faskesUuid,
                 kodeBooking: data.kode_booking,
                 deletedAt: null,
+                statusRj: { [Op.ne]: 0 },
                 dischargeDate: null
             },
         });
@@ -410,7 +412,8 @@ export default class RawatJalanRepository {
             where: {
                 faskesUuid,
                 kodeBooking: data.kode_booking,
-                deletedAt: null,
+                deletedAt: null,    
+                statusRj: { [Op.ne]: 0 },
                 dischargeDate: null
             },
             include: [
@@ -585,7 +588,7 @@ export default class RawatJalanRepository {
             const existingRegist = await RawatJalanModel.findOne({
                 where: {
                     uuid,
-                    faskesUuid,
+                    faskesUuid, 
                     deletedAt: null,
                 },
                 transaction: t,
@@ -705,16 +708,15 @@ export default class RawatJalanRepository {
 
                     for (const rj of rawatJalan) {
                         let patient = rj.patient.dataValues;
-                        console.log("patient:", patient);
 
-                        const result = data.find(item => item.no_rm === patient.no_rm && item.faskes_uuid === user.faskesUuid);
+                        const result = data.find(item => item.no_rm === patient.no_rm && item.faskes_uuid === user.faskesUuid
+                            && item.kode_booking === rj.kodeBooking);
 
                         await updateAppointmentMobile.put(`/${result.uuid}`, {
                             status: 0
                         });
                     }
 
-                    console.log("Rawat jalan:", rawatJalan[0].dataValues.noRm);
                     
                 }catch(error){
                     console.error("Error membuat appointment:", error);
@@ -733,5 +735,76 @@ export default class RawatJalanRepository {
             throw e;
         }
     }
+
+    static async cancelVisitMobile(data, faskesUuid) {
+        try {
+            data = convertSnakeToCamel(data);
+
+            return await sequelizeInstance.transaction(async (t) => {
+            const appointmentRes = await getAppointmentMobile.get("/");
+            const appointmentData = appointmentRes.data.payload;
+
+            let foundRawatJalan = [];
+            
+            for (const appointmentUuid of data.listUuid) {
+                const appointment = appointmentData.find((item) => item.uuid === appointmentUuid);
+
+                await updateAppointmentMobile.put(`/${appointment.uuid}`, {
+                    status: 0,
+                });
+
+                if (!appointment) {
+                    throw new NotfoundException(`Appointment tidak ditemukan`);
+                }
+
+                const jadwalPraktek = dayjs(appointment.jadwal_praktek);
+                const now = dayjs();
+
+                if (jadwalPraktek.diff(now, "minute") < 60) {
+                    throw new BadRequestException("Pemeriksaan kurang dari 1 jam, pembatalan boking tidak dapat dilakukan.");
+                }
+                
+                const rawatJalan = await RawatJalanModel.findOne({
+                where: {
+                    noRm: appointment.no_rm,
+                    kodeBooking: appointment.kode_booking,
+                    faskesUuid: faskesUuid,
+                    statusRj: { [Op.not]: 0 }
+                },
+                transaction: t
+                });
+
+                if (!rawatJalan) {
+                    throw new NotfoundException(`Rawat jalan tidak ditemukan`);
+                }
+
+                foundRawatJalan.push(rawatJalan);
+            }
+
+            await RawatJalanModel.update(
+                { statusRj: 0, cancelReason: "Pembatalan melalui Mobile" },
+                {
+                where: {
+                    uuid: foundRawatJalan.map((rj) => rj.uuid),
+                    faskesUuid
+                },
+                transaction: t
+                }
+            );
+
+            eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
+                list_no_pelayanan: foundRawatJalan.map((rj) => rj.noPelayanan),
+                cancel_reason: "Pembatalan melalui Mobile",
+                cancel_by: faskesUuid.username,
+            });
+
+            return foundRawatJalan;
+            });
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+}
+
     
 }

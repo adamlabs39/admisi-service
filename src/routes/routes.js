@@ -25,6 +25,7 @@ routes.get("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.getAl
 routes.get("/rawat-jalan/mobile/today", apiKeyCheckPatient, RawatJalanController.getRawatJalanToday);
 routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
 routes.put("/rawat-jalan/mobile/:uuid", apiKeyCheckPatient, RawatJalanController.updateRawatJalanMobile);
+routes.delete("/rawat-jalan/mobile/cancel", apiKeyCheckPatient, RawatJalanController.cancelVisitMobile);
 
 //TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);
