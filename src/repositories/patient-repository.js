@@ -352,7 +352,7 @@ export default class PatientRepository{
                 let i = 0;
 
                 let patientCount = await PatientModel.unscoped().count({
-                    where: { faskesUuid },
+                    where: { faskesUuid, noRm: { [Op.notILike]: 'XX%' } },
                     transaction: t,
                 });
 
