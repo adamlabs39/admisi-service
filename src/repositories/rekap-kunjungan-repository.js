@@ -46,7 +46,7 @@ export default class RekapKunjunganRepository{
         const endUnix = normalizeToDay(args.end_date);
 
         const logMaster = await LogPelayananModel.findAll({
-            where: { deletedAt: null },
+            where: { deletedAt: null, faskesUuid: faskesUuid },
             attributes: [
                 "jenis_kunjungan"
             ],
@@ -129,7 +129,7 @@ export default class RekapKunjunganRepository{
         const endUnix = normalizeToDay(args.end_date);
 
         const dokterMaster = await PractitionerModel.findAll({
-            where: { deletedAt: null },
+            where: { deletedAt: null, is_doctor: true, faskesUuid: faskesUuid },
             include: {
                 model: PegawaiModel,
                 as: "pegawai",
@@ -240,7 +240,7 @@ export default class RekapKunjunganRepository{
         const endUnix = normalizeToDay(args.end_date);
 
         const penjaminMaster = await InsuranceAccountModel.findAll({
-            where: { deletedAt: null },
+            where: { deletedAt: null, faskesUuid: faskesUuid },
             attributes: ["name"],
             raw: true,
         });
