@@ -2,7 +2,7 @@ import { LogPelayananModel } from "@adameds/model-sdk/pelayanan";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
 import { Context } from "../middlewares/context.js";
 import { Op } from "sequelize";
-import { PegawaiModel, PractitionerModel } from "@adameds/model-sdk/datamaster";
+import { PegawaiModel, PenjaminModel, PractitionerModel } from "@adameds/model-sdk/datamaster";
 import sequelizeInstace from "../configurations/sequelize-instance.js";
 import { InsuranceAccountModel, PatientModel } from "@adameds/model-sdk/admisi";
 import { buildRekap, generateUnixRange } from "../helper/rekap-helper.js";
@@ -46,7 +46,7 @@ export default class RekapKunjunganRepository{
         const endUnix = normalizeToDay(args.end_date);
 
         const logMaster = await LogPelayananModel.findAll({
-            where: { deletedAt: null },
+            where: { deletedAt: null, faskesUuid: faskesUuid },
             attributes: [
                 "jenis_kunjungan"
             ],
@@ -129,7 +129,7 @@ export default class RekapKunjunganRepository{
         const endUnix = normalizeToDay(args.end_date);
 
         const dokterMaster = await PractitionerModel.findAll({
-            where: { deletedAt: null },
+            where: { deletedAt: null, is_doctor: true, faskes_uuid: faskesUuid },
             include: {
                 model: PegawaiModel,
                 as: "pegawai",
@@ -239,8 +239,8 @@ export default class RekapKunjunganRepository{
         const startUnix = normalizeToDay(args.start_date);
         const endUnix = normalizeToDay(args.end_date);
 
-        const penjaminMaster = await InsuranceAccountModel.findAll({
-            where: { deletedAt: null },
+        const penjaminMaster = await PenjaminModel.findAll({
+            where: { deletedAt: null, faskes_uuid: faskesUuid },
             attributes: ["name"],
             raw: true,
         });
