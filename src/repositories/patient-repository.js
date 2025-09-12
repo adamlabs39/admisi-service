@@ -9,7 +9,7 @@ import {
 import {Op} from "sequelize";
 import Pagination from "../helper/pagination.js";
 import moment from "moment";
-import {convertSnakeToCamel, generateNoRM, generateNoRmMobile, getInfoAge} from "../helper/utility.js";
+import {convertSnakeToCamel, generateNoRM, generateNoRmTemporary, getInfoAge} from "../helper/utility.js";
 import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import DuplicateException from "../exception/duplicate-exception.js";
@@ -38,6 +38,18 @@ export default class PatientRepository{
                 ],
                 transaction
             }) : null;
+
+            const pasienBaru = await PatientModel.findOne({
+                where: {
+                    faskesUuid,
+                    uuid,
+                    noRm: { [Op.like]: 'XX%' }
+                }
+            })
+
+            if (pasienBaru) {
+                patient.update({ noRm: await generateNoRM() }, { transaction });
+            }
 
             // Set isNewBorn to false if not provided during update
             if (data.isNewBorn === undefined || !data.isNewBorn) {
@@ -72,7 +84,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
-                            { noIdentity: data.noIdentity || data.dataValues.no_identity, deletedAt: { [Op.is]: null } },
+                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity || data.dataValues.no_identity, deletedAt: { [Op.is]: null } },
                             { faskesUuid: faskesUuid }
                         ]
                     },
@@ -86,6 +98,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         faskesUuid,
+                        noRm: { [Op.notLike]: 'XX%' },
                         noIdentity: data.noIdentity,
                         deletedAt: { [Op.is]: null }
                     },
@@ -144,7 +157,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
-                            { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
+                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
                             { faskesUuid: faskesUuid }
                         ]
                     },
@@ -158,6 +171,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         faskesUuid,
+                        noRm: { [Op.notLike]: 'XX%' },
                         noIdentity: data.noIdentity,
                         deletedAt: { [Op.is]: null }
                     },
@@ -194,7 +208,7 @@ export default class PatientRepository{
                 ? await patient.update(data, { transaction })
                 : await PatientModel.create({
                     ...data,
-                    noRm: await generateNoRM(),
+                    noRm: await generateNoRmTemporary(),
                     name: "Nama Pasien",
                     gender: "Male"
                 }, { transaction });
@@ -217,6 +231,7 @@ export default class PatientRepository{
         data = convertSnakeToCamel(data);
         data.address = convertSnakeToCamel(data.address);
         data.birthDetail = convertSnakeToCamel(data.birthDetail);
+
         PatientService.patientIdentityFormat(data.identity, data.noIdentity);
 
         try {
@@ -224,7 +239,21 @@ export default class PatientRepository{
                 data.isNewBorn = false;
             }
 
-            const uuid = data.patientUuid || null;
+            let patientExist = null;
+
+            if (data.noRm) {
+                patientExist = await PatientModel.findOne({
+                    where: {
+                        faskesUuid,
+                        noRm: data.noRm,
+                        deletedAt: { [Op.is]: null }
+                    },
+                    transaction
+                });
+            }
+
+            const uuid = patientExist ? patientExist.uuid : null;
+
             const patient = uuid ? await PatientModel.findOne({
                 where: { uuid, deletedAt: { [Op.is]: null } },
                 include: [
@@ -238,7 +267,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
-                            { noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
+                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
                             { faskesUuid: faskesUuid }
                         ]
                     },
@@ -252,6 +281,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         faskesUuid,
+                        noRm: { [Op.notLike]: 'XX%' },
                         noIdentity: data.noIdentity,
                         deletedAt: { [Op.is]: null }
                     },
@@ -294,7 +324,7 @@ export default class PatientRepository{
             } else {
                 patientModel = await PatientModel.create({
                     ...data,
-                    noRm: await generateNoRmMobile(faskesUuid),
+                    noRm: await generateNoRmTemporary(faskesUuid),
                 }, { transaction });
             }
 
@@ -404,7 +434,8 @@ export default class PatientRepository{
 
             let filter = {
                 deletedAt: { [Op.is]: null },
-                faskesUuid: data.faskes_uuid
+                faskesUuid: data.faskes_uuid,
+                noRm: { [Op.notLike]: 'XX%' }
             };
 
             if (data.no_rm) {

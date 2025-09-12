@@ -247,7 +247,6 @@ export default class RawatJalanRepository {
             //* GET JADWAL DOKTER DARI ANTRIAN
             const jadwalDokter = await JadwalDokterRepository.findJadwalDokterByUuid(data.jadwalDokterUuid);
 
-            console.log("Data rawat jalan:", data);
             const dataRJ = {
                 faskesUuid,
                 patientUuid: patient.uuid,
