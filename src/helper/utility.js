@@ -42,11 +42,12 @@ const generateNoRM = async () => {
     return `${paddedNumber.slice(0, 2)}-${paddedNumber.slice(2, 4)}-${paddedNumber.slice(4, 6)}`;
 };
 
-const generateNoRmMobile = async (faskesUuid) => {
-    let countPatient = await PatientModel.unscoped().count({ where: { faskesUuid } });
+const generateNoRmTemporary = async (faskesUuidMobile = null) => {
+    const faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR)?.faskesUuid;
+    let countPatient = await PatientModel.unscoped().count({ where: { faskesUuid, noRm: { [Op.like]: 'XX%' } } });
     countPatient += 1;
     const paddedNumber = countPatient.toString().padStart(6, '0');
-    return `${paddedNumber.slice(0, 2)}-${paddedNumber.slice(2, 4)}-${paddedNumber.slice(4, 6)}`;
+    return `XX${paddedNumber}`;
 };
 
 const generateAntrianAdmisi = async () => {
@@ -112,38 +113,6 @@ const generateNoReg = async (faskesUuidMobile = null) => {
 
     return `REG${today}${count.toString().padStart(4, "0")}`;
 };
-
-//TODO ini mengambil no registrasi terbesar
-// const generateNoReg = async () => {
-//     const today = moment().format("YYMMDD");
-//     const { faskesUuid } = Context.get(CTX_AUTHOR);
-
-//     const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
-
-//     const results = await Promise.all(
-//         listModel.map((model) =>
-//         model.max("no_reg", {
-//             where: {
-//             faskesUuid,
-//             no_reg: { [Op.like]: `REG${today}%` },
-//             },
-//         })
-//         )
-//     );
-
-//     let maxNumber = 0;
-//     results.forEach((val) => {
-//         if (val) {
-//         const num = parseInt(val.slice(-4), 10);
-//         if (num > maxNumber) maxNumber = num;
-//         }
-//     });
-
-//     const nextNumber = (maxNumber || 0) + 1;
-
-//     return `REG${today}${nextNumber.toString().padStart(4, "0")}`;
-// };
-
 
 const generateNoPelayanan = async (service, faskesUuidMobile = null) => {
     const today = moment().format('YYMMDD');
@@ -317,7 +286,7 @@ const getInfoPelayanan = async (pelayanan, noreg, column = ['uuid']) => {
 export {
     paginationHelper,
     generateNoRM,
-    generateNoRmMobile,
+    generateNoRmTemporary,
     getInfoAge,
     convertSnakeToCamel,
     generateNoReg,
