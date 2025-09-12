@@ -114,6 +114,13 @@ export class RawatJalanService {
         return result;
     }
 
+    static async cancelVisitMobile(data, faskesUuid){
+        const validData = ZodValidator.validate(RawatJalanValidation.CANCEL_VISIT_MOBILE_VALIDATOR, data);
+        if (!validData) throw new BadRequestException("Bad Request");
+        const result = await RawatJalanRepository.cancelVisitMobile(validData, faskesUuid);
+        if (!result) throw new Error("Gagal melakukan pembatalan visit");
+        return result;
+    }
 
     static async getDetail(uuid){
         const result = await RawatJalanRepository.getOne(uuid);

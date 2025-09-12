@@ -110,6 +110,15 @@ export default class RawatJalanController {
         }
     }
 
+    static async cancelVisitMobile(request, response, nextFunction) {
+        try {
+            const faskesUuid = request.headers["faskes-uuid"];
+            const data = await RawatJalanService.cancelVisitMobile(request.body, faskesUuid);
+            return response.status(200).json(successResponse("Data Rawat Jalan Berhasil Dibatalkan", data));
+        } catch (error) {
+            nextFunction(error);
+        }
+    }
 
     static async getDetail(req, res, next) {
         try{
