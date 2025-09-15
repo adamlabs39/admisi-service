@@ -115,7 +115,7 @@ export class RawatJalanService {
     }
 
     static async cancelVisitMobile(data, faskesUuid){
-        const validData = ZodValidator.validate(RawatJalanValidation.CANCEL_VISIT_MOBILE_VALIDATOR, data);
+        const validData = ZodValidator.validate(RawatJalanValidation.CHECK_KODE_BOOKING_VALIDATOR, data);
         if (!validData) throw new BadRequestException("Bad Request");
         const result = await RawatJalanRepository.cancelVisitMobile(validData, faskesUuid);
         if (!result) throw new Error("Gagal melakukan pembatalan visit");

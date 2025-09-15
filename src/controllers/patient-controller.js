@@ -109,7 +109,6 @@ export default class PatientController {
             if(!file) throw new BadRequestException("Tidak ada file yang diupload");
             const availableMimeTypes = ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
             if(!availableMimeTypes.includes(file.mimetype)) throw new BadRequestException("File yang diupload bukan file excel");
-            if(!file) throw new BadRequestException("Tidak ada file yang diupload");
             const wb = XLSX.read(file.data, {type: 'buffer'});
             const sheet = wb.Sheets[wb.SheetNames[0]];
             const data = XLSX.utils.sheet_to_json(sheet, {raw: true, defval: null, range: 12});

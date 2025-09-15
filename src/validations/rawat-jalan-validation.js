@@ -69,8 +69,5 @@ export default class RawatJalanValidation {
         list_uuid: z.array(z.string({ required_error: "Pembatalan Rawat Jalan perlu diisi" }).max(255)),
         cancel_reason: z.string({ required_error: "Alasan Pembatalan perlu diisi" }).max(255)
     })
-
-    static CANCEL_VISIT_MOBILE_VALIDATOR = z.object({
-        list_uuid: z.array(z.string({ required_error: "Pembatalan Rawat Jalan perlu diisi" }).max(255))
-    })
+    
 }

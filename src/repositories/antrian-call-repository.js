@@ -48,7 +48,6 @@ export default class AntrianCallRepository {
         try {
             const result = await getAllAntrianCall.get("/all", { params: args });
             
-            console.log("result antrian:", dayjs().unix());
             const antrian = result.data.payload.filter((item) => item.pelayanan == "admisi" && item.patient_data.tanggal_daftar >= dayjs().startOf("day").unix());
 
             return antrian;

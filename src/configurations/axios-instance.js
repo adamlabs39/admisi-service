@@ -121,6 +121,17 @@ const updateAppointmentMobile = axios.create({
   },
 });
 
+//! Cancel Booking Mobile
+const cancelBookingMobile = axios.create({
+  baseURL: `${BASE_URL_ANTRIAN}/mobile/report-antrian/cancle-booking`,
+  timeout: 10000,
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "x-api-key": "KalGen6eMdJmzLBgl1cgp6D68Q4XHRLIm8sry6ylJYZlH1x1cv",
+  },
+});
+
 export { 
   generateNoAntrian, 
   jadwalDokter, 
@@ -130,5 +141,6 @@ export {
   getAllAntrianCall,
   updateAntrianCall,
   getAppointmentMobile,
-  updateAppointmentMobile
+  updateAppointmentMobile,
+  cancelBookingMobile
 };
