@@ -84,7 +84,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
-                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity || data.dataValues.no_identity, deletedAt: { [Op.is]: null } },
+                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity || data.dataValues.no_identity, deletedAt: { [Op.is]: null }, isNewBorn: false },
                             { faskesUuid: faskesUuid }
                         ]
                     },
@@ -100,7 +100,8 @@ export default class PatientRepository{
                         faskesUuid,
                         noRm: { [Op.notLike]: 'XX%' },
                         noIdentity: data.noIdentity,
-                        deletedAt: { [Op.is]: null }
+                        deletedAt: { [Op.is]: null },
+                        isNewBorn: false
                     },
                     transaction
                 });
