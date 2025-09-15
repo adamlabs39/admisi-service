@@ -91,12 +91,6 @@ export default class RawatInapRepository {
 
             const bedData = await MonitoringRoomRepository.getDetailBed(data.monitoringRoomUuid);
 
-            //* Validasi untuk jam lahir bayi tidak boleh lebih dari saat ini
-            if (moment(data.patientData.birth_detail.birth_date).format("YYYY-MM-DD") === moment().format("YYYY-MM-DD") && 
-            data.patientData.birth_time > moment().format("HH:mm:ss")) {
-                throw new Error("jam lahir bayi tidak boleh lebih dari saat ini");
-            }
-
             const monitoring = await MonitoringRoomRepository.registPatientToBed(bedData.dataValues.uuid, patient.uuid, transaction);
 
             const registRI = await RawatInapModel.create({
@@ -180,7 +174,6 @@ export default class RawatInapRepository {
         try {
             const {faskesUuid} = Context.get(CTX_AUTHOR);
             data = convertSnakeToCamel(data);
-            console.log("Update Rawat Inap Data:", data);
 
             const rawatInap = await RawatInapModel.findOne({
                 where: {
@@ -298,20 +291,20 @@ export default class RawatInapRepository {
             {
                 model: PatientModel,
                 as: "patient",
-                required: true,
+                required: false,
                 where: { deletedAt: { [Op.is]: null } },
                 include: [
                 {
                     model: AddressModel,
                     as: "address",
-                    required: true,
+                    required: false,
                     where: { deletedAt: { [Op.is]: null } },
                     attributes: ["uuid", "full_address", "prov", "city", "district", "rt", "rw", "village", "country", "postal_code"],
                 },
                 {
                     model: BirthDetailModel,
                     as: "birth_detail",
-                    required: true,
+                    required: false,
                     where: { deletedAt: { [Op.is]: null } },
                     attributes: ["birth_place", "birth_date", "age_year", "age_month", "age_day"],
                 },
@@ -321,28 +314,28 @@ export default class RawatInapRepository {
             {
                 model: RoomMonitoringModel,
                 as: "monitoring_room",
-                required: true,
+                required: false,
                 where: { deletedAt: { [Op.is]: null } },
                 attributes: ["uuid", "room_uuid", "no_bed"],
                 include: [
                 {
                     model: LokasiModel,
                     as: "bed_lokasi",
-                    required: true,
+                    required: false,
                     where: { deletedAt: { [Op.is]: null } },
                     attributes: ["uuid", "code", "name", "class_code", "class_name"],
                 },
                 {
                     model: LokasiModel,
                     as: "room",
-                    required: true,
+                    required: false,
                     where: { deletedAt: { [Op.is]: null } },
                     attributes: ["uuid", "code", "name", "class_code", "class_name"],
                     include: [
                     {
                         model: KategoriRuanganModel,
                         as: "kategori_ruangan",
-                        required: true,
+                        required: false,
                         where: { deletedAt: { [Op.is]: null } },
                         attributes: ["uuid", "code", "name"],
                     },
@@ -353,14 +346,14 @@ export default class RawatInapRepository {
                 {
                 model: PractitionerModel,
                 as: "practitioner",
-                required: true,
+                required: false,
                 where: {deletedAt: {[Op.is]: null}},
                 attributes: ["uuid"],
                 include: [
                     {
                         model: PegawaiModel,
                         as: "pegawai",
-                        required: true,
+                        required: false,
                         where: {deletedAt: {[Op.is]: null}},
                         attributes: ["first_title", "last_title", ["name", "nama"], "nik"]
                     }
