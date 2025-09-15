@@ -21,7 +21,7 @@ import {InsuranceAdmissionModel, LogPelayananModel, RawatJalanModel} from "@adam
 import InsuranceAdmissionRepository from "./insurance-admission-repository.js";
 import {eventEmitter} from "../helper/event.js";
 import {LOG_CANCLE_PELAYANAN_CHANNEL, LOG_PELAYANAN_CHANNEL} from "../constant/event-constant.js";
-import { generateNoAntrian, getAppointmentMobile, updateAppointmentMobile } from "../configurations/axios-instance.js";
+import { cancelBookingMobile, generateNoAntrian, getAppointmentMobile, updateAppointmentMobile } from "../configurations/axios-instance.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 import AntrianCallRepository from "./antrian-call-repository.js";
 import rawatJalanFilter from "./filters/rawat-jalan-filter.js";
@@ -539,7 +539,7 @@ export default class RawatJalanRepository {
                 const appointment = await getAppointmentMobile.get('/');
                 const data = appointment.data.payload;
 
-                const result = data.find(item => item.no_rm === patient.noRm && item.faskes_uuid === faskesUuid);
+                const result = data.find(item => item.no_rm === patient.noRm && item.faskes_uuid === faskesUuid && item.kode_booking === existingRegist.kodeBooking);
 
                 await updateAppointmentMobile.put(`/${result.uuid}`, {
                     status: 2
@@ -585,20 +585,27 @@ export default class RawatJalanRepository {
         const update = await sequelizeInstance.transaction(async (t) => {
             data = convertSnakeToCamel(data);
 
+            const appointment = await getAppointmentMobile.get("/");
+            const appointmentData = appointment.data.payload.find((item) => item.uuid === uuid && item.faskes_uuid === faskesUuid);
+
+            console.log("Appointment Data:", appointmentData);
+
             const existingRegist = await RawatJalanModel.findOne({
                 where: {
-                    uuid,
-                    faskesUuid, 
+                    noRm: appointmentData.no_rm,
+                    faskesUuid: appointmentData.faskes_uuid,
+                    kodeBooking: appointmentData.kode_booking,
                     deletedAt: null,
                 },
                 transaction: t,
             });
 
-            if (!existingRegist) throw new NotfoundException("ID tidak ditemukan");
+            if (!existingRegist) throw new NotfoundException("Rawat Jalan tidak ditemukan");
 
             const jadwalDokter = await JadwalDokterRepository.findJadwalDokterUuidMobile(faskesUuid, data.jadwalDokterUuid);
             
-            data.patientData.patient_uuid = existingRegist.dataValues.patientUuid;
+            console.log("Regist ada:", existingRegist);
+            data.patientData.noRm = existingRegist.dataValues.noRm;
             const patient = await PatientRepository.registPatientMobile(data.patientData, faskesUuid, t);
             if (!patient) throw new Error("Gagal mengupdate pasien");
 
@@ -628,6 +635,9 @@ export default class RawatJalanRepository {
             if (statusRj >= 4) throw new BadRequestException("Data telah diproses");
 
             const updatedRegist = await existingRegist.update(dataRJ, { transaction: t });
+
+            //* Buat Pemanggilan antrian
+            await AntrianCallRepository.createAntrianCallMobile(data, patient, updatedRegist, faskesUuid);
 
             eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
                 tgl_registrasi: updatedRegist.tanggalDaftar,
@@ -738,64 +748,33 @@ export default class RawatJalanRepository {
 
     static async cancelVisitMobile(data, faskesUuid) {
         try {
+            const user = Context.get(faskesUuid);
             data = convertSnakeToCamel(data);
 
             return await sequelizeInstance.transaction(async (t) => {
-            const appointmentRes = await getAppointmentMobile.get("/");
-            const appointmentData = appointmentRes.data.payload;
-
-            let foundRawatJalan = [];
-            
-            for (const appointmentUuid of data.listUuid) {
-                const appointment = appointmentData.find((item) => item.uuid === appointmentUuid);
-
-                await updateAppointmentMobile.put(`/${appointment.uuid}`, {
-                    status: 0,
-                });
-
-                if (!appointment) {
-                    throw new NotfoundException(`Appointment tidak ditemukan`);
-                }
-
-                const jadwalPraktek = dayjs(appointment.jadwal_praktek);
-                const now = dayjs();
-
-                if (jadwalPraktek.diff(now, "minute") < 60) {
-                    throw new BadRequestException("Pemeriksaan kurang dari 1 jam, pembatalan boking tidak dapat dilakukan.");
-                }
-                
-                const rawatJalan = await RawatJalanModel.findOne({
-                where: {
-                    noRm: appointment.no_rm,
-                    kodeBooking: appointment.kode_booking,
-                    faskesUuid: faskesUuid,
-                    statusRj: { [Op.not]: 0 }
-                },
-                transaction: t
-                });
-
-                if (!rawatJalan) {
-                    throw new NotfoundException(`Rawat jalan tidak ditemukan`);
-                }
-
-                foundRawatJalan.push(rawatJalan);
-            }
 
             await RawatJalanModel.update(
                 { statusRj: 0, cancelReason: "Pembatalan melalui Mobile" },
                 {
                 where: {
-                    uuid: foundRawatJalan.map((rj) => rj.uuid),
+                    kodeBooking: data.kodeBooking,
                     faskesUuid
                 },
                 transaction: t
                 }
             );
 
+            const foundRawatJalan = await RawatJalanModel.findAll({
+                where: {
+                    kodeBooking: data.kodeBooking,
+                    faskesUuid,
+                }
+            });
+
             eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
                 list_no_pelayanan: foundRawatJalan.map((rj) => rj.noPelayanan),
                 cancel_reason: "Pembatalan melalui Mobile",
-                cancel_by: faskesUuid.username,
+                cancel_by: user.username,
             });
 
             return foundRawatJalan;
@@ -804,7 +783,5 @@ export default class RawatJalanRepository {
             console.error(error);
             throw error;
         }
-}
-
-    
+    }
 }
