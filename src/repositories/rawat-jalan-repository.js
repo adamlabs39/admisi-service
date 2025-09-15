@@ -748,7 +748,6 @@ export default class RawatJalanRepository {
 
     static async cancelVisitMobile(data, faskesUuid) {
         try {
-            const user = Context.get(faskesUuid);
             data = convertSnakeToCamel(data);
 
             return await sequelizeInstance.transaction(async (t) => {
@@ -774,7 +773,7 @@ export default class RawatJalanRepository {
             eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
                 list_no_pelayanan: foundRawatJalan.map((rj) => rj.noPelayanan),
                 cancel_reason: "Pembatalan melalui Mobile",
-                cancel_by: user.username,
+                cancel_by: "Mobile",
             });
 
             return foundRawatJalan;
