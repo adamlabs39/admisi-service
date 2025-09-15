@@ -752,31 +752,32 @@ export default class RawatJalanRepository {
 
             return await sequelizeInstance.transaction(async (t) => {
 
-            await RawatJalanModel.update(
-                { statusRj: 0, cancelReason: "Pembatalan melalui Mobile" },
-                {
-                where: {
-                    kodeBooking: data.kodeBooking,
-                    faskesUuid
-                },
-                transaction: t
-                }
-            );
+                await RawatJalanModel.update(
+                    { statusRj: 0, cancelReason: "Pembatalan melalui Mobile" },
+                    {
+                    where: {
+                        kodeBooking: data.kodeBooking,
+                        faskesUuid
+                    },
+                    transaction: t
+                    }
+                );
 
-            const foundRawatJalan = await RawatJalanModel.findAll({
-                where: {
-                    kodeBooking: data.kodeBooking,
-                    faskesUuid,
-                }
-            });
+                const foundRawatJalan = await RawatJalanModel.findAll({
+                    where: {
+                        kodeBooking: data.kodeBooking,
+                        faskesUuid,
+                    }
+                });
 
-            eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
-                list_no_pelayanan: foundRawatJalan.map((rj) => rj.noPelayanan),
-                cancel_reason: "Pembatalan melalui Mobile",
-                cancel_by: "Mobile",
-            });
+                eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
+                    list_no_pelayanan: foundRawatJalan.map((rj) => rj.noPelayanan),
+                    cancel_reason: "Pembatalan melalui Mobile",
+                    cancel_by: "Mobile",
+                });
 
             return foundRawatJalan;
+
             });
         } catch (error) {
             console.error(error);
