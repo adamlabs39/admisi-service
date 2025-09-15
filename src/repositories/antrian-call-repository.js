@@ -1,9 +1,10 @@
+import dayjs from "dayjs";
 import { createAntrianCall, createAntrianCallMobile, getAllAntrianCall, updateAntrianCall } from "../configurations/axios-instance.js";
 
 export default class AntrianCallRepository {
     static async createAntrianCall(data, patient, rawatJalan){
         const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
-        const pasienBaru = data.patientData.patient_uuid == null;
+        const pasienBaru = data.patientData.patient_uuid == null || data.patientData.no_rm == null;
         const pelayanan = pasienBaru == false || rawatJalan.dataValues.platform == "ADMISI" ? "poli" : "admisi"
 
         try {
@@ -22,7 +23,7 @@ export default class AntrianCallRepository {
 
     static async createAntrianCallMobile(data, patient, rawatJalan, faskesUuid){
         const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
-        const pasienBaru = data.patientData.patient_uuid == null;
+        const pasienBaru = data.patientData.patient_uuid == null || data.patientData.no_rm == null;
         const pelayanan = pasienBaru == false ? "poli" : "admisi";
         
         try {
@@ -47,10 +48,10 @@ export default class AntrianCallRepository {
         try {
             const result = await getAllAntrianCall.get("/all", { params: args });
             
-            console.log("result antrian:", result.data.payload);
-            // const antrian = result.data.payload.filter((item) => item.created_at == moment().startOf("day").unix());
+            console.log("result antrian:", dayjs().unix());
+            const antrian = result.data.payload.filter((item) => item.pelayanan == "admisi" && item.patient_data.tanggal_daftar >= dayjs().startOf("day").unix());
 
-            return result.data.payload;
+            return antrian;
 
         } catch (error) {
             console.error("Error fetching all antrian:", error);
