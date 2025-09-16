@@ -44,9 +44,15 @@ const generateNoRM = async () => {
 
 const generateNoRmTemporary = async (faskesUuidMobile = null) => {
     const faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR)?.faskesUuid;
-    let countPatient = await PatientModel.unscoped().count({ where: { faskesUuid, noRm: { [Op.like]: 'XX%' } } });
-    countPatient += 1;
-    const paddedNumber = countPatient.toString().padStart(6, '0');
+    let lastNoRm = await PatientModel.unscoped().max('noRm', { where: { faskesUuid, noRm: { [Op.like]: 'XX%' } } });
+    let nextNumber = 1;
+
+    if (lastNoRm) {
+        const currentNumber = parseInt(lastNoRm.replace(/^XX/, ""), 10);
+        nextNumber = currentNumber + 1;
+    }
+
+    const paddedNumber = nextNumber.toString().padStart(6, "0");
     return `XX${paddedNumber}`;
 };
 

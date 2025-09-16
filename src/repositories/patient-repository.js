@@ -185,9 +185,20 @@ export default class PatientRepository{
             let address = patient ? patient.address : null;
             if (address) {
                 await address.update(data.address || {}, { transaction });
-            } else if (data.address) {
-                data.address.faskesUuid = faskesUuid;
-                address = await AddressModel.create(data.address, { transaction });
+            } else {
+                address = await AddressModel.create({
+                    prov: "15",
+                    city: "1505",
+                    district: "150505",
+                    rt: "1",
+                    rw: "2",
+                    full_address: "Jl. Raya No. 123",
+                    country: "id-ID",
+                    village: "1505052004",
+                    postal_code: "45666",
+                    faskesUuid
+                },{ transaction }
+                );
             }
             data.addressUuid = address?.uuid || null;
             
