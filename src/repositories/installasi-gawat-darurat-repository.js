@@ -73,7 +73,7 @@ export default class InstallasiGawatDaruratRepository {
             if (data.withoutIdentity) {
                 additionalData = {withoutIdentity: true};
             } else if (data.isNewborn) {
-                additionalData = {newborn: true};
+                additionalData = {newborn: true, multipleBirth: data.patientData.multiple_birth};
             }
             
             const resultIgd = await InstalasiGawatDaruratModel.create({...commonIgdData, ...additionalData}, {transaction});
