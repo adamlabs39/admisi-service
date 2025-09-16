@@ -301,18 +301,29 @@ export default class RawatJalanRepository {
             if (!patient) throw new Error("Failed to create patient");
             data = convertSnakeToCamel(data);
 
-            const bookingExist = await RawatJalanModel.findOne({
+            const checkPatient = await PatientModel.findOne({
                 where: {
                     faskesUuid,
-                    patientUuid: patient.uuid,
-                    deletedAt: null,
-                    jadwalPeriksa: data.jadwalPeriksa,
+                    noIdentity: data.patientData.no_identity,
+                    deletedAt: null
                 },
-                attributes: ["uuid", "jadwal_periksa"],
             });
 
-            if (bookingExist && bookingExist.dataValues.jadwal_periksa == data.jadwalPeriksa) {
-                throw new DuplicateException("Jadwal periksa sudah terdaftar");
+            if (checkPatient) {
+                const bookingExist = await RawatJalanModel.findOne({
+                    where: {
+                        faskesUuid,
+                        patientUuid: checkPatient.dataValues.uuid,
+                        deletedAt: null,
+                        jadwalDokterUuid: data.jadwalDokterUuid,
+                        jadwalPeriksa: data.jadwalPeriksa,
+                    },
+                    attributes: ["uuid", "jadwal_periksa"],
+                });
+
+                if (bookingExist && dayjs.unix(bookingExist.dataValues.jadwal_periksa).format("YYYY-MM-DD") == dayjs.unix(data.jadwalPeriksa).format("YYYY-MM-DD")) {
+                    throw new DuplicateException("Jadwal periksa sudah terdaftar");
+                }
             }
 
             //* GET JADWAL DOKTER DARI ANTRIAN
@@ -348,16 +359,17 @@ export default class RawatJalanRepository {
             //* Buat Pemanggilan antrian
             await AntrianCallRepository.createAntrianCallMobile(data, patient, regist, faskesUuid);
 
-            eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
-                tgl_registrasi: regist.tanggalDaftar,
-                noreg: regist.noReg,
-                no_pelayanan: regist.noPelayanan,
-                jenis_kunjungan: "RJ",
-                practitioner_uuid: regist.practitionerUuid,
-                patient_uuid: patient.uuid,
-                lokasi_uuid: regist.lokasiUuid,
-                payment_method: 1,
-            });
+            // eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
+            //     faskes_uuid: faskesUuid,
+            //     tgl_registrasi: regist.tanggalDaftar,
+            //     noreg: regist.noReg,
+            //     no_pelayanan: regist.noPelayanan,
+            //     jenis_kunjungan: "RJ",
+            //     practitioner_uuid: regist.practitionerUuid,
+            //     patient_uuid: patient.uuid,
+            //     lokasi_uuid: regist.lokasiUuid,
+            //     payment_method: 1,
+            // });
             return regist.dataValues.uuid;
         });
 
@@ -707,7 +719,7 @@ export default class RawatJalanRepository {
                 }
                 
                 await RawatJalanModel.update(
-                    {statusRj: 0, cancelReason: data.cancelReason},
+                    {statusRj: 0, alasanBatal: data.alasanBatal},
                     {where: {uuid: data.listUuid, faskesUuid: user.faskesUuid}, transaction: t}
                 );
 
@@ -753,7 +765,7 @@ export default class RawatJalanRepository {
             return await sequelizeInstance.transaction(async (t) => {
 
                 await RawatJalanModel.update(
-                    { statusRj: 0, cancelReason: "Pembatalan melalui Mobile" },
+                    { statusRj: 0, alasanBatal: "Pembatalan melalui Mobile" },
                     {
                     where: {
                         kodeBooking: data.kodeBooking,

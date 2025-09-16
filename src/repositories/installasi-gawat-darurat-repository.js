@@ -265,6 +265,22 @@ export default class InstallasiGawatDaruratRepository {
                             }
                         ],
                         attributes: ["uuid", "no_rm", "title", "name", "identity", "no_identity", "gender", "phone", "religion", "language", "mother_name", "maritial_status", "status", 'is_new_born'],
+                    },
+                    {
+                        model: PractitionerModel,
+                        as: "practitioner",
+                        required: true,
+                        where: {deletedAt: {[Op.is]: null}},
+                        attributes: ["uuid"],
+                        include: [
+                            {
+                                model: PegawaiModel,
+                                as: "pegawai",
+                                required: true,
+                                where: {deletedAt: {[Op.is]: null}},
+                                attributes: ["first_title", "last_title", ["name","nama"]]
+                            }
+                        ]
                     }
                 ],
                 attributes: [
