@@ -186,6 +186,7 @@ export default class RawatJalanRepository {
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(),
                 noPelayanan: await generateNoPelayanan('RJ'),
+                jadwalPeriksa: moment().unix(),
             };
 
             //* GENERATE NO ANTRIAN
@@ -271,7 +272,7 @@ export default class RawatJalanRepository {
                 noAntrianAdmisi: data.noAntrianAdmisi,
                 noAntrianPoli: data.noAntrianPoli,
                 kodeBooking: data.kodeBooking,
-                jadwalPeriksa: data.jadwalPeriksa,
+                jadwalPeriksa: moment().unix(),
             };
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
