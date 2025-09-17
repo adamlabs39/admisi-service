@@ -359,17 +359,6 @@ export default class RawatJalanRepository {
             //* Buat Pemanggilan antrian
             await AntrianCallRepository.createAntrianCallMobile(data, patient, regist, faskesUuid);
 
-            // eventEmitter.emit(LOG_PELAYANAN_CHANNEL, {
-            //     faskes_uuid: faskesUuid,
-            //     tgl_registrasi: regist.tanggalDaftar,
-            //     noreg: regist.noReg,
-            //     no_pelayanan: regist.noPelayanan,
-            //     jenis_kunjungan: "RJ",
-            //     practitioner_uuid: regist.practitionerUuid,
-            //     patient_uuid: patient.uuid,
-            //     lokasi_uuid: regist.lokasiUuid,
-            //     payment_method: 1,
-            // });
             return regist.dataValues.uuid;
         });
 
@@ -542,7 +531,7 @@ export default class RawatJalanRepository {
 
             if (statusRj === 1 || statusRj === 2) dataRJ.statusRj = 3;
 
-            if (existingRegist.platform === "MOBILE") {
+            if (existingRegist.platform === "MOBILE" && existingRegist.tanggalCheckin === null) {
                 dataRJ.tanggalCheckin = moment().unix();
             }
 
