@@ -55,7 +55,7 @@ export default class PatientRepository{
             if (data.isNewBorn === undefined || !data.isNewBorn) {
                 data.isNewBorn = false;
             }
-            
+
             // Handle address
             let address = patient ? patient.address : null;
             if (address) {

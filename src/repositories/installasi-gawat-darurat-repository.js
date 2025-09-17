@@ -44,6 +44,7 @@ export default class InstallasiGawatDaruratRepository {
                 if (!mom) throw new NotfoundException("Identitas Ibu tidak ditemukan! Pastikan Ibu sudah terdaftar sebagai pasien");
                 data.patientData.isNewBorn = true;
             }
+
             const patient = await PatientRepository.registPatient(data.patientData, transaction);
             if (!patient) throw new Error("Failed to process patient data");
 
@@ -152,16 +153,25 @@ export default class InstallasiGawatDaruratRepository {
                         transaction
                     });
                     if (!checkPatient) throw new NotfoundException("Patient not found");
+                    console.log("Data pasien:", data.patientData);
                     if (data.isNewborn) {
                         const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
                         if (!mom) throw new NotfoundException("Identity Mom not found! please register the mother first");
                         data.patientData.isNewBorn = true;
                     }
+                    
                     patient = await PatientRepository.registPatient(data.patientData, transaction);
                     if (!patient) throw new Error("Failed to process patient data");
 
                     data.patientUuid = patient.uuid;
                 } else {
+
+                    if (data.isNewborn) {
+                        const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
+                        if (!mom) throw new NotfoundException("Identity Mom not found! please register the mother first");
+                        data.patientData.isNewBorn = true;
+                    }
+                    
                     patient = await PatientRepository.registPatient({
                         patientUuid: igd.patientUuid,
                         ...data.patientData,
@@ -185,10 +195,12 @@ export default class InstallasiGawatDaruratRepository {
 
                 const additionalData = {
                     withoutIdentity: !!data.withoutIdentity,
-                    newborn: !!data.isNewborn
+                    newborn: !!data.isNewborn,
+                    multipleBirth: data.isNewborn ? data.patientData.multiple_birth : false
                 };
 
                 const resultIgd = await igd.update({ ...commonData, ...additionalData }, { transaction });
+
                 if (data.paymentMethod === 'ASURANSI') {
                     await InsuranceAdmissionRepository.AsuransiPelayanan({
                         patientUuid: resultIgd.patientUuid,
