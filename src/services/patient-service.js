@@ -85,6 +85,7 @@ export default class PatientService {
     }
     
     static async checkPatientExist(data) {
+        PatientService.patientIdentityFormat(data.identity, data.no_identity);
         const validData = ZodValidator.validate(PatientValidation.CHECK_IDENTITY_VALIDATOR, data);
         if (!validData) throw new BadRequestException("Bad Request");
         const result = await PatientRepository.checkExistPatient(validData);

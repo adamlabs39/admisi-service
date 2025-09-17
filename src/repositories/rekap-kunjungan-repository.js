@@ -98,6 +98,7 @@ export default class RekapKunjunganRepository{
                 required: true,
                     where: {
                         is_doctor: { [Op.is]: true },
+                        faskes_uuid: faskesUuid,
                         deletedAt: { [Op.is]: null }
                     },
                 attributes: [],

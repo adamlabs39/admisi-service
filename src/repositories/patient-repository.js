@@ -55,7 +55,7 @@ export default class PatientRepository{
             if (data.isNewBorn === undefined || !data.isNewBorn) {
                 data.isNewBorn = false;
             }
-            
+
             // Handle address
             let address = patient ? patient.address : null;
             if (address) {
@@ -442,8 +442,8 @@ export default class PatientRepository{
 
     static async checkExistPatient(data){
         convertSnakeToCamel(data);
-        try {
 
+        try {
             let filter = {
                 deletedAt: { [Op.is]: null },
                 faskesUuid: data.faskes_uuid,
@@ -451,10 +451,10 @@ export default class PatientRepository{
             };
 
             if (data.no_rm) {
-                filter.no_rm = data.no_rm;
+                filter.noRm = data.no_rm;
             } else if (data.identity && data.no_identity) {
                 filter.identity = data.identity;
-                filter.no_identity = data.no_identity;
+                filter.noIdentity = data.no_identity;
             } else {
                 throw new BadRequestException("Parameter tidak lengkap");
             }

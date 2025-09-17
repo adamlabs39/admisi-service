@@ -196,7 +196,6 @@ export default class RawatJalanRepository {
                 });
 
                 dataRJ.noAntrianPoli = response.data.payload.no_antrian_poli;
-                dataRJ.kodeBooking = response.data.payload.kode_booking;
                 
             } catch (error) {
                 console.error("Error membuat no antrian:", error);
@@ -315,7 +314,7 @@ export default class RawatJalanRepository {
                     where: {
                         faskesUuid,
                         patientUuid: checkPatient.dataValues.uuid,
-                        deletedAt: null,
+                        statusRj: { [Op.ne]: 0 },
                         jadwalDokterUuid: data.jadwalDokterUuid,
                         jadwalPeriksa: data.jadwalPeriksa,
                     },

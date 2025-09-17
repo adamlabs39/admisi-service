@@ -8,8 +8,8 @@ export default class RawatInapValidation {
             ...PatientValidation.NEWBORN_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        complaint: z.string({ required_error: "Keluhan perlu diisi" }).max(255),
-        note: z.string({ required_error: "Catatan perlu diisi" }).max(255),
+        complaint: z.string().max(255).default(""),
+        note: z.string().max(255).default(""),
         join_bill: z.boolean().default(false),
         family_bill: z.boolean().default(false),
         monitoring_room_uuid: z.string({ required_error: "Bed perlu dipilih" }).max(255),
@@ -33,8 +33,8 @@ export default class RawatInapValidation {
             ...PatientValidation.NEWBORN_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        complaint: z.string({ required_error: "Keluhan perlu diisi" }).max(255),
-        note: z.string({ required_error: "Catatan perlu diisi" }).max(255),
+        complaint: z.string().max(255).default(""),
+        note: z.string().max(255).default(""),
         family_bill: z.boolean().default(false),
         monitoring_room_uuid: z.string({ required_error: "Bed perlu dipilih" }).max(255),
         multiple_birth: z.boolean().default(false),
@@ -56,8 +56,8 @@ export default class RawatInapValidation {
             ...PatientValidation.PATIENT_VALIDATOR.shape
         }),
         payment_method: z.enum(["TUNAI", "ASURANSI"]),
-        complaint: z.string({ required_error: "Keluhan perlu diisi" }).max(255),
-        note: z.string({ required_error: "Catatan perlu diisi" }).max(255),
+        complaint: z.string().max(255).default(""),
+        note: z.string().max(255).default(""),
         maternity: z.boolean().default(false),
         upgrade_class: z.boolean().default(false),
         entrusted_patient: z.boolean().default(false),
