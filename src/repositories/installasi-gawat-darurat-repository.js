@@ -133,7 +133,7 @@ export default class InstallasiGawatDaruratRepository {
         const { faskesUuid } = Context.get(CTX_AUTHOR);
 
         try {
-            return await sequelizeInstance.transaction(async (transaction) => {
+            const update = await sequelizeInstance.transaction(async (transaction) => {
                 const igd = await InstalasiGawatDaruratModel.findOne({ where: { uuid }, transaction });
                 if (!igd) throw new NotfoundException("IGD not found");
 
@@ -239,21 +239,22 @@ export default class InstallasiGawatDaruratRepository {
                     payment_method: resultIgd.paymentMethod
                 });
 
-                return await this.getDetail(resultIgd.uuid);
+                return resultIgd.uuid;
             });
+
+            return await this.getDetail(update);
+
         } catch (e) {
             console.error("Error updating IGD", e);
             throw e;
         }
     }
 
-
-
     static async getDetail(uuid) {
         try{
-            const {faskesUuid} = Context.get(CTX_AUTHOR);
+            const { faskesUuid } = Context.get(CTX_AUTHOR);
             const igd = await InstalasiGawatDaruratModel.findOne({
-                where: {uuid, faskesUuid},
+                where: { uuid, faskesUuid },
                 include: [
                     {
                         model: PatientModel,
@@ -344,7 +345,10 @@ export default class InstallasiGawatDaruratRepository {
                     patient: igd.patient.get()
                 };
             }
-            return igd;
+            return {
+                ...igd.get(),
+                patient: igd.patient.get()
+            };
         }catch (e) {
             console.log("Error get detail IGD", e);
             throw e;
