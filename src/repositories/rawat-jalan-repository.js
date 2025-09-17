@@ -196,7 +196,6 @@ export default class RawatJalanRepository {
                 });
 
                 dataRJ.noAntrianPoli = response.data.payload.no_antrian_poli;
-                dataRJ.kodeBooking = response.data.payload.kode_booking;
                 
             } catch (error) {
                 console.error("Error membuat no antrian:", error);
