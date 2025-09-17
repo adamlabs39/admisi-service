@@ -315,7 +315,7 @@ export default class RawatJalanRepository {
                     where: {
                         faskesUuid,
                         patientUuid: checkPatient.dataValues.uuid,
-                        deletedAt: null,
+                        statusRj: { [Op.ne]: 0 },
                         jadwalDokterUuid: data.jadwalDokterUuid,
                         jadwalPeriksa: data.jadwalPeriksa,
                     },

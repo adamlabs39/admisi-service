@@ -51,8 +51,6 @@ export default class AntrianCallRepository {
             const startOfDay = dayjs().startOf("day").unix();
             const endOfDay = dayjs().endOf("day").unix();
 
-            console.log("Start:", startOfDay);
-            console.log("End:", endOfDay);
             const antrian = result.data.payload.filter((item) => item.pelayanan == "admisi" && item.patient_data.jadwal_periksa >= startOfDay && item.patient_data.jadwal_periksa <= endOfDay);
 
             return antrian;
