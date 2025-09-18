@@ -444,7 +444,8 @@ export default class PatientRepository{
             let filter = {
                 // deletedAt: { [Op.is]: null },
                 faskesUuid: data.faskes_uuid,
-                noRm: { [Op.notLike]: 'XX%' }
+                noRm: { [Op.notLike]: 'XX%' },
+                status: { [Op.is]: true}
             };
 
             if (data.no_rm) {
