@@ -305,7 +305,7 @@ export default class RawatJalanRepository {
                 where: {
                     faskesUuid,
                     noIdentity: data.patientData.no_identity,
-                    deletedAt: null
+                    isNewBorn: { [Op.is]: false },
                 },
             });
 

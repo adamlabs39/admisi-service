@@ -36,9 +36,9 @@ export default class InstallasiGawatDaruratRepository {
     static async registIGD(data) {
         const { faskesUuid } = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
-        const transaction = await sequelizeInstance.transaction();
         console.log(data);
         try {
+            const create = await sequelizeInstance.transaction(async (transaction) => {
             if(data.isNewborn){
                 const mom = await PatientRepository.getOnePatientBy('no_identity', data.patientData.no_identity);
                 if (!mom) throw new NotfoundException("Identitas Ibu tidak ditemukan! Pastikan Ibu sudah terdaftar sebagai pasien");
@@ -117,9 +117,11 @@ export default class InstallasiGawatDaruratRepository {
                 payment_method: resultIgd.paymentMethod
             })
 
-            await transaction.commit();
+                return resultIgd.uuid;
+            });
 
-            return await this.getDetail(resultIgd.uuid);
+            return await this.getDetail(create);
+            
         } catch (e) {
             console.log("Error regist IGD", e);
             await transaction.rollback();
