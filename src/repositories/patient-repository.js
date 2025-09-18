@@ -212,7 +212,7 @@ export default class PatientRepository{
 
             data.faskesUuid = faskesUuid;
             const patientModel = patient
-                ? await patient.update(data, { transaction })
+                ? await patient.update({ ...data, status: true }, { transaction })
                 : await PatientModel.create({
                     ...data,
                     noRm: await generateNoRmTemporary(),
@@ -445,7 +445,6 @@ export default class PatientRepository{
                 // deletedAt: { [Op.is]: null },
                 faskesUuid: data.faskes_uuid,
                 noRm: { [Op.notLike]: 'XX%' },
-                status: { [Op.is]: true}
             };
 
             if (data.no_rm) {
@@ -457,7 +456,7 @@ export default class PatientRepository{
                 throw new BadRequestException("Parameter tidak lengkap");
             }
             
-            return await PatientModel.findOne({
+            const patient = await PatientModel.findOne({
                 where: filter,
                 include: [
                     {
@@ -482,6 +481,7 @@ export default class PatientRepository{
                     "no_identity",
                     "gender",
                     "phone",
+                    "status",
                     "religion",
                     "language",
                     "mother_name",
@@ -489,6 +489,9 @@ export default class PatientRepository{
                     "status",
                 ],
             });
+
+            return patient;
+
         } catch (error) {
             console.log(error);
             throw error;
