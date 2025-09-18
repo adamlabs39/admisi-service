@@ -600,7 +600,7 @@ export default class PatientRepository{
                 ]
             };
 
-            if (args.status == "active") {
+            if (args.status == "aktif") {
                 filter.status = { [Op.is]: true };
                 filter.noRm = { [Op.notLike]: 'XX%' };
             }
