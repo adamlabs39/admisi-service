@@ -14,7 +14,6 @@ import {Context} from "../middlewares/context.js";
 import {CTX_AUTHOR} from "../constant/context-constant.js";
 import DuplicateException from "../exception/duplicate-exception.js";
 import PatientService from "../services/patient-service.js";
-import { ca, fa, no } from "zod/v4/locales";
 import NotfoundException from "../exception/notfound-exception.js";
 import BadRequestException from "../exception/bad-request-exception.js";
 
@@ -31,7 +30,7 @@ export default class PatientRepository{
         try {
             const uuid = data.patientUuid || null;
             const patient = uuid ? await PatientModel.findOne({
-                where: { uuid, deletedAt: { [Op.is]: null } },
+                where: { uuid },
                 include: [
                     { model: AddressModel, as: 'address' },
                     { model: BirthDetailModel, as: 'birth_detail' }
@@ -84,8 +83,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
-                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity || data.dataValues.no_identity, deletedAt: { [Op.is]: null }, isNewBorn: false },
-                            { faskesUuid: faskesUuid }
+                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity || data.dataValues.no_identity,  isNewBorn: false, faskesUuid },
                         ]
                     },
                     transaction
@@ -100,7 +98,6 @@ export default class PatientRepository{
                         faskesUuid,
                         noRm: { [Op.notLike]: 'XX%' },
                         noIdentity: data.noIdentity,
-                        deletedAt: { [Op.is]: null },
                         isNewBorn: false
                     },
                     transaction
@@ -146,7 +143,7 @@ export default class PatientRepository{
 
             const uuid = data.patientUuid || null;
             const patient = uuid ? await PatientModel.findOne({
-                where: { uuid, deletedAt: { [Op.is]: null } },
+                where: { uuid },
                 include: [
                     { model: AddressModel, as: 'address' },
                     { model: BirthDetailModel, as: 'birth_detail' }
@@ -158,8 +155,7 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
-                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
-                            { faskesUuid: faskesUuid }
+                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity, faskesUuid },
                         ]
                     },
                     transaction
@@ -174,7 +170,6 @@ export default class PatientRepository{
                         faskesUuid,
                         noRm: { [Op.notLike]: 'XX%' },
                         noIdentity: data.noIdentity,
-                        deletedAt: { [Op.is]: null }
                     },
                     transaction
                 });
@@ -247,6 +242,7 @@ export default class PatientRepository{
         PatientService.patientIdentityFormat(data.identity, data.noIdentity);
 
         try {
+            
             if (data.isNewBorn === undefined || !data.isNewBorn) {
                 data.isNewBorn = false;
             }
@@ -258,7 +254,6 @@ export default class PatientRepository{
                     where: {
                         faskesUuid,
                         noRm: data.noRm,
-                        deletedAt: { [Op.is]: null }
                     },
                     transaction
                 });
@@ -267,7 +262,7 @@ export default class PatientRepository{
             const uuid = patientExist ? patientExist.uuid : null;
 
             const patient = uuid ? await PatientModel.findOne({
-                where: { uuid, deletedAt: { [Op.is]: null } },
+                where: { uuid },
                 include: [
                     { model: AddressModel, as: 'address' },
                     { model: BirthDetailModel, as: 'birth_detail' }
@@ -279,8 +274,11 @@ export default class PatientRepository{
                 const existingPatient = await PatientModel.findOne({
                     where: {
                         [Op.and]: [
-                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity, deletedAt: { [Op.is]: null } },
-                            { faskesUuid: faskesUuid }
+                            { 
+                                noRm: { [Op.notLike]: 'XX%' }, 
+                                noIdentity: data.noIdentity, 
+                                faskesUuid 
+                            },
                         ]
                     },
                     transaction
@@ -295,7 +293,6 @@ export default class PatientRepository{
                         faskesUuid,
                         noRm: { [Op.notLike]: 'XX%' },
                         noIdentity: data.noIdentity,
-                        deletedAt: { [Op.is]: null }
                     },
                     transaction
                 });
@@ -332,7 +329,7 @@ export default class PatientRepository{
 
             let patientModel;
             if (patient) {
-                patientModel = await patient.update(data, { transaction });
+                patientModel = await patient.update({...data, status: true}, { transaction });
             } else {
                 patientModel = await PatientModel.create({
                     ...data,
@@ -445,7 +442,7 @@ export default class PatientRepository{
 
         try {
             let filter = {
-                deletedAt: { [Op.is]: null },
+                // deletedAt: { [Op.is]: null },
                 faskesUuid: data.faskes_uuid,
                 noRm: { [Op.notLike]: 'XX%' }
             };
@@ -505,11 +502,6 @@ export default class PatientRepository{
                     [Op.and]: [
                         { uuid },
                         { faskesUuid },
-                        {
-                            deletedAt: {
-                                [Op.is]: null
-                            }
-                        }
                     ]
                 },
                 include: [
@@ -557,7 +549,7 @@ export default class PatientRepository{
                     where: {
                         uuid: data.listUuid,
                         faskesUuid,
-                        deletedAt: { [Op.is]: null }
+                        status: { [Op.is]: true }
                     }
                 })
 
@@ -566,12 +558,12 @@ export default class PatientRepository{
                 }
 
                 return await PatientModel.update(
-                    { deletedAt: moment().unix() },
+                    { status: false },
                     {
                         where: {
                             uuid: data.listUuid,
                             faskesUuid,
-                            deletedAt: { [Op.is]: null }
+                            status: { [Op.is]: true }
                         },
                         transaction: t
                     }
@@ -606,6 +598,11 @@ export default class PatientRepository{
                     sequelizeInstace.where(sequelizeInstace.col("address.full_address"), { [Op.iLike]: `%${args.q || ""}%` })
                 ]
             };
+
+            if (args.status == "active") {
+                filter.status = { [Op.is]: true };
+                filter.noRm = { [Op.notLike]: 'XX%' };
+            }
 
             const option = {
                 include: [{
@@ -650,7 +647,6 @@ export default class PatientRepository{
                     where: {
                         faskesUuid,
                         [col]: val,
-                        deletedAt: null
                     }
                 });
         } catch (error) {
@@ -668,7 +664,6 @@ export default class PatientRepository{
                     where: {
                         uuid,
                         faskesUuid,
-                        deletedAt: { [Op.is]: null }
                     },
                     transaction: t
                 });
@@ -711,11 +706,6 @@ export default class PatientRepository{
                         [Op.and]: [
                             { uuid },
                             { faskesUuid },
-                            {
-                                deletedAt: {
-                                    [Op.is]: null
-                                }
-                            }
                         ]
                     },
                     attributes: ["uuid", "unggahBerkas", "berkasInfo"],
@@ -740,11 +730,6 @@ export default class PatientRepository{
                             [Op.and]: [
                                 { uuid },
                                 { faskesUuid },
-                                {
-                                    deletedAt: {
-                                        [Op.is]: null
-                                    }
-                                }
                             ]
                         },
                         transaction: t
@@ -765,7 +750,6 @@ export default class PatientRepository{
                 where: {
                     uuid,
                     faskesUuid,
-                    deletedAt: { [Op.is]: null }
                 },
                 attributes: [
                     "uuid", "unggahBerkas", "berkasInfo"

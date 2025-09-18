@@ -1,13 +1,31 @@
 import NotfoundException from "../exception/notfound-exception.js";
 import { jadwalDokter, jadwalDokterMobile } from "../configurations/axios-instance.js";
+import dayjs from "dayjs";
 
 export default class JadwalDokterRepository{
     static async getAllJadwalDokter() {
         try {
-            const { data } = await jadwalDokter.get("/");
-            const jadwalList = data.payload;
+            
+            const hari = {
+                0: "Minggu",
+                1: "Senin",
+                2: "Selasa",
+                3: "Rabu",
+                4: "Kamis",
+                5: "Jumat",
+                6: "Sabtu",
+            }
 
-            return jadwalList
+            const { data } = await jadwalDokter.get("/");
+
+            const jadwalList = data.payload.map((item) => ({
+                doctor: item.doctor,
+                poli: item.poli,
+                jadwal_dokter: item.jadwal_dokter.filter((jadwal) => jadwal.day === hari[dayjs().day()]),
+            })).filter((item) => item.jadwal_dokter.length > 0);
+
+            return jadwalList;
+
         } catch (err) {
             console.error("Error getAllJadwalDokter:", err.message);
             throw err;
@@ -51,13 +69,11 @@ export default class JadwalDokterRepository{
     static async findJadwalDokterByUuid(uuid) {
         try{
             const jadwalList = await this.getAllJadwalDokter();
-            let jadwalDokter = null;
-            
             for (const item of jadwalList) {
             const foundJadwal = item.jadwal_dokter.find((jadwal) => jadwal.jadwal_dokter_uuid === uuid);
-                
+
                 if (foundJadwal) {
-                    jadwalDokter = {
+                    return {
                     ...foundJadwal,
                     practitionerUuid: item.doctor.uuid,
                     lokasiUuid: item.poli.uuid,
@@ -66,12 +82,9 @@ export default class JadwalDokterRepository{
                     practitionerCode: item.doctor.kode_antrian,
                     lokasiCode: item.poli.kode_antrian,
                     };
-                    break;
                 }
             }
-            if (!jadwalDokter) throw new NotfoundException("Jadwal Dokter tidak ditemukan");
-
-            return jadwalDokter;
+            throw new NotfoundException("Jadwal Dokter tidak ditemukan");
 
         } catch (err) {
             console.error("Error findJadwalDokterByUuid:", err.message);
