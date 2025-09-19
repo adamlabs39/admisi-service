@@ -5,24 +5,8 @@ import dayjs from "dayjs";
 export default class JadwalDokterRepository{
     static async getAllJadwalDokter() {
         try {
-            
-            const hari = {
-                0: "Minggu",
-                1: "Senin",
-                2: "Selasa",
-                3: "Rabu",
-                4: "Kamis",
-                5: "Jumat",
-                6: "Sabtu",
-            }
-
             const { data } = await jadwalDokter.get("/");
-
-            const jadwalList = data.payload.map((item) => ({
-                doctor: item.doctor,
-                poli: item.poli,
-                jadwal_dokter: item.jadwal_dokter.filter((jadwal) => jadwal.day === hari[dayjs().day()]),
-            })).filter((item) => item.jadwal_dokter.length > 0);
+            const jadwalList = data.payload;
 
             return jadwalList;
 
@@ -47,10 +31,10 @@ export default class JadwalDokterRepository{
             lokasiUuid: item.poli.uuid,
             lokasiName: item.poli.name,
             lokasiCode: item.poli.kode_antrian,
+            day: jadwal.day
             }))
         );
 
-        // cari jadwal spesifik
         const jadwalDokter = jadwalList.find(
             (j) => j.jadwal_dokter_uuid === jadwalUuid
         );

@@ -7,6 +7,7 @@ import {
     convertSnakeToCamel,
     generateNoPelayanan,
     generateNoReg,
+    hari,
 } from "../helper/utility.js";
 import PatientRepository from "./patient-repository.js";
 import moment from "moment";
@@ -165,6 +166,10 @@ export default class RawatJalanRepository {
             
             //* GET JADWAL DOKTER
             const jadwalDokter = await JadwalDokterRepository.findJadwalDokterByUuid(data.jadwalDokterUuid);
+
+            if (jadwalDokter.day !== hari[dayjs().day()]) {
+                throw new BadRequestException("Jadwal dokter harus hari ini");
+            }
 
             const dataRJ = {
                 faskesUuid,
