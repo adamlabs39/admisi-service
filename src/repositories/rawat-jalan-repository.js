@@ -168,7 +168,7 @@ export default class RawatJalanRepository {
             const jadwalDokter = await JadwalDokterRepository.findJadwalDokterByUuid(data.jadwalDokterUuid);
 
             if (jadwalDokter.day !== hari[dayjs().day()]) {
-                throw new BadRequestException("Jadwal dokter harus hari ini");
+                throw new BadRequestException("Hanya bisa memilih jadwal pada hari ini.");
             }
 
             const dataRJ = {
@@ -527,6 +527,16 @@ export default class RawatJalanRepository {
             if (statusRj === 0) throw new BadRequestException("Data sudah dibatalkan");
             if (statusRj >= 4) throw new BadRequestException("Data telah diproses");
 
+            const isToday = moment.unix(existingRegist.jadwalPeriksa).isSame(moment(), "day");
+
+            if (existingRegist.platform === "MOBILE" && !isToday) {
+                throw new BadRequestException("Check-in hanya dapat dilakukan sesuai dengan tanggal booking.");
+            }
+
+            if (!existingRegist.tanggalCheckin) {
+                dataRJ.tanggalCheckin = moment().unix();
+            }
+
             if (lokasiUuid && practitionerUuid && (lokasiUuid !== dataRJ.lokasiUuid || practitionerUuid !== dataRJ.practitionerUuid)) {
                 throw new BadRequestException("Tidak bisa mengubah poli atau dokter");
             }
@@ -535,10 +545,6 @@ export default class RawatJalanRepository {
             if (!jadwalDokterUuid) dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
 
             if (statusRj === 1 || statusRj === 2) dataRJ.statusRj = 3;
-
-            if (existingRegist.platform === "MOBILE" && existingRegist.tanggalCheckin === null) {
-                dataRJ.tanggalCheckin = moment().unix();
-            }
 
             //* Update Status Appointment Mobile
             try {
