@@ -34,6 +34,16 @@ const paginationHelper = (page, limit, total) => {
     };
 }
 
+const hari = {
+    0: "Minggu",
+    1: "Senin",
+    2: "Selasa",
+    3: "Rabu",
+    4: "Kamis",
+    5: "Jumat",
+    6: "Sabtu",
+}
+
 const generateNoRM = async () => {
     const { faskesUuid } = Context.get(CTX_AUTHOR);
     let countPatient = await PatientModel.unscoped().count({ where: { faskesUuid, noRm: { [Op.notILike]: 'XX%' } } });
@@ -309,5 +319,6 @@ export {
     generateAntrianPoli,
     generateAntrianAdmisi,
     generateNoPelayanan,
-    getInfoInsurance
+    getInfoInsurance,
+    hari
 };
