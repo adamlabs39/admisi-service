@@ -246,6 +246,7 @@ export default class PatientRepository{
                 }
             }
 
+            
             data.faskesUuid = faskesUuid;
 
             if (!externalTransaction) await transaction.commit();
