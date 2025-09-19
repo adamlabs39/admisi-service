@@ -28,7 +28,8 @@ export default class PatientValidation{
             country: z.string({ required_error: "Negara perlu diisi"}).max(150),
             village: z.string({ required_error: "Desa perlu diisi"}).max(150),
             postal_code: z.string({ required_error: "Kode Pos perlu diisi"}).max(150),
-        })
+        }),
+        status: z.boolean().optional(),
     });
 
     static PATIENT_DELETE_VALIDATOR = z.object({
