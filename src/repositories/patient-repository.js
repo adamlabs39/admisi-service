@@ -19,100 +19,52 @@ import BadRequestException from "../exception/bad-request-exception.js";
 
 export default class PatientRepository{
     static async registPatient(data, externalTransaction = null) {
-        const transaction = externalTransaction || await sequelizeInstace.transaction();
         const { faskesUuid } = Context.get(CTX_AUTHOR);
-        data = convertSnakeToCamel(data);
-        data.address = convertSnakeToCamel(data.address);
-        data.birthDetail = convertSnakeToCamel(data.birthDetail);
-
-        PatientService.patientIdentityFormat(data.identity, data.noIdentity);
-        
+        const transaction = externalTransaction || await sequelizeInstace.transaction();
         try {
-            const uuid = data.patientUuid || null;
-            const patient = uuid ? await PatientModel.findOne({
-                where: { uuid },
-                include: [
-                    { model: AddressModel, as: 'address' },
-                    { model: BirthDetailModel, as: 'birth_detail' }
-                ],
-                transaction
-            }) : null;
 
-            const pasienBaru = await PatientModel.findOne({
-                where: {
-                    faskesUuid,
-                    uuid,
-                    noRm: { [Op.like]: 'XX%' }
-                }
-            })
-
-            if (pasienBaru) {
-                patient.update({ noRm: await generateNoRM() }, { transaction });
+            const { patient, preparedData, address, birthDetail } = await this.registPatientCore(data, faskesUuid, transaction);
+            
+            let patientModel;
+            if (patient) {
+                //* Update pasien lama
+                patientModel = await patient.update(preparedData, { transaction });
+            } else {
+                //* Create pasien baru
+                const noRm = await generateNoRM(faskesUuid);
+                patientModel = await PatientModel.create({ ...preparedData, noRm }, { transaction });
             }
 
-            // Set isNewBorn to false if not provided during update
-            if (data.isNewBorn === undefined || !data.isNewBorn) {
-                data.isNewBorn = false;
-            }
+            if (!externalTransaction) await transaction.commit();
 
-            // Handle address
-            let address = patient ? patient.address : null;
-            if (address) {
-                await address.update(data.address || {}, { transaction });
-            } else if (data.address) {
-                data.address.faskesUuid = faskesUuid;
-                address = await AddressModel.create(data.address, { transaction });
-            }
-            data.addressUuid = address?.uuid || null;
+            return {
+                ...patientModel.get({ plain: true }),
+                address: address ? address.get({ plain: true }) : null,
+                birthDetail: birthDetail ? birthDetail.get({ plain: true }) : null
+            };
+            
+        } catch (error) {
+            if (!externalTransaction) await transaction.rollback();
+            console.error(error);
+            throw error;
+        }
+    }
 
-            // Handle birth detail
-            let birthDetail = patient ? patient.birth_detail : null;
-            if (birthDetail) {
-                const infoAge = getInfoAge(data.birthDetail.birthDate);
-                Object.assign(data.birthDetail, infoAge);
-                await birthDetail.update(data.birthDetail || {}, { transaction });
-            } else if (data.birthDetail) {
-                data.birthDetail.faskesUuid = faskesUuid;
-                const infoAge = getInfoAge(data.birthDetail.birthDate);
-                Object.assign(data.birthDetail, infoAge);
-                birthDetail = await BirthDetailModel.create(data.birthDetail, { transaction });
-            }
-            data.birthDetailUuid = birthDetail?.uuid || null;
+    static async registPatientMobile(data, faskesUuid, externalTransaction = null) {
+        const transaction = externalTransaction || await sequelizeInstace.transaction();
+        try {
 
-            if (uuid && !data.isNewBorn) {
-                const existingPatient = await PatientModel.findOne({
-                    where: {
-                        [Op.and]: [
-                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity || data.dataValues.no_identity,  isNewBorn: false, faskesUuid },
-                        ]
-                    },
-                    transaction
-                });
-                if (existingPatient && existingPatient.uuid !== uuid) {
-                    throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
-                }
-            } else if (!uuid && !data.isNewBorn) {
-                // Check uniqueness for new patients
-                const existingPatient = await PatientModel.findOne({
-                    where: {
-                        faskesUuid,
-                        noRm: { [Op.notLike]: 'XX%' },
-                        noIdentity: data.noIdentity,
-                        isNewBorn: false
-                    },
-                    transaction
-                });
-                if (existingPatient) throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
-            }
+            const { patient, preparedData, address, birthDetail } = await this.registPatientCore(data, faskesUuid, transaction);
 
-            // Create or update patient
-            data.faskesUuid = faskesUuid;
-            const patientModel = patient
-                ? await patient.update(data, { transaction })
-                : await PatientModel.create({
-                    ...data,
-                    noRm: await generateNoRM(),
-                }, { transaction });
+            let patientModel;
+            if (patient) {
+                //* Update pasien lama
+                patientModel = await patient.update({ ...preparedData, status: true }, { transaction });
+            } else {
+                //* Create pasien baru
+                const noRm = await generateNoRmTemporary(faskesUuid);
+                patientModel = await PatientModel.create({ ...preparedData, noRm }, { transaction });
+            }
 
             if (!externalTransaction) await transaction.commit();
 
@@ -151,29 +103,20 @@ export default class PatientRepository{
                 transaction
             }) : null;
 
-            if (uuid && !data.isNewBorn) {
-                const existingPatient = await PatientModel.findOne({
-                    where: {
-                        [Op.and]: [
-                            { noRm: { [Op.notLike]: 'XX%' }, noIdentity: data.noIdentity, faskesUuid },
-                        ]
-                    },
-                    transaction
-                });
-                if (existingPatient && existingPatient.uuid !== uuid) {
-                    throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
+            if (!data.isNewBorn) {
+                const existingPatient = await this.checkNoIdentity(data.noIdentity, faskesUuid, transaction);
+
+                if (uuid) {
+                    //* Check identitas pasien lama
+                    if (existingPatient && existingPatient.uuid !== uuid) {
+                        throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
+                    }
+                } else { 
+                    //* Check identitas pasien baru
+                    if (existingPatient) {
+                        throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
+                    }
                 }
-            } else if (!uuid && !data.isNewBorn) {
-                // Check uniqueness for new patients
-                const existingPatient = await PatientModel.findOne({
-                    where: {
-                        faskesUuid,
-                        noRm: { [Op.notLike]: 'XX%' },
-                        noIdentity: data.noIdentity,
-                    },
-                    transaction
-                });
-                if (existingPatient) throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
             }
 
             // Handle address
@@ -196,9 +139,13 @@ export default class PatientRepository{
                 );
             }
             data.addressUuid = address?.uuid || null;
-            
-            if (!data.birthDetailUuid) {
-                const birthDetail = await BirthDetailModel.create({
+
+            let birthDetail = patient ? patient.birth_detail : null;
+
+            if (birthDetail) {
+                await birthDetail.update(data.birth_detail || {}, { transaction });
+            } else {
+                birthDetail = await BirthDetailModel.create({
                     faskesUuid: faskesUuid,
                     birthPlace: 'Surabaya',
                     birthDate: new Date('2000-01-01'),
@@ -233,116 +180,81 @@ export default class PatientRepository{
         }
     }
 
-    static async registPatientMobile(data, faskesUuid, externalTransaction = null) {
+    static async registPatientCore(data, faskesUuid, options = {}, externalTransaction = null) {
         const transaction = externalTransaction || await sequelizeInstace.transaction();
-        data = convertSnakeToCamel(data);
-        data.address = convertSnakeToCamel(data.address);
-        data.birthDetail = convertSnakeToCamel(data.birthDetail);
-
-        PatientService.patientIdentityFormat(data.identity, data.noIdentity);
-
+        
         try {
+            data = convertSnakeToCamel(data);
+            data.address = convertSnakeToCamel(data.address);
+            data.birthDetail = convertSnakeToCamel(data.birthDetail);
+
+            PatientService.patientIdentityFormat(data.identity, data.noIdentity);
             
-            if (data.isNewBorn === undefined || !data.isNewBorn) {
-                data.isNewBorn = false;
-            }
+            data.isNewBorn = data.isNewBorn === undefined ? false : data.isNewBorn;
 
-            let patientExist = null;
+            let patient = null;
+            const includeAssociations = [
+                { model: AddressModel, as: 'address' },
+                { model: BirthDetailModel, as: 'birth_detail' }
+            ];
 
-            if (data.noRm) {
-                patientExist = await PatientModel.findOne({
-                    where: {
-                        faskesUuid,
-                        noRm: data.noRm,
-                    },
+            //* Cek pasien lama berdasarkan uuid atau noRm
+            if (data.patientUuid) {
+                patient = await PatientModel.findOne({
+                    where: { uuid: data.patientUuid, faskesUuid },
+                    include: includeAssociations,
                     transaction
                 });
             }
-
-            const uuid = patientExist ? patientExist.uuid : null;
-
-            const patient = uuid ? await PatientModel.findOne({
-                where: { uuid },
-                include: [
-                    { model: AddressModel, as: 'address' },
-                    { model: BirthDetailModel, as: 'birth_detail' }
-                ],
-                transaction
-            }) : null;
-
-            if (uuid && !data.isNewBorn) {
-                const existingPatient = await PatientModel.findOne({
-                    where: {
-                        [Op.and]: [
-                            { 
-                                noRm: { [Op.notLike]: 'XX%' }, 
-                                noIdentity: data.noIdentity, 
-                                faskesUuid 
-                            },
-                        ]
-                    },
+            else if (data.noRm) {
+                patient = await PatientModel.findOne({
+                    where: { noRm: data.noRm, faskesUuid },
+                    include: includeAssociations,
                     transaction
                 });
-                if (existingPatient && existingPatient.uuid !== uuid) {
-                    throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
-                }
-            } else if (!uuid && !data.isNewBorn) {
-                // Check uniqueness for new patients
-                const existingPatient = await PatientModel.findOne({
-                    where: {
-                        faskesUuid,
-                        noRm: { [Op.notLike]: 'XX%' },
-                        noIdentity: data.noIdentity,
-                    },
-                    transaction
-                });
-                if (existingPatient) throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
+            }
+            if (patient && !data.patientUuid) {
+                data.patientUuid = patient.uuid;
             }
 
-            // Handle address
-            let address = patient ? patient.address : null;
-            if (address) {
-                await address.update(data.address || {}, { transaction });
-            } else if (data.address) {
-                data.address.faskesUuid = faskesUuid;
-                address = await AddressModel.create(data.address, { transaction });
+            //* Generate noRm jika pasien memeliki noRM sementara
+            if (patient && patient.noRm.startsWith('XX')) {
+                await patient.update({ noRm: await generateNoRM() }, { transaction });
             }
+            
+            //* Create atau update address dan birth detail
+            const address = await this.createAddressPatient(data.address, patient, faskesUuid, transaction);
+            const birthDetail = await this.createBirthDetailPatient(data.birthDetail, patient, faskesUuid, transaction);
+
             data.addressUuid = address?.uuid || null;
-
-            let birthDetail = patient ? patient.birth_detail : null;
-            
-            if (birthDetail && data.birthDetail) {
-                const infoAge = getInfoAge(data.birthDetail.birthDate);
-                Object.assign(data.birthDetail, infoAge);
-                await birthDetail.update(data.birthDetail, { transaction });
-            } else if (!birthDetail && data.birthDetail) {
-
-                data.birthDetail.faskesUuid = faskesUuid;
-                const infoAge = getInfoAge(data.birthDetail.birthDate);
-                Object.assign(data.birthDetail, infoAge);
-                birthDetail = await BirthDetailModel.create(data.birthDetail, { transaction });
-            }
-            
             data.birthDetailUuid = birthDetail?.uuid || null;
-            
-            data.faskesUuid = faskesUuid;
 
-            let patientModel;
-            if (patient) {
-                patientModel = await patient.update({...data, status: true}, { transaction });
-            } else {
-                patientModel = await PatientModel.create({
-                    ...data,
-                    noRm: await generateNoRmTemporary(faskesUuid),
-                }, { transaction });
+            //* Validasi no identitas
+            if (!data.isNewBorn) {
+                const existingPatient = await this.checkNoIdentity(data.noIdentity, faskesUuid, transaction);
+
+                //* Check identitas pasien lama
+                if (data.patientUuid) {
+                    if (existingPatient && existingPatient.uuid !== data.patientUuid) {
+                        throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
+                    }
+                } else {
+                    //* Check identitas pasien baru 
+                    if (existingPatient) {
+                        throw new DuplicateException("No Identitas Pasien sudah terdaftar.");
+                    }
+                }
             }
+
+            data.faskesUuid = faskesUuid;
 
             if (!externalTransaction) await transaction.commit();
 
-            return {
-                ...patientModel.get({ plain: true }),
-                address: address ? address.get({ plain: true }) : null,
-                birthDetail: birthDetail ? birthDetail.get({ plain: true }) : null,
+            return { 
+                patient,
+                preparedData: data, 
+                address, 
+                birthDetail 
             };
 
         } catch (error) {
@@ -350,7 +262,50 @@ export default class PatientRepository{
             console.error(error);
             throw error;
         }
+    }
 
+    static async createAddressPatient(addressData, patient, faskesUuid, transaction) {
+        let address = patient ? patient.address : null;
+        if (address) {
+            await address.update(addressData || {}, { transaction });
+        } else if (addressData) {
+            addressData.faskesUuid = faskesUuid;
+            address = await AddressModel.create(addressData, { transaction });
+        }
+        return address;
+    }
+
+    static async createBirthDetailPatient(birthDetailData, patient, faskesUuid, transaction) {
+        let birthDetail = patient ? patient.birth_detail : null;
+        if (birthDetailData) {
+            const infoAge = getInfoAge(birthDetailData.birthDate);
+            Object.assign(birthDetailData, infoAge);
+            
+            if (birthDetail) {
+                await birthDetail.update(birthDetailData, { transaction });
+            } else {
+                birthDetailData.faskesUuid = faskesUuid;
+                birthDetail = await BirthDetailModel.create(birthDetailData, { transaction });
+            }
+        }
+
+        return birthDetail;
+    }
+
+    static async checkNoIdentity(noIdentity, faskesUuid, transaction) {
+        if (!noIdentity) {
+            return null;
+        }
+
+        return await PatientModel.findOne({
+            where: {
+                faskesUuid,
+                noIdentity,
+                isNewBorn: false,
+                noRm: { [Op.notLike]: 'XX%' }
+            },
+            transaction
+        });
     }
     
     static async importData(data){
@@ -584,21 +539,9 @@ export default class PatientRepository{
             const filter = {
                 faskesUuid,
                 [Op.or]: [
-                    {
-                        name: {
-                            [Op.iLike]: `%${args.q || ""}%`
-                        }
-                    },
-                    {
-                        noRm: {
-                            [Op.iLike]: `%${args.q || ""}%`
-                        }
-                    },
-                    {
-                        noIdentity: {
-                            [Op.iLike]: `%${args.q || ""}%`
-                        }
-                    },
+                    {name: {[Op.iLike]: `%${args.q || ""}%`}},
+                    {noRm: {[Op.iLike]: `%${args.q || ""}%`}},
+                    {noIdentity: {[Op.iLike]: `%${args.q || ""}%`}},
                     sequelizeInstace.where(sequelizeInstace.col("address.full_address"), { [Op.iLike]: `%${args.q || ""}%` })
                 ]
             };
@@ -631,12 +574,7 @@ export default class PatientRepository{
                 ],
             };
 
-            return await Pagination.init(
-                PatientModel,
-                args,
-                filter,
-                option
-            );
+            return await Pagination.init(PatientModel, args, filter, option);
         } catch (error) {
             console.log(error);
             throw error;

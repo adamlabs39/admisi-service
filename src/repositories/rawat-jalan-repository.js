@@ -527,7 +527,10 @@ export default class RawatJalanRepository {
             if (statusRj === 0) throw new BadRequestException("Data sudah dibatalkan");
             if (statusRj >= 4) throw new BadRequestException("Data telah diproses");
 
-            const isToday = moment.unix(existingRegist.jadwalPeriksa).isSame(moment(), "day");
+            const starOfDay = moment().startOf('day').unix();
+            const endOfDay = moment().endOf('day').unix();
+
+            const isToday = existingRegist.jadwalPeriksa >= starOfDay && existingRegist.jadwalPeriksa <= endOfDay;
 
             if (existingRegist.platform === "MOBILE" && !isToday) {
                 throw new BadRequestException("Check-in hanya dapat dilakukan sesuai dengan tanggal booking.");
