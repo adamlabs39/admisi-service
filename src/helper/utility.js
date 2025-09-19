@@ -101,6 +101,9 @@ const generateAntrianPoli = async (jadwalUuid) => {
 const generateNoReg = async (faskesUuidMobile = null) => {
     const today = moment().format("YYMMDD");
     const faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR)?.faskesUuid;
+    const startOfDay = moment().startOf('day').unix();
+    const endOfDay = moment().endOf('day').unix();
+    
     const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
 
     const count =
@@ -110,7 +113,7 @@ const generateNoReg = async (faskesUuidMobile = null) => {
             model.count({
                 where: {
                 faskesUuid,
-                createdAt: { [Op.between]: [today, today + 86400] },
+                createdAt: { [Op.between]: [ startOfDay, endOfDay] },
                 },
             })
             )
@@ -123,6 +126,8 @@ const generateNoReg = async (faskesUuidMobile = null) => {
 const generateNoPelayanan = async (service, faskesUuidMobile = null) => {
     const today = moment().format('YYMMDD');
     const faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR)?.faskesUuid;
+    const startOfDay = moment().startOf("day").unix();
+    const endOfDay = moment().endOf("day").unix();
 
     const { model, prefix } = {
         'IGD': { model: InstalasiGawatDaruratModel, prefix: 'IGD' },
@@ -133,7 +138,7 @@ const generateNoPelayanan = async (service, faskesUuidMobile = null) => {
     if (!model) throw new Error('Service not found');
 
     const count = await model.count({
-        where: { faskesUuid, createdAt: { [Op.between]: [today, today + 86400] } }
+        where: { faskesUuid, createdAt: { [Op.between]: [startOfDay, endOfDay] } }
     });
 
     return `${prefix}${today}${(count + 1).toString().padStart(4, '0')}`;
