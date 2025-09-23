@@ -88,8 +88,11 @@ export default class RawatJalanRepository {
         const count = await RawatJalanModel.count({
             where: {
                 faskesUuid,
-                tanggalDaftar: { [Op.gte]: moment().startOf('day').unix() },
-                deletedAt: { [Op.is]: null }
+                jadwalPeriksa: { 
+                    [Op.gte]: moment().startOf('day').unix(),
+                    [Op.lte]: moment().endOf('day').unix() 
+                },
+                noAntrianAdmisi: { [Op.ne]: null },
             }
         });
 

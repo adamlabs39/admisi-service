@@ -44,7 +44,7 @@ EventListener.init();
 if (process.env.SYNC_DB === "true") {
     try {
         for (const model of MODELMERGE) {
-            await model.sync({ alter: true});
+            await model.sync({ alter: true });
         }
         // await dbSeeder();
     } catch (error) {
