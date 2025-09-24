@@ -730,7 +730,7 @@ export default class RawatJalanRepository {
                 }
                 
                 await RawatJalanModel.update(
-                    {statusRj: 0, alasanBatal: data.alasanBatal},
+                    {statusRj: 0, alasanBatal: data.alasanBatal, petugas: user.username, deletedAt: moment().unix()},
                     {where: {uuid: data.listUuid, faskesUuid: user.faskesUuid}, transaction: t}
                 );
 
@@ -776,7 +776,7 @@ export default class RawatJalanRepository {
             return await sequelizeInstance.transaction(async (t) => {
 
                 await RawatJalanModel.update(
-                    { statusRj: 0, alasanBatal: "Pembatalan melalui Mobile" },
+                    { statusRj: 0, alasanBatal: "Pembatalan melalui Mobile", petugas: "Batal Mobile", deletedAt: moment().unix() },
                     {
                     where: {
                         kodeBooking: data.kodeBooking,
