@@ -36,7 +36,6 @@ export default class InstallasiGawatDaruratRepository {
     static async registIGD(data) {
         const { faskesUuid } = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
-        console.log(data);
         try {
             const create = await sequelizeInstance.transaction(async (transaction) => {
             if(data.isNewborn){
@@ -124,7 +123,6 @@ export default class InstallasiGawatDaruratRepository {
             
         } catch (e) {
             console.log("Error regist IGD", e);
-            await transaction.rollback();
             throw e;
         }
     }
@@ -479,7 +477,7 @@ export default class InstallasiGawatDaruratRepository {
                     throw new BadRequestException("IGD tidak ditemukan");
                 }
 
-                await InstalasiGawatDaruratModel.update({statusIgd: 0}, {
+                await InstalasiGawatDaruratModel.update({statusIgd: 0, alasanBatal: data.alasanBatal, petugas: user.username, deletedAt: moment().unix()}, {
                     where: {
                         uuid: data.listUuid,
                         faskesUuid: user.faskesUuid,

@@ -9,7 +9,7 @@ export default function rawatJalanFilter({faskesUuid, args = {}, options = {}}) 
             ...options,
             deletedAt: { [Op.is]: null },
             statusRj: { [Op.not]: 0 },
-            tanggalDaftar: {
+            jadwalPeriksa: {
                 [Op.between]: [args.start_date, args.end_date],
             },
             dischargeDate: {

@@ -88,8 +88,11 @@ export default class RawatJalanRepository {
         const count = await RawatJalanModel.count({
             where: {
                 faskesUuid,
-                tanggalDaftar: { [Op.gte]: moment().startOf('day').unix() },
-                deletedAt: { [Op.is]: null }
+                jadwalPeriksa: { 
+                    [Op.gte]: moment().startOf('day').unix(),
+                    [Op.lte]: moment().endOf('day').unix() 
+                },
+                noAntrianAdmisi: { [Op.ne]: null },
             }
         });
 
@@ -190,9 +193,10 @@ export default class RawatJalanRepository {
                 statusRj: 3,
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(),
-                noPelayanan: await generateNoPelayanan('RJ'),
-                jadwalPeriksa: moment().unix(),
+                jadwalPeriksa: moment().startOf('day').unix(),
             };
+
+            dataRJ.noPelayanan = await generateNoPelayanan("RJ", dataRJ.jadwalPeriksa);
 
             //* GENERATE NO ANTRIAN
             try {
@@ -272,12 +276,13 @@ export default class RawatJalanRepository {
                 statusRj: 2,
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(),
-                noPelayanan: await generateNoPelayanan('RJ'),
                 noAntrianAdmisi: data.noAntrianAdmisi,
                 noAntrianPoli: data.noAntrianPoli,
                 kodeBooking: data.kodeBooking,
-                jadwalPeriksa: moment().unix(),
+                jadwalPeriksa: moment().startOf('day').unix(),
             };
+
+            dataRJ.noPelayanan = await generateNoPelayanan('RJ', dataRJ.jadwalPeriksa);
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
@@ -313,6 +318,8 @@ export default class RawatJalanRepository {
                     isNewBorn: { [Op.is]: false },
                 },
             });
+
+            console.log("Check Patient:", checkPatient);
 
             if (checkPatient) {
                 const bookingExist = await RawatJalanModel.findOne({
@@ -351,13 +358,14 @@ export default class RawatJalanRepository {
                 tanggalDaftar: moment().unix(),
                 statusRj: 1,
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
-                noReg: await generateNoReg(faskesUuid),
-                noPelayanan: await generateNoPelayanan('RJ', faskesUuid),
+                noReg: await generateNoReg(data.jadwalPeriksa, faskesUuid),
                 noAntrianAdmisi: data.noAntrianAdmisi,
                 noAntrianPoli: data.noAntrianPoli,
                 kodeBooking: data.kodeBooking,
                 jadwalPeriksa: data.jadwalPeriksa,
             };
+
+            dataRJ.noPelayanan = await generateNoPelayanan("RJ", dataRJ.jadwalPeriksa, faskesUuid);
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
@@ -722,7 +730,7 @@ export default class RawatJalanRepository {
                 }
                 
                 await RawatJalanModel.update(
-                    {statusRj: 0, alasanBatal: data.alasanBatal},
+                    {statusRj: 0, alasanBatal: data.alasanBatal, petugas: user.username, deletedAt: moment().unix()},
                     {where: {uuid: data.listUuid, faskesUuid: user.faskesUuid}, transaction: t}
                 );
 
@@ -768,7 +776,7 @@ export default class RawatJalanRepository {
             return await sequelizeInstance.transaction(async (t) => {
 
                 await RawatJalanModel.update(
-                    { statusRj: 0, alasanBatal: "Pembatalan melalui Mobile" },
+                    { statusRj: 0, alasanBatal: "Pembatalan melalui Mobile", petugas: "Batal Mobile", deletedAt: moment().unix() },
                     {
                     where: {
                         kodeBooking: data.kodeBooking,

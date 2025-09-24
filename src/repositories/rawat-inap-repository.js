@@ -453,14 +453,14 @@ export default class RawatInapRepository {
 
 
     static async cancelVisit(data) {
-        const {faskesUuid} = Context.get(CTX_AUTHOR);
+        const user = Context.get(CTX_AUTHOR);
         data = convertSnakeToCamel(data);
         try {
             return sequelizeInstance.transaction(async (t) => {
                 const rawatInap = await RawatInapModel.findAll({
                     where: {
                         uuid: data.listUuid,
-                        faskesUuid,
+                        faskesUuid: user.faskesUuid,
                         statusRi: {[Op.not]: 0}
                     },
                     transaction: t
@@ -472,11 +472,11 @@ export default class RawatInapRepository {
                 if (rawatInap.length === 0) throw new NotfoundException("Rawat Inap tidak ditemukan");
 
                 await RawatInapModel.update({
-                    statusRi: 0
+                    statusRi: 0, alasan_batal: data.cancelReason, deletedAt: moment().unix(), petugas: user.username
                 }, {
                     where: {
                         uuid: data.listUuid,
-                        faskesUuid
+                        faskesUuid: user.faskesUuid
                     },
                     transaction: t
                 });
@@ -492,7 +492,7 @@ export default class RawatInapRepository {
                         {
                             where: {
                             uuid: riModel.monitoringRoomUuid,
-                            faskesUuid
+                            faskesUuid: user.faskesUuid
                             },
                             transaction: t
                         }
@@ -502,7 +502,8 @@ export default class RawatInapRepository {
                 
                 eventEmitter.emit(LOG_CANCLE_PELAYANAN_CHANNEL, {
                     list_no_pelayanan: rawatInap.map((ri) => ri.noPelayanan),
-                    cancel_reason: data.cancelReason
+                    cancel_reason: data.cancelReason,
+                    cancel_by: user.username
                 });
 
                 return rawatInap;
