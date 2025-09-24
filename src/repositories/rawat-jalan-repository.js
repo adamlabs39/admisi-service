@@ -193,9 +193,10 @@ export default class RawatJalanRepository {
                 statusRj: 3,
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(),
-                noPelayanan: await generateNoPelayanan('RJ'),
-                jadwalPeriksa: moment().unix(),
+                jadwalPeriksa: moment().startOf('day').unix(),
             };
+
+            dataRJ.noPelayanan = await generateNoPelayanan("RJ", dataRJ.jadwalPeriksa);
 
             //* GENERATE NO ANTRIAN
             try {
@@ -275,12 +276,13 @@ export default class RawatJalanRepository {
                 statusRj: 2,
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
                 noReg: await generateNoReg(),
-                noPelayanan: await generateNoPelayanan('RJ'),
                 noAntrianAdmisi: data.noAntrianAdmisi,
                 noAntrianPoli: data.noAntrianPoli,
                 kodeBooking: data.kodeBooking,
-                jadwalPeriksa: moment().unix(),
+                jadwalPeriksa: moment().startOf('day').unix(),
             };
+
+            dataRJ.noPelayanan = await generateNoPelayanan('RJ', dataRJ.jadwalPeriksa);
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 
@@ -316,6 +318,8 @@ export default class RawatJalanRepository {
                     isNewBorn: { [Op.is]: false },
                 },
             });
+
+            console.log("Check Patient:", checkPatient);
 
             if (checkPatient) {
                 const bookingExist = await RawatJalanModel.findOne({
@@ -354,13 +358,14 @@ export default class RawatJalanRepository {
                 tanggalDaftar: moment().unix(),
                 statusRj: 1,
                 jadwalDokterUuid: jadwalDokter.jadwal_dokter_uuid,
-                noReg: await generateNoReg(faskesUuid),
-                noPelayanan: await generateNoPelayanan('RJ', faskesUuid),
+                noReg: await generateNoReg(data.jadwalPeriksa, faskesUuid),
                 noAntrianAdmisi: data.noAntrianAdmisi,
                 noAntrianPoli: data.noAntrianPoli,
                 kodeBooking: data.kodeBooking,
                 jadwalPeriksa: data.jadwalPeriksa,
             };
+
+            dataRJ.noPelayanan = await generateNoPelayanan("RJ", dataRJ.jadwalPeriksa, faskesUuid);
 
             const regist = await RawatJalanModel.create(dataRJ, {transaction: t});
 

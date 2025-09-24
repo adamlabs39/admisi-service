@@ -108,36 +108,46 @@ const generateAntrianPoli = async (jadwalUuid) => {
     };
 };
 
-const generateNoReg = async (faskesUuidMobile = null) => {
-    const today = moment().format("YYMMDD");
+const generateNoReg = async (jadwalPeriksa = null, faskesUuidMobile = null) => {
     const faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR)?.faskesUuid;
-    const startOfDay = moment().startOf('day').unix();
-    const endOfDay = moment().endOf('day').unix();
-    
-    const listModel = [InstalasiGawatDaruratModel, RawatInapModel, RawatJalanModel];
+    let date, startOfDay, endOfDay;
+
+    if (jadwalPeriksa !== null) {
+        date = moment.unix(jadwalPeriksa).format('YYMMDD');
+        startOfDay = moment.unix(jadwalPeriksa).startOf('day').unix();
+        endOfDay = moment.unix(jadwalPeriksa).endOf('day').unix();
+    } else {
+        date = moment().format('YYMMDD');
+        startOfDay = moment().startOf('day').unix();
+        endOfDay = moment().endOf('day').unix();
+    }
+
+    const listModel = [
+        { model: InstalasiGawatDaruratModel, tanggal: 'tanggalDaftar' },
+        { model: RawatInapModel, tanggal: 'tanggalDaftar' },
+        { model: RawatJalanModel, tanggal: 'jadwalPeriksa' }
+    ];
 
     const count =
         (
         await Promise.all(
-            listModel.map((model) =>
+            listModel.map(({ model, tanggal }) =>
             model.count({
                 where: {
                 faskesUuid,
-                createdAt: { [Op.between]: [ startOfDay, endOfDay] },
+                [tanggal]: { [Op.between]: [ startOfDay, endOfDay] },
                 },
             })
             )
         )
         ).reduce((total, count) => total + count, 0) + 1;
 
-    return `REG${today}${count.toString().padStart(4, "0")}`;
+    return `REG${date}${count.toString().padStart(4, "0")}`;
 };
 
-const generateNoPelayanan = async (service, faskesUuidMobile = null) => {
-    const today = moment().format('YYMMDD');
+const generateNoPelayanan = async (service, jadwalPeriksa = null, faskesUuidMobile = null) => {
+    let date, startOfDay, endOfDay, count;
     const faskesUuid = faskesUuidMobile || Context.get(CTX_AUTHOR)?.faskesUuid;
-    const startOfDay = moment().startOf("day").unix();
-    const endOfDay = moment().endOf("day").unix();
 
     const { model, prefix } = {
         'IGD': { model: InstalasiGawatDaruratModel, prefix: 'IGD' },
@@ -147,11 +157,25 @@ const generateNoPelayanan = async (service, faskesUuidMobile = null) => {
 
     if (!model) throw new Error('Service not found');
 
-    const count = await model.count({
-        where: { faskesUuid, createdAt: { [Op.between]: [startOfDay, endOfDay] } }
-    });
+    if (model === RawatJalanModel){
+        date = moment.unix(jadwalPeriksa).format('YYMMDD');
+        startOfDay = moment.unix(jadwalPeriksa).startOf('day').unix();
+        endOfDay = moment.unix(jadwalPeriksa).endOf('day').unix();
 
-    return `${prefix}${today}${(count + 1).toString().padStart(4, '0')}`;
+        count = await model.count({
+            where: { faskesUuid, jadwalPeriksa: { [Op.between]: [startOfDay, endOfDay] } }
+        });
+    }else {
+        date = moment().format('YYMMDD');
+        startOfDay = moment().startOf('day').unix();
+        endOfDay = moment().endOf('day').unix();
+
+        count = await model.count({
+            where: { faskesUuid, tanggalDaftar: { [Op.between]: [startOfDay, endOfDay] } }
+        });
+    }
+
+    return `${prefix}${date}${(count + 1).toString().padStart(4, '0')}`;
 };
 
 const generateBookingCode = (length = 6) => {

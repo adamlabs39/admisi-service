@@ -50,7 +50,7 @@ export default class AntrianCallRepository {
             
             const startOfDay = dayjs().startOf("day").format("YYYY-MM-DD");
 
-            const antrian = result.data.payload.filter((item) => item.pelayanan == "admisi" && dayjs.unix(item.patient_data.jadwal_periksa).format("YYYY-MM-DD") >= startOfDay && dayjs.unix(item.patient_data.jadwal_periksa).format("YYYY-MM-DD") <= startOfDay);
+            const antrian = result.data.payload.filter((item) => item.pelayanan == "admisi" && dayjs.unix(item.patient_data.jadwal_periksa).format("YYYY-MM-DD") >= startOfDay && dayjs.unix(item.patient_data.jadwal_periksa).format("YYYY-MM-DD") <= startOfDay).sort((a, b) => a.patient_data.antrian.no_antrian_admisi - b.patient_data.antrian.no_antrian_admisi);
 
             return antrian;
 
