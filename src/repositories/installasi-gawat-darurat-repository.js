@@ -477,7 +477,7 @@ export default class InstallasiGawatDaruratRepository {
                     throw new BadRequestException("IGD tidak ditemukan");
                 }
 
-                await InstalasiGawatDaruratModel.update({statusIgd: 0, alasanBatal: data.alasanBatal, petugas: user.username, deletedAt: moment().unix()}, {
+                await InstalasiGawatDaruratModel.update({statusIgd: 0, alasanBatal: data.cancelReason, petugas: user.username, deletedAt: moment().unix()}, {
                     where: {
                         uuid: data.listUuid,
                         faskesUuid: user.faskesUuid,

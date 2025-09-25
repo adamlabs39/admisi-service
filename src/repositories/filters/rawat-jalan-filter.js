@@ -12,9 +12,6 @@ export default function rawatJalanFilter({faskesUuid, args = {}, options = {}}) 
             jadwalPeriksa: {
                 [Op.between]: [args.start_date, args.end_date],
             },
-            dischargeDate: {
-                [Op.is]: null,
-            },
         },
     });
 

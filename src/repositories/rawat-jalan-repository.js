@@ -730,7 +730,7 @@ export default class RawatJalanRepository {
                 }
                 
                 await RawatJalanModel.update(
-                    {statusRj: 0, alasanBatal: data.alasanBatal, petugas: user.username, deletedAt: moment().unix()},
+                    {statusRj: 0, alasanBatal: data.cancelReason, petugas: user.username, deletedAt: moment().unix()},
                     {where: {uuid: data.listUuid, faskesUuid: user.faskesUuid}, transaction: t}
                 );
 

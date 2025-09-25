@@ -78,7 +78,7 @@ updateAntrianCall.interceptors.request.use(authInterceptor);
 
 //! Jadwal Dokter
 const jadwalDokter = axios.create({
-  baseURL: `${BASE_URL_ANTRIAN}/jadwal-dokter`,
+  baseURL: `${BASE_URL_ANTRIAN}/jadwal-dokter/all`,
   timeout: 10000,
   method: "GET",
   headers: {
@@ -91,7 +91,7 @@ jadwalDokter.interceptors.request.use(authInterceptor);
 
 //! Jadwal Dokter Mobile
 const jadwalDokterMobile = axios.create({
-  baseURL: `${BASE_URL_ANTRIAN}/mobile/jadwal-dokter`,
+  baseURL: `${BASE_URL_ANTRIAN}/mobile/jadwal-dokter/all`,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",

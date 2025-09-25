@@ -6,9 +6,8 @@ export default class JadwalDokterRepository{
     static async getAllJadwalDokter() {
         try {
             const { data } = await jadwalDokter.get("/");
-            const jadwalList = data.payload;
 
-            return jadwalList;
+            return data;
 
         } catch (err) {
             console.error("Error getAllJadwalDokter:", err.message);
@@ -18,32 +17,32 @@ export default class JadwalDokterRepository{
 
     static async findJadwalDokterUuidMobile(faskesUuid, jadwalUuid) {
         try {
-        const { data } = await jadwalDokterMobile.get("", {
-            headers: { "faskes-uuid": faskesUuid },
-        });
+            const { data } = await jadwalDokterMobile.get("/", {
+                headers: { "faskes-uuid": faskesUuid },
+            });
 
-        const jadwalList = data.payload.flatMap((item) =>
-            item.jadwal_dokter.map((jadwal) => ({
-            ...jadwal,
-            practitionerUuid: item.doctor.uuid,
-            practitionerName: item.doctor.name,
-            practitionerCode: item.doctor.kode_antrian,
-            lokasiUuid: item.poli.uuid,
-            lokasiName: item.poli.name,
-            lokasiCode: item.poli.kode_antrian,
-            day: jadwal.day
-            }))
-        );
+            const jadwalList = data.payload.flatMap((item) =>
+                item.jadwal_dokter.map((jadwal) => ({
+                ...jadwal,
+                practitionerUuid: item.doctor.uuid,
+                practitionerName: item.doctor.name,
+                practitionerCode: item.doctor.kode_antrian,
+                lokasiUuid: item.poli.uuid,
+                lokasiName: item.poli.name,
+                lokasiCode: item.poli.kode_antrian,
+                day: jadwal.day
+                }))
+            );
 
-        const jadwalDokter = jadwalList.find(
-            (j) => j.jadwal_dokter_uuid === jadwalUuid
-        );
+            const jadwalDokter = jadwalList.find(
+                (j) => j.jadwal_dokter_uuid === jadwalUuid
+            );
 
-        if (!jadwalDokter) {
-            throw new NotfoundException("Jadwal Dokter tidak ditemukan");
-        }
+            if (!jadwalDokter) {
+                throw new NotfoundException("Jadwal Dokter tidak ditemukan");
+            }
 
-        return jadwalDokter;
+            return jadwalDokter;
         } catch (err) {
         console.error("Error getAllJadwalDokterMobile:", err.message);
         throw err;
