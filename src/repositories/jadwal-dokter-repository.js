@@ -6,8 +6,9 @@ export default class JadwalDokterRepository{
     static async getAllJadwalDokter() {
         try {
             const { data } = await jadwalDokter.get("/");
+            const jadwalList = data.data;
 
-            return data;
+            return jadwalList;
 
         } catch (err) {
             console.error("Error getAllJadwalDokter:", err.message);
@@ -52,6 +53,7 @@ export default class JadwalDokterRepository{
     static async findJadwalDokterByUuid(uuid) {
         try{
             const jadwalList = await this.getAllJadwalDokter();
+            console.log("Total jadwal dokter fetched:", jadwalList.length);
             for (const item of jadwalList) {
             const foundJadwal = item.jadwal_dokter.find((jadwal) => jadwal.jadwal_dokter_uuid === uuid);
 
