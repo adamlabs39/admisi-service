@@ -15,6 +15,20 @@ export default function rawatJalanFilter({faskesUuid, args = {}, options = {}}) 
         },
     });
 
+    //* filter untuk modul pelayanan
+    if(args.status){
+        if(parseInt(args.status) === 1){
+                //* Pelayanan
+            filter.statusRj = {[Op.in]: [0, 1, 2, 3, 4]};
+        }else if(parseInt(args.status) === 0){
+                //* Discharge
+            filter.statusRj = {[Op.in]: [5]};
+        }else if (parseInt(args.status) === 2){
+                //* Semua status
+            filter.statusRj = {[Op.in]: [0, 1, 2, 3, 4, 5]};
+        }
+    }
+
     if (args.poly) {
         const polyArray = args.poly.split(',').map(item => item.trim());
         filter.lokasiUuid = {[Op.in]: polyArray};
@@ -28,14 +42,6 @@ export default function rawatJalanFilter({faskesUuid, args = {}, options = {}}) 
     if (args.payment_method) {
         const paymentMethodArray = args.payment_method.split(',').map(item => item.trim());
         filter.paymentMethod = {[Op.in]: paymentMethodArray};
-    }
-
-    if(args.status){
-        if(parseInt(args.status) === 1){
-            filter.statusRj = {[Op.in]: [1, 2, 3, 4]};
-        }else{
-            filter.statusRj = {[Op.in]: [5]};
-        }
     }
 
     //! Digunakan atau tidak?
