@@ -374,7 +374,20 @@ export default class InstallasiGawatDaruratRepository {
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date]
             },
-            dischargeDate: {[Op.is]: null}
+        }
+        
+        //* filter untuk modul pelayanan IGD
+        if(args.status){
+            if(parseInt(args.status) === 1){
+                    //* Pelayanan
+                filter.statusIgd = {[Op.in]: [0, 1]};
+            }else if(parseInt(args.status) === 0){
+                    //* Discharge
+                filter.statusIgd = {[Op.in]: [2]};
+            }else if (parseInt(args.status) === 2){
+                    //* Semua status
+                filter.statusIgd = {[Op.in]: [0, 1, 2]};
+            }
         }
 
         if (args.payment_method) filter.paymentMethod = args.payment_method;

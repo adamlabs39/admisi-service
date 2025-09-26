@@ -7,7 +7,6 @@ export default function rawatJalanFilter({faskesUuid, args = {}, options = {}}) 
         args,
         options: {
             ...options,
-            deletedAt: { [Op.is]: null },
             statusRj: { [Op.not]: 0 },
             jadwalPeriksa: {
                 [Op.between]: [args.start_date, args.end_date],
@@ -15,7 +14,7 @@ export default function rawatJalanFilter({faskesUuid, args = {}, options = {}}) 
         },
     });
 
-    //* filter untuk modul pelayanan
+    //* filter untuk modul pelayanan RJ
     if(args.status){
         if(parseInt(args.status) === 1){
                 //* Pelayanan
