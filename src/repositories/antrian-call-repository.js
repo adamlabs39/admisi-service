@@ -4,7 +4,7 @@ import { createAntrianCall, createAntrianCallMobile, getAllAntrianCall, updateAn
 export default class AntrianCallRepository {
     static async createAntrianCall(data, patient, rawatJalan){
         const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
-        const pasienBaru = !data.patientData.patient_uuid == null || !data.patient_uuid == null;
+        const pasienBaru = !data.patientData.patient_uuid;
         const pelayanan = pasienBaru == false || rawatJalan.dataValues.platform == "ADMISI" ? "poli" : "admisi"
 
         try {
@@ -23,7 +23,7 @@ export default class AntrianCallRepository {
 
     static async createAntrianCallMobile(data, patient, rawatJalan, faskesUuid){
         const jenisPasien = data.paymentMethod === "ASURANSI" ? "JKN" : "NON-JKN";
-        const pasienBaru = !data.patientData.no_rm == null;
+        const pasienBaru = !data.patientData.no_rm;
         const pelayanan = pasienBaru == false ? "poli" : "admisi";
         
         try {
