@@ -12,10 +12,22 @@ export default function rawatInapFilter({faskesUuid, args = {}, options = {}}) {
             tanggalDaftar: {
                 [Op.between]: [args.start_date, args.end_date],
             },
-            dischargeDate: { [Op.is]: null },
-            deletedAt: { [Op.is]: null },
         },
     });
+
+    //* filter untuk modul pelayanan RI
+    if(args.status){
+        if(parseInt(args.status) === 1){
+                //* Dirawat
+            filter.statusRi = {[Op.in]: [0, 1, 3]};
+        }else if(parseInt(args.status) === 0){
+                //* Discharge
+            filter.statusRi = {[Op.in]: [4]};
+        }else if (parseInt(args.status) === 2){
+                //* Semua status
+            filter.statusRi = {[Op.in]: [0, 1, 3, 4]};
+        }
+    }
 
     if (args.payment_method) filter.paymentMethod = args.payment_method;
     if (args.dpjp) filter.practitionerUuid = args.dpjp;
