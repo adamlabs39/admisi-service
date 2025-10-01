@@ -7,7 +7,7 @@ import GeneralConsentController from "../controllers/general-consent-controller.
 import RawatInapController from "../controllers/rawat-inap-controller.js";
 import InstalasiGawatDaruratController from "../controllers/instalasi-gawat-darurat-controller.js";
 import ReportController from "../controllers/report-controller.js";
-import apiKeyCheckPatient from "../middlewares/apiKey-middleware.js";
+import { apiKeyFaskesCheck, apiKeyCheck } from "../middlewares/apiKey-middleware.js";
 import authorizationSdk from "@adameds/authorization-sdk";
 import { Context } from "../middlewares/context.js";
 import { CTX_AUTHOR } from "../constant/context-constant.js";
@@ -20,12 +20,13 @@ const routes = express.Router();
 
 
 // Routes Mobile
-routes.post("/patient/check-patient", apiKeyCheckPatient, PatientController.checkPatientExist);
-routes.get("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.getAll);
-routes.get("/rawat-jalan/mobile/today", apiKeyCheckPatient, RawatJalanController.getRawatJalanToday);
-routes.post("/rawat-jalan/mobile", apiKeyCheckPatient, RawatJalanController.registRawatJalanMobile);
-routes.put("/rawat-jalan/mobile/:uuid", apiKeyCheckPatient, RawatJalanController.updateRawatJalanMobile);
-routes.delete("/rawat-jalan/mobile/cancel", apiKeyCheckPatient, RawatJalanController.cancelVisitMobile);
+routes.post("/patient/check-patient", apiKeyFaskesCheck, PatientController.checkPatientExist);
+routes.get("/rawat-jalan/mobile", apiKeyFaskesCheck, RawatJalanController.getAll);
+routes.get("/rawat-jalan/mobile/today", apiKeyFaskesCheck, RawatJalanController.getRawatJalanToday);
+routes.post("/rawat-jalan/mobile", apiKeyFaskesCheck, RawatJalanController.registRawatJalanMobile);
+routes.put("/rawat-jalan/mobile/:uuid", apiKeyFaskesCheck, RawatJalanController.updateRawatJalanMobile);
+routes.delete("/rawat-jalan/mobile/cancel", apiKeyFaskesCheck, RawatJalanController.cancelVisitMobile);
+routes.get("/rawat-jalan/mobile/jadwal-pemeriksaan/:uuid", apiKeyCheck, RawatJalanController.getPemeriksaanDokterMobile);
 
 //TODO DIGANTI SAAT MERGE (Untuk Local)
 routes.use(AuthorizationMiddleware);
