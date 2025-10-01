@@ -56,7 +56,7 @@ export default class RawatInapRepository {
 
         const options = {
             include: rawatInapInclude,
-            attributes: ["uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method", "status_ri", "rekam_medis_uuid", "no_pelayanan"],
+            attributes: ["uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "discharge_date", "payment_method", "status_ri", "rekam_medis_uuid", "no_pelayanan"],
         };
 
         const transform = {
