@@ -70,7 +70,6 @@ export default class RawatInapRepository {
                 const today = dayjs();
                 const tglRawat = dayjs.unix(row.tanggal_dirawat);
                 const diff = today.diff(tglRawat, "day");
-                console.log("Diff hari:", diff);
                 return `${diff} hari`;
             }
         };
