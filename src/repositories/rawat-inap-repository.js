@@ -74,7 +74,6 @@ export default class RawatInapRepository {
                     : dayjs();
 
                 const diff = end.diff(start, "day");
-                console.log("Diff days:", diff);
                 return `${diff} hari`;
             }
         };
