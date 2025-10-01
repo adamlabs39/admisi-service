@@ -67,9 +67,14 @@ export default class RawatInapRepository {
             }),
             lama_dirawat: (row) => {
                 if (!row.tanggal_dirawat) return null;
-                const today = dayjs();
-                const tglRawat = dayjs.unix(row.tanggal_dirawat);
-                const diff = today.diff(tglRawat, "day");
+
+                const start = dayjs.unix(row.tanggal_dirawat);
+                const end = row.discharge_date
+                    ? dayjs.unix(row.discharge_date)
+                    : dayjs();
+
+                const diff = end.diff(start, "day");
+                console.log("Diff days:", diff);
                 return `${diff} hari`;
             }
         };
