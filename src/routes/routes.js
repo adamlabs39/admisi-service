@@ -24,7 +24,6 @@ routes.post("/patient/check-patient", apiKeyFaskesCheck, PatientController.check
 routes.get("/rawat-jalan/mobile", apiKeyFaskesCheck, RawatJalanController.getAll);
 routes.get("/rawat-jalan/mobile/today", apiKeyFaskesCheck, RawatJalanController.getRawatJalanToday);
 routes.post("/rawat-jalan/mobile", apiKeyFaskesCheck, RawatJalanController.registRawatJalanMobile);
-routes.put("/rawat-jalan/mobile/:uuid", apiKeyFaskesCheck, RawatJalanController.updateRawatJalanMobile);
 routes.delete("/rawat-jalan/mobile/cancel", apiKeyFaskesCheck, RawatJalanController.cancelVisitMobile);
 routes.get("/rawat-jalan/mobile/jadwal-pemeriksaan/:uuid", apiKeyCheck, RawatJalanController.getPemeriksaanDokterMobile);
 
