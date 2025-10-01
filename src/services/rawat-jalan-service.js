@@ -95,6 +95,14 @@ export class RawatJalanService {
         return result;
     }
 
+    static async getPemeriksaanDokterMobile(uuid, args){
+        if (!args.faskes_uuid) throw new BadRequestException("Perlu filter faskes_uuid");
+        // if (!args.tanggal) throw new BadRequestException("Perlu filter tanggal");
+        const result = await RawatJalanRepository.getPemeriksaanDokterMobile(uuid, args);
+        if(!result) throw new BadRequestException("Data not found");
+        return result;
+    }
+
     static async updateFarmasi(uuid, data){
         const checkExist = await checkExistData(RawatJalanModel, uuid);
         if(!checkExist) throw new NotfoundException('Data tidak ditemukan');

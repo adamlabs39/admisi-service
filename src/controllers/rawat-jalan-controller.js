@@ -92,6 +92,15 @@ export default class RawatJalanController {
         }
     }
 
+    static async getPemeriksaanDokterMobile(request, response, nextFunction) {
+        try{
+            const data = await RawatJalanService.getPemeriksaanDokterMobile(request.params.uuid, request.query);
+            return response.status(200).json(successResponse("Data Pemeriksaan Dokter Berhasil Ditampilkan", data));
+        }catch (error){
+            nextFunction(error);
+        }
+    }
+
     static async updateFarmasi(request, response, nextFunction) {
         try{
             const data = await RawatJalanService.updateFarmasi(request.params.uuid, request.body);

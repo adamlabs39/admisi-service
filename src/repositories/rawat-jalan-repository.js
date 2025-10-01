@@ -679,6 +679,51 @@ export default class RawatJalanRepository {
         return this.getOne(update);
     }
 
+    static async getPemeriksaanDokterMobile(uuid, args){
+
+        const filter = ({
+            faskesUuid: args.faskes_uuid,
+            practitionerUuid: uuid,
+            statusRj: { [Op.not]: 0 },
+        });
+
+        if (args.tanggal) {
+            const startOfDay = moment(args.tanggal).startOf('day').unix();
+            const endOfDay = moment(args.tanggal).endOf('day').unix();
+            filter.jadwalPeriksa = { [Op.between]: [startOfDay, endOfDay] };
+        }
+
+        if (args.antrian) filter.statusRj = { [Op.in]: [1,2,3] };
+
+        if (args.diperiksa) filter.statusRj = { [Op.in]: [4] };
+
+        if (args.selesai) filter.statusRj = { [Op.in]: [5] };
+
+        return await RawatJalanModel.findAll({
+            where: filter,
+            include: [
+                {
+                    model: PatientModel,
+                    as: "patient",
+                    required: true,
+                    attributes: [ "uuid", "name" ]
+                },
+                {
+                    model: LokasiModel,
+                    as: "lokasi",
+                    required: true,
+                    attributes: [ "uuid", "name" ]
+                },
+                {
+                    model: JadwalDokterModel,
+                    as: "jadwal_dokter",
+                    required: true,
+                    attributes: [ "uuid", "start_time", "end_time", "day" ]
+                },
+            ],
+            attributes: [ "uuid" , "practitioner_uuid" , "status_rj", "jadwal_periksa" ]
+        });
+    }
 
     static async updateFarmasi(uuid, data) {
         const user = Context.get(CTX_AUTHOR);
