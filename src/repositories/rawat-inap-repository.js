@@ -43,6 +43,7 @@ import rawatInapFilter from "./filters/rawat-inap-filter.js";
 import { rawatInapInclude } from "./include/rawat-inap-include.js";
 import { keperawatanInapFilter } from "./filters/report-filter.js";
 import { keperawatanInapInclude } from "./include/report-include.js";
+import dayjs from "dayjs";
 
 export default class RawatInapRepository {
     static async getAll(args) {
@@ -64,6 +65,14 @@ export default class RawatInapRepository {
                 uuid: undefined, // delete practitioner uuid
                 ...row.practitioner.pegawai.get(),
             }),
+            lama_dirawat: (row) => {
+                if (!row.tanggal_dirawat) return null;
+                const today = dayjs();
+                const tglRawat = dayjs.unix(row.tanggal_dirawat);
+                const diff = today.diff(tglRawat, "day");
+                console.log("Diff hari:", diff);
+                return `${diff} hari`;
+            }
         };
 
         return await Pagination.init(
