@@ -47,7 +47,7 @@ export default class RawatJalanRepository {
         const options = {
             include: rawatJalanInclude,
             attributes: [
-                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "no_antrian_farmasi", "kode_booking", "platform", "tanggal_daftar", "jadwal_periksa", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
+                "uuid", "no_reg", "no_rm", "no_antrian_admisi", "no_antrian_poli", "no_antrian_farmasi", "kode_booking", "platform", "tanggal_daftar", "jadwal_periksa", "discharge_date", "tanggal_checkin", "payment_method", "status_rj", "rekam_medis_uuid", "no_pelayanan"
             ],
         };
 

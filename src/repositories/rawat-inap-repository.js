@@ -43,6 +43,7 @@ import rawatInapFilter from "./filters/rawat-inap-filter.js";
 import { rawatInapInclude } from "./include/rawat-inap-include.js";
 import { keperawatanInapFilter } from "./filters/report-filter.js";
 import { keperawatanInapInclude } from "./include/report-include.js";
+import dayjs from "dayjs";
 
 export default class RawatInapRepository {
     static async getAll(args) {
@@ -56,7 +57,7 @@ export default class RawatInapRepository {
 
         const options = {
             include: rawatInapInclude,
-            attributes: ["uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "payment_method", "status_ri", "rekam_medis_uuid", "no_pelayanan"],
+            attributes: ["uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "discharge_date", "payment_method", "status_ri", "rekam_medis_uuid", "no_pelayanan"],
         };
 
         const transform = {
@@ -64,6 +65,17 @@ export default class RawatInapRepository {
                 uuid: undefined, // delete practitioner uuid
                 ...row.practitioner.pegawai.get(),
             }),
+            lama_dirawat: (row) => {
+                if (!row.tanggal_dirawat) return null;
+
+                const start = dayjs.unix(row.tanggal_dirawat);
+                const end = row.discharge_date
+                    ? dayjs.unix(row.discharge_date)
+                    : dayjs();
+
+                const diff = end.diff(start, "day");
+                return `${diff} hari`;
+            }
         };
 
         return await Pagination.init(

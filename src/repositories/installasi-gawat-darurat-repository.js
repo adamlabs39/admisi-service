@@ -447,7 +447,7 @@ export default class InstallasiGawatDaruratRepository {
                 },
             ],
             attributes: [
-                "uuid", "no_reg", "no_rm", "tanggal_daftar", "tanggal_daftar", "tanggal_dirawat", "without_identity",  "payment_method", "status_igd", "kondisi_pasien_pulang", "rekam_medis_uuid", "no_pelayanan"
+                "uuid", "no_reg", "no_rm", "tanggal_daftar", "discharge_date", "tanggal_dirawat", "without_identity",  "payment_method", "status_igd", "kondisi_pasien_pulang", "rekam_medis_uuid", "no_pelayanan"
             ]
         }
 
