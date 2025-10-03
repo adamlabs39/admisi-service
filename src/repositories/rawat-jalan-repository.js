@@ -114,7 +114,7 @@ export default class RawatJalanRepository {
                 ]
             },
             include: rawatJalanInclude,
-            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar", "tanggal_checkin", "platform"],
+            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar", "tanggal_checkin", "jadwal_periksa", "platform"],
             });
 
             if (!result) throw new NotfoundException("Data tidak ditemukan");
