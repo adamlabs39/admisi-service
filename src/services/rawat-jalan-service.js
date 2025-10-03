@@ -85,16 +85,6 @@ export class RawatJalanService {
         return result;
     }
 
-    static async updateRawatJalanMobile(uuid, data, faskesUuid) {
-        const validData = ZodValidator.validate(RawatJalanValidation.RAJAL_MOBILE_VALIDATOR, data);
-        if (!validData) throw new BadRequestException("Bad Request");
-        
-        const result = await RawatJalanRepository.updateMobile(uuid, validData, faskesUuid);
-        if (!result) throw new Error("Gagal melakukan update rawat jalan mobile");
-
-        return result;
-    }
-
     static async getPemeriksaanDokterMobile(uuid, args){
         if (!args.faskes_uuid) throw new BadRequestException("Perlu filter faskes_uuid");
         // if (!args.tanggal) throw new BadRequestException("Perlu filter tanggal");
