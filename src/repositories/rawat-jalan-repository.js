@@ -28,6 +28,8 @@ import AntrianCallRepository from "./antrian-call-repository.js";
 import rawatJalanFilter from "./filters/rawat-jalan-filter.js";
 import { rawatJalanInclude } from "./include/rawat-jalan-include.js";
 import dayjs from "dayjs";
+import redis from "../configurations/redis-instance.js";
+import { publishAppointmentCancel, publishAppointmentCheckin } from "../helper/redis-publisher.js";
 
 export default class RawatJalanRepository {
     /**
@@ -114,7 +116,7 @@ export default class RawatJalanRepository {
                 ]
             },
             include: rawatJalanInclude,
-            attributes: ["uuid", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar", "tanggal_checkin", "jadwal_periksa", "tanggal_periksa","platform"],
+            attributes: ["uuid", "no_rm", "faskes_uuid", "no_reg", "payment_method", "maternity", "note", "complaint", "practitioner_uuid", "jadwal_dokter_uuid", "lokasi_uuid", "no_pelayanan", "no_antrian_admisi", "no_antrian_poli", "kode_booking", "no_antrian_farmasi", "status_rj", "tanggal_daftar", "tanggal_checkin", "jadwal_periksa", "tanggal_periksa","platform"],
             });
 
             if (!result) throw new NotfoundException("Data tidak ditemukan");
@@ -535,13 +537,29 @@ export default class RawatJalanRepository {
             if (statusRj === 0) throw new BadRequestException("Data sudah dibatalkan");
             if (statusRj >= 4) throw new BadRequestException("Data telah diproses");
 
-            const starOfDay = moment().startOf('day').unix();
-            const endOfDay = moment().endOf('day').unix();
+            //* Jika status booking
+            if (statusRj === 1) {
 
-            const isToday = existingRegist.jadwalPeriksa >= starOfDay && existingRegist.jadwalPeriksa <= endOfDay;
+                const starOfDay = moment().startOf('day').unix();
+                const endOfDay = moment().endOf('day').unix();
 
-            if (existingRegist.platform === "MOBILE" && !isToday) {
-                throw new BadRequestException("Check-in hanya dapat dilakukan sesuai dengan tanggal booking.");
+                const isToday = existingRegist.jadwalPeriksa >= starOfDay && existingRegist.jadwalPeriksa <= endOfDay;
+
+                if (existingRegist.platform === "MOBILE") {
+
+                    //* Cek apakah jadwal periksa sesuai dengan hari ini
+                    if (!isToday) {
+                        throw new BadRequestException("Check-in hanya dapat dilakukan sesuai dengan tanggal booking.");
+                    }
+
+                    //* Update Status Appointment Mobile
+                    await publishAppointmentCheckin({
+                        faskesUuid,
+                        kodeBooking: existingRegist.kodeBooking,
+                        noRm: patient.noRm,
+                    });
+
+                }
             }
 
             if (!existingRegist.tanggalCheckin) {
@@ -556,20 +574,6 @@ export default class RawatJalanRepository {
             if (!jadwalDokterUuid) dataRJ.jadwalDokterUuid = jadwalDokter.jadwal_dokter_uuid;
 
             if (statusRj === 1 || statusRj === 2) dataRJ.statusRj = 3;
-
-            //* Update Status Appointment Mobile
-            try {
-                const appointment = await getAppointmentMobile.get('/');
-                const data = appointment.data.payload;
-
-                const result = data.find(item => item.no_rm === patient.noRm && item.faskes_uuid === faskesUuid && item.kode_booking === existingRegist.kodeBooking);
-
-                await updateAppointmentMobile.put(`/${result.uuid}`, {
-                    status: 2
-                });
-            }catch(error){
-                console.error("Error membuat appointment:", error);
-            }
             
             const updatedRegist = await existingRegist.update(dataRJ, { transaction: t });
 
@@ -706,21 +710,18 @@ export default class RawatJalanRepository {
 
                 //* Update Status Appointment Mobile
                 try {
-                    const appointment = await getAppointmentMobile.get('/');
-                    const data = appointment.data.payload;
-
                     for (const rj of rawatJalan) {
                         let patient = rj.patient.dataValues;
 
-                        const result = data.find(item => item.no_rm === patient.no_rm && item.faskes_uuid === user.faskesUuid
-                            && item.kode_booking === rj.kodeBooking);
-
-                        await updateAppointmentMobile.put(`/${result.uuid}`, {
-                            status: 0
-                        });
+                        console.log("Rawat Jalan Platform:", patient);
+                        if (rj.platform === "MOBILE") {
+                            await publishAppointmentCancel({
+                                faskesUuid: user.faskesUuid,
+                                kodeBooking: rj.kodeBooking,
+                                noRm: patient.no_rm,
+                            });
+                        }
                     }
-
-                    
                 }catch(error){
                     console.error("Error membuat appointment:", error);
                 }

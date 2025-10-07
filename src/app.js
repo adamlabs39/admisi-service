@@ -10,6 +10,7 @@ import routes from "./routes/routes.js";
 import {dbSeeder} from "./seeders/db-seeder.js";
 import EventListener from "./listeners/event-listener.js";
 import efp from "express-fileupload";
+import redis from "./configurations/redis-instance.js";
 const app = express();
 const port = process.env.APP_PORT || 8080;
 //TODO DIGANTI SAAT MERGE
@@ -37,6 +38,14 @@ app.use(cors(corsConfig));
 app.use(efp());
 app.use("/api/v3/admisi", routes);
 app.use(errorMiddleware);
+
+redis.on("connect", () => {
+    console.log("Connected to Redis");
+});
+
+redis.on("error", (err) => {
+    console.error("Redis connection error:", err);
+});
 
 
 // Event Handler
