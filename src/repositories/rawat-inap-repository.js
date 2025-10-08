@@ -374,6 +374,7 @@ export default class RawatInapRepository {
             ],
             attributes: [
             "uuid",
+            "no_rm",
             "no_reg",
             "tanggal_daftar",
             "payment_method",
