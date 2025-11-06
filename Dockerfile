@@ -1,4 +1,4 @@
-FROM node:19.5.0-alpine
+FROM node:20-alpine
 WORKDIR /adameds-admisi
 COPY . .
 ENV APP_PORT=8081
